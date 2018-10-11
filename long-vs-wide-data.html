@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Long vs Wide Data</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="/theme/css/code_blocks/monokai.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="/long-vs-wide-data.html" rel="canonical" />
+
+        <meta name="description" content="What does it mean for data to be in long form vs wide form, and when would you use each? In Pandas, how do you convert from one form to another?">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Data munging">
+        <meta name="tags" content="Pandas">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="" />
+      <meta property="og:image" content="/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="/author/damien-martin.html">
+  <meta property="og:url" content="/long-vs-wide-data.html">
+  <meta property="og:title" content="Long vs Wide Data">
+  <meta property="article:published_time" content="2018-09-19 11:00:00-07:00">
+            <meta property="og:description" content="What does it mean for data to be in long form vs wide form, and when would you use each? In Pandas, how do you convert from one form to another?">
+
+            <meta propery="og:image" content="/assets/images/pandas.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Long vs Wide Data</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Wed 19 September 2018">Wed 19 September 2018</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="/category/posts.html">Posts</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+        
+            <div class="post-cover cover" style="background-image: url('assets/images/pandas.png')">
+        
+      </div>
+    </header>    
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>The way we store data is often different from the way it is used to create visualizations, or how it is fed into models. Often the data stored in a database is in <a href="http://vita.had.co.nz/papers/tidy-data.pdf">tidy format</a> (as described in this paper by Hadley Wickham), and we have to transform it into a form appropriate for our analysis.</p>
+<p>The two forms of data we will talk about are <em>long</em> and <em>wide</em>.</p>
+<ul>
+<li><strong>Long form</strong>
+  This is very close to the tidy format. It typically makes the data easy to store, and allows easy transformations to other types.</li>
+<li><strong>Wide form</strong>
+  Useful when looking at multiple lines / series on a graph, or when making tables for quick comparison.</li>
+</ul>
+<p>Which format is more useful for a machine learning model depends on the details of the model. These descriptions can seem a little abstract without some explicit examples.</p>
+<h2>Stock price: long to wide via <code>pivot</code></h2>
+<p>Let's look at the stock prices for Apple (<a href="https://www.nasdaq.com/symbol/aapl/historical">AAPL</a>), Amazon (<a href="https://www.nasdaq.com/symbol/amzn/historical">AMZN</a>), and Google (<a href="https://www.nasdaq.com/symbol/googl/historical">GOOGL</a>). We can use quandl, or simply scrape the Nasdaq pages, to get some information on how these stocks are doing. Here is a snapshot of the dataframe <code>stock_price_long</code> in "long form"/"tidy form":</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Date</th>
+<th>Open</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AAPL</td>
+<td>2018-09-18</td>
+<td>217.79</td>
+</tr>
+<tr>
+<td>AAPL</td>
+<td>2018-09-17</td>
+<td>222.15</td>
+</tr>
+<tr>
+<td>AAPL</td>
+<td>2018-09-14</td>
+<td>225.75</td>
+</tr>
+<tr>
+<td>AAPL</td>
+<td>2018-09-13</td>
+<td>223.52</td>
+</tr>
+<tr>
+<td>AMZN</td>
+<td>2018-09-18</td>
+<td>1918.65</td>
+</tr>
+<tr>
+<td>AMZN</td>
+<td>2018-09-17</td>
+<td>1954.73</td>
+</tr>
+<tr>
+<td>AMZN</td>
+<td>2018-09-14</td>
+<td>1992.93</td>
+</tr>
+<tr>
+<td>AMZN</td>
+<td>2018-09-13</td>
+<td>2000.00</td>
+</tr>
+<tr>
+<td>GOOGL</td>
+<td>2018-09-18</td>
+<td>1162.66</td>
+</tr>
+<tr>
+<td>GOOGL</td>
+<td>2018-09-17</td>
+<td>1177.77</td>
+</tr>
+<tr>
+<td>GOOGL</td>
+<td>2018-09-14</td>
+<td>1188.00</td>
+</tr>
+<tr>
+<td>GOOGL</td>
+<td>2018-09-13</td>
+<td>1179.70</td>
+</tr>
+</tbody>
+</table>
+<p>Here every row tells us about a specific stock on a specific day. If we wanted to plot the performance of the stock over time, we could use seaborn (which works well with long data sets):</p>
+<div class="highlight"><pre><span></span><span class="n">sns</span><span class="o">.</span><span class="n">lineplot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;Date&#39;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s1">&#39;Open&#39;</span><span class="p">,</span> <span class="n">hue</span><span class="o">=</span><span class="s1">&#39;Symbol&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="s1">&#39;stock_price_long&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>INSERT GRAPH HERE</p>
+<p>If using <code>matplotlib</code>, long form isn't ideal for making this plot. We can use <code>groupby</code> (or filter) to make the plots:</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">group_index</span><span class="p">,</span> <span class="n">group_frame</span> <span class="ow">in</span> <span class="n">stock_frame_long</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;Symbol&#39;</span><span class="p">):</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">group_frame</span><span class="p">[</span><span class="s1">&#39;Date&#39;</span><span class="p">],</span> <span class="n">group_frame</span><span class="p">[</span><span class="s1">&#39;Open&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="n">group_index</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Open price&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+
+
+<p>INSERT GRAPH HERE</p>
+<p>An alternative is to use a <em>wide</em> dataframe. We can make one using the <code>pivot</code> method:</p>
+<div class="highlight"><pre><span></span><span class="n">stock_frame_wide</span> <span class="o">=</span> <span class="n">stock_frame_long</span><span class="o">.</span><span class="n">pivot</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">&#39;Date&#39;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="s1">&#39;Symbol&#39;</span><span class="p">,</span> <span class="n">values</span><span class="o">=</span><span class="s1">&#39;Open&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>which produces the following dataframe:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>AAPL</th>
+<th>AMZN</th>
+<th>GOOGL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Date</strong></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2018-09-13</td>
+<td>223.52</td>
+<td>2000.00</td>
+<td>1179.70</td>
+</tr>
+<tr>
+<td>2018-09-12</td>
+<td>225.75</td>
+<td>1992.93</td>
+<td>1188.00</td>
+</tr>
+<tr>
+<td>2018-09-17</td>
+<td>222.15</td>
+<td>1954.73</td>
+<td>1177.77</td>
+</tr>
+<tr>
+<td>2018-09-18</td>
+<td>217.79</td>
+<td>1918.65</td>
+<td>1162.66</td>
+</tr>
+</tbody>
+</table>
+<p>Note that the dates have been moved into the index, which makes plotting relatively simple</p>
+<div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">stock_frame_wide</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="n">stock_frame_wide</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Open price&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+</pre></div>
+
+
+<p>The advantages of the wide format in this case is that it is a lot easier to present the information to people, and is slightly more natural to use with plotting. The disadvantages of the wide form is that it becomes cumbersome to add or remove columns. For example, if a company goes bankrupt, you have to decide whether to add blank rows, or drop the column. Likewise, if a new company starts, we have missing values for the dates before that company opens.</p>
+<h2>Olympic Medals: long vs wide with <code>pivot_table</code></h2>
+<p>Kaggle has an easy to read <a href="https://www.kaggle.com/the-guardian/olympic-games">data set of Olympic medal winners</a>. Loading the data from the summer olympics we see</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="right">Year</th>
+<th align="left">City</th>
+<th align="left">Sport</th>
+<th align="left">Discipline</th>
+<th align="left">Athlete</th>
+<th align="left">Country</th>
+<th align="left">Gender</th>
+<th align="left">Event</th>
+<th align="left">Medal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">0</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">HAJOS, Alfred</td>
+<td align="left">HUN</td>
+<td align="left">Men</td>
+<td align="left">100M Freestyle</td>
+<td align="left">Gold</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">HERSCHMANN, Otto</td>
+<td align="left">AUT</td>
+<td align="left">Men</td>
+<td align="left">100M Freestyle</td>
+<td align="left">Silver</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">DRIVAS, Dimitrios</td>
+<td align="left">GRE</td>
+<td align="left">Men</td>
+<td align="left">100M Freestyle For Sailors</td>
+<td align="left">Bronze</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">MALOKINIS, Ioannis</td>
+<td align="left">GRE</td>
+<td align="left">Men</td>
+<td align="left">100M Freestyle For Sailors</td>
+<td align="left">Gold</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">CHASAPIS, Spiridon</td>
+<td align="left">GRE</td>
+<td align="left">Men</td>
+<td align="left">100M Freestyle For Sailors</td>
+<td align="left">Silver</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">CHOROPHAS, Efstathios</td>
+<td align="left">GRE</td>
+<td align="left">Men</td>
+<td align="left">1200M Freestyle</td>
+<td align="left">Bronze</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td align="right">1896</td>
+<td align="left">Athens</td>
+<td align="left">Aquatics</td>
+<td align="left">Swimming</td>
+<td align="left">HAJOS, Alfred</td>
+<td align="left">HUN</td>
+<td align="left">Men</td>
+<td align="left">1200M Freestyle</td>
+<td align="left">Gold</td>
+</tr>
+</tbody>
+</table>
+<p>This information is already in long form, which is convenient for storage. The wide form is better for:
+<em> Visualization: The data is too detailed and not well organized to allow quick visual comparisons.
+</em> Point summarization: If we wanted to calculate a weighted medal scores - for example 5 points for gold, 3 for silver, and 1 for gold - then this format isn't great for analysis.
+* Some machine learning models: we might use this data to see if performance in previous Olympic games can help predict the spending of that country in the next Olympic games. In this case, we want to feed the model all the information about a countries performance in a given set of games on a single row to allow it to make predictions.</p>
+<p>Let's convert this to a "wide form" with the count of medals, broken down by year, country, gender, and medal type.</p>
+<p>Last time we converted from long form to wide form, we used <code>DataFrame.pivot</code>. In that case, each element in the wide table came from a single row. For this problem, we want to aggregate many rows by counting how many occurred, which <code>pivot</code> cannot do. Instead, we are going to use <a href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pivot_table.html"><code>DataFrame.pivot_table</code></a> in the following way:</p>
+<div class="highlight"><pre><span></span><span class="n">summer</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;summer.csv&#39;</span><span class="p">)</span>
+
+<span class="n">summer_wide</span> <span class="o">=</span> <span class="p">(</span><span class="n">summer</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">&#39;Year&#39;</span><span class="p">,</span>
+                        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Country&#39;</span><span class="p">,</span> <span class="s1">&#39;Gender&#39;</span><span class="p">,</span> <span class="s1">&#39;Medal&#39;</span><span class="p">],</span>
+                        <span class="n">aggfunc</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+                     <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                     <span class="o">.</span><span class="n">loc</span><span class="p">[:,(</span><span class="s1">&#39;Athlete&#39;</span><span class="p">)]</span>
+               <span class="p">)</span>
+</pre></div>
+
+
+<p>All the columns in <code>summer</code> that are not used in the <code>index</code> or <code>columns</code> call to <code>pivot_table</code> (such as "Athlete", "Discipline", and "City") are copied at the top level. The call <code>.loc[:, ('Athlete')]</code> selects just the copy for Athletes.</p>
+<p>This dataframe has up to 6 columns per country (3 medal types for each gender), with a total of 558 columns, which is still hard to visualize. We can focus down to just American medals which has only 6 columns, and can keep the number of rows reasonable by looking Olympics ceremonies starting in 1984, using <code>summer_wide.loc[1984:, ('USA')]</code></p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="right">('Men', 'Bronze')</th>
+<th align="right">('Men', 'Gold')</th>
+<th align="right">('Men', 'Silver')</th>
+<th align="right">('Women', 'Bronze')</th>
+<th align="right">('Women', 'Gold')</th>
+<th align="right">('Women', 'Silver')</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">1984</td>
+<td align="right">26</td>
+<td align="right">106</td>
+<td align="right">70</td>
+<td align="right">24</td>
+<td align="right">62</td>
+<td align="right">45</td>
+</tr>
+<tr>
+<td align="right">1988</td>
+<td align="right">37</td>
+<td align="right">49</td>
+<td align="right">45</td>
+<td align="right">15</td>
+<td align="right">28</td>
+<td align="right">19</td>
+</tr>
+<tr>
+<td align="right">1992</td>
+<td align="right">35</td>
+<td align="right">57</td>
+<td align="right">31</td>
+<td align="right">50</td>
+<td align="right">32</td>
+<td align="right">19</td>
+</tr>
+<tr>
+<td align="right">1996</td>
+<td align="right">40</td>
+<td align="right">59</td>
+<td align="right">32</td>
+<td align="right">12</td>
+<td align="right">101</td>
+<td align="right">16</td>
+</tr>
+<tr>
+<td align="right">2000</td>
+<td align="right">22</td>
+<td align="right">68</td>
+<td align="right">29</td>
+<td align="right">30</td>
+<td align="right">62</td>
+<td align="right">37</td>
+</tr>
+<tr>
+<td align="right">2004</td>
+<td align="right">33</td>
+<td align="right">51</td>
+<td align="right">33</td>
+<td align="right">40</td>
+<td align="right">65</td>
+<td align="right">42</td>
+</tr>
+<tr>
+<td align="right">2008</td>
+<td align="right">57</td>
+<td align="right">67</td>
+<td align="right">29</td>
+<td align="right">24</td>
+<td align="right">58</td>
+<td align="right">80</td>
+</tr>
+<tr>
+<td align="right">2012</td>
+<td align="right">19</td>
+<td align="right">42</td>
+<td align="right">27</td>
+<td align="right">27</td>
+<td align="right">105</td>
+<td align="right">30</td>
+</tr>
+</tbody>
+</table>
+<p>To show selection using the multi-index, we could also look at women's medals from the US and Canada, starting in 1984:</p>
+<div class="highlight"><pre><span></span><span class="n">summer_women</span> <span class="o">=</span> <span class="n">summer_wide</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1984</span><span class="p">:,</span> <span class="p">([</span><span class="s1">&#39;USA&#39;</span><span class="p">,</span> <span class="s1">&#39;CAN&#39;</span><span class="p">],</span> <span class="s1">&#39;Women&#39;</span><span class="p">,[</span><span class="s1">&#39;Gold&#39;</span><span class="p">,</span> <span class="s1">&#39;Silver&#39;</span><span class="p">,</span> <span class="s1">&#39;Bronze&#39;</span><span class="p">])]</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="right">('CAN', 'Women', 'Bronze')</th>
+<th align="right">('CAN', 'Women', 'Gold')</th>
+<th align="right">('CAN', 'Women', 'Silver')</th>
+<th align="right">('USA', 'Women', 'Bronze')</th>
+<th align="right">('USA', 'Women', 'Gold')</th>
+<th align="right">('USA', 'Women', 'Silver')</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">1984</td>
+<td align="right">11</td>
+<td align="right">4</td>
+<td align="right">21</td>
+<td align="right">24</td>
+<td align="right">62</td>
+<td align="right">45</td>
+</tr>
+<tr>
+<td align="right">1988</td>
+<td align="right">7</td>
+<td align="right">3</td>
+<td align="right">0</td>
+<td align="right">15</td>
+<td align="right">28</td>
+<td align="right">19</td>
+</tr>
+<tr>
+<td align="right">1992</td>
+<td align="right">2</td>
+<td align="right">16</td>
+<td align="right">2</td>
+<td align="right">50</td>
+<td align="right">32</td>
+<td align="right">19</td>
+</tr>
+<tr>
+<td align="right">1996</td>
+<td align="right">7</td>
+<td align="right">2</td>
+<td align="right">23</td>
+<td align="right">12</td>
+<td align="right">101</td>
+<td align="right">16</td>
+</tr>
+<tr>
+<td align="right">2000</td>
+<td align="right">20</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="right">30</td>
+<td align="right">62</td>
+<td align="right">37</td>
+</tr>
+<tr>
+<td align="right">2004</td>
+<td align="right">3</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">40</td>
+<td align="right">65</td>
+<td align="right">42</td>
+</tr>
+<tr>
+<td align="right">2008</td>
+<td align="right">4</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">24</td>
+<td align="right">58</td>
+<td align="right">80</td>
+</tr>
+<tr>
+<td align="right">2012</td>
+<td align="right">29</td>
+<td align="right">1</td>
+<td align="right">10</td>
+<td align="right">27</td>
+<td align="right">105</td>
+<td align="right">30</td>
+</tr>
+</tbody>
+</table>
+<p>Even so, we are left with a lot of different countries, and a very wide table. Still focusing on games from 1984 onward, lets select the countries that have won the most medals:</p>
+<div class="highlight"><pre><span></span><span class="n">summer_countries</span> <span class="o">=</span> <span class="p">(</span><span class="n">summer</span><span class="o">.</span><span class="n">pivot_table</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="s1">&#39;Year&#39;</span><span class="p">,</span>
+                            <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Country&#39;</span><span class="p">],</span> <span class="n">aggfunc</span><span class="o">=</span><span class="s1">&#39;count&#39;</span><span class="p">)</span>
+                          <span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+                          <span class="o">.</span><span class="n">loc</span><span class="p">[:,(</span><span class="s1">&#39;Athlete&#39;</span><span class="p">)]</span>
+                   <span class="p">)</span>
+
+<span class="n">medal_totals</span> <span class="o">=</span> <span class="n">summer_countries</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">country_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">medal_totals</span><span class="o">.</span><span class="n">rank</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">summer_countries</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="mi">1984</span><span class="p">:,</span> <span class="n">country_mask</span><span class="p">]</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="right">AUS</th>
+<th align="right">FRA</th>
+<th align="right">GBR</th>
+<th align="right">GER</th>
+<th align="right">HUN</th>
+<th align="right">ITA</th>
+<th align="right">NED</th>
+<th align="right">SWE</th>
+<th align="right">URS</th>
+<th align="right">USA</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">1984</td>
+<td align="right">50</td>
+<td align="right">68</td>
+<td align="right">72</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">63</td>
+<td align="right">40</td>
+<td align="right">32</td>
+<td align="right">0</td>
+<td align="right">333</td>
+</tr>
+<tr>
+<td align="right">1988</td>
+<td align="right">34</td>
+<td align="right">29</td>
+<td align="right">53</td>
+<td align="right">0</td>
+<td align="right">44</td>
+<td align="right">29</td>
+<td align="right">44</td>
+<td align="right">16</td>
+<td align="right">294</td>
+<td align="right">193</td>
+</tr>
+<tr>
+<td align="right">1992</td>
+<td align="right">57</td>
+<td align="right">57</td>
+<td align="right">50</td>
+<td align="right">198</td>
+<td align="right">45</td>
+<td align="right">46</td>
+<td align="right">33</td>
+<td align="right">35</td>
+<td align="right">0</td>
+<td align="right">224</td>
+</tr>
+<tr>
+<td align="right">1996</td>
+<td align="right">132</td>
+<td align="right">51</td>
+<td align="right">26</td>
+<td align="right">124</td>
+<td align="right">43</td>
+<td align="right">71</td>
+<td align="right">73</td>
+<td align="right">31</td>
+<td align="right">0</td>
+<td align="right">260</td>
+</tr>
+<tr>
+<td align="right">2000</td>
+<td align="right">183</td>
+<td align="right">66</td>
+<td align="right">55</td>
+<td align="right">119</td>
+<td align="right">53</td>
+<td align="right">65</td>
+<td align="right">79</td>
+<td align="right">32</td>
+<td align="right">0</td>
+<td align="right">248</td>
+</tr>
+<tr>
+<td align="right">2004</td>
+<td align="right">157</td>
+<td align="right">53</td>
+<td align="right">57</td>
+<td align="right">149</td>
+<td align="right">40</td>
+<td align="right">102</td>
+<td align="right">76</td>
+<td align="right">12</td>
+<td align="right">0</td>
+<td align="right">264</td>
+</tr>
+<tr>
+<td align="right">2008</td>
+<td align="right">149</td>
+<td align="right">76</td>
+<td align="right">77</td>
+<td align="right">101</td>
+<td align="right">27</td>
+<td align="right">42</td>
+<td align="right">62</td>
+<td align="right">7</td>
+<td align="right">0</td>
+<td align="right">315</td>
+</tr>
+<tr>
+<td align="right">2012</td>
+<td align="right">114</td>
+<td align="right">82</td>
+<td align="right">126</td>
+<td align="right">94</td>
+<td align="right">26</td>
+<td align="right">68</td>
+<td align="right">69</td>
+<td align="right">23</td>
+<td align="right">0</td>
+<td align="right">250</td>
+</tr>
+</tbody>
+</table>
+<p>We have reduced the dataset down enough that someone would be able to look at it and discern patterns in the data.</p>
+<h2>Demographic data: wide to long with <code>melt</code></h2>
+<p>The <a href="https://en.wikipedia.org/wiki/Seattle">wikipedia page for Seattle</a> has the following demographic information presented</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left">Race</th>
+<th align="left">2010</th>
+<th align="left">1990</th>
+<th align="left">1970</th>
+<th align="left">1940</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">1</td>
+<td align="left">White</td>
+<td align="left">69.5%</td>
+<td align="left">75.3%</td>
+<td align="left">87.4%</td>
+<td align="left">96.1%</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="left">—Non-Hispanic</td>
+<td align="left">66.3%</td>
+<td align="left">73.7%</td>
+<td align="left">85.3%[112]</td>
+<td align="left">NaN</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="left">Black or African American</td>
+<td align="left">7.9%</td>
+<td align="left">10.1%</td>
+<td align="left">7.1%</td>
+<td align="left">1.0%</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="left">6.6%</td>
+<td align="left">3.6%</td>
+<td align="left">2.0%[112]</td>
+<td align="left">NaN</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="left">Asian</td>
+<td align="left">13.8%</td>
+<td align="left">11.8%</td>
+<td align="left">4.2%</td>
+<td align="left">2.8%</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td align="left">Other race</td>
+<td align="left">2.4%</td>
+<td align="left">NaN</td>
+<td align="left">NaN</td>
+<td align="left">NaN</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td align="left">Two or more races</td>
+<td align="left">5.1%</td>
+<td align="left">NaN</td>
+<td align="left">NaN</td>
+<td align="left">NaN</td>
+</tr>
+</tbody>
+</table>
+<p>The numbers in brackets are the classic wikipedia citations. Here we see some of the problems with wide format: early on the questionnaires didn't ask about "other", "two or more races" or "non-hispanic" as categories, so we are forced to use <code>NaN</code>s instead. In long format, we simple wouldn't store this data.</p>
+<p>The long format should include the <code>race</code>, the <code>year</code>, and the <code>percentage</code> of population. We will also have to clear the data a little (for example, eliminating the percentage signs and the citation brackets).</p>
+<p>We can grab the table with a little experimentation:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Grab all the tables on the wikipedia page</span>
+<span class="n">seattle_tables</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_html</span><span class="p">(</span><span class="s1">&#39;https://en.wikipedia.org/wiki/Seattle&#39;</span><span class="p">)</span>
+<span class="n">demographic_wide</span> <span class="o">=</span> <span class="n">seattle_tables</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
+
+<span class="c1"># Convert to long form:</span>
+<span class="n">demographic_long</span> <span class="o">=</span> <span class="n">demographic_wide</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">id_vars</span><span class="o">=</span><span class="s1">&#39;Race&#39;</span><span class="p">,</span>
+    <span class="n">value_vars</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2010</span><span class="p">,</span> <span class="mi">1990</span><span class="p">,</span> <span class="mi">1970</span><span class="p">,</span> <span class="mi">1940</span><span class="p">],</span>
+    <span class="n">var_name</span><span class="o">=</span><span class="s1">&#39;Year&#39;</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="s1">&#39;fraction&#39;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This command changes the dataframe to have two new columns: the "variable" column called <code>Year</code> and the "value" called <code>fraction</code>. Each entry in the columns <code>1940</code>, ..., <code>2010</code> gets copied onto its own row, where the column name is entered for the year, and the entry value is used for the <code>fraction</code>:</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left">Race</th>
+<th align="right">Year</th>
+<th align="left">fraction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">0</td>
+<td align="left">White</td>
+<td align="right">2010</td>
+<td align="left">69.5%</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">2010</td>
+<td align="left">66.3%</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="left">Black or African American</td>
+<td align="right">2010</td>
+<td align="left">7.9%</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">2010</td>
+<td align="left">6.6%</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="left">Asian</td>
+<td align="right">2010</td>
+<td align="left">13.8%</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="left">Other race</td>
+<td align="right">2010</td>
+<td align="left">2.4%</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td align="left">Two or more races</td>
+<td align="right">2010</td>
+<td align="left">5.1%</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td align="left">White</td>
+<td align="right">1990</td>
+<td align="left">75.3%</td>
+</tr>
+<tr>
+<td align="right">8</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">1990</td>
+<td align="left">73.7%</td>
+</tr>
+<tr>
+<td align="right">9</td>
+<td align="left">Black or African American</td>
+<td align="right">1990</td>
+<td align="left">10.1%</td>
+</tr>
+<tr>
+<td align="right">10</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">1990</td>
+<td align="left">3.6%</td>
+</tr>
+<tr>
+<td align="right">11</td>
+<td align="left">Asian</td>
+<td align="right">1990</td>
+<td align="left">11.8%</td>
+</tr>
+<tr>
+<td align="right">12</td>
+<td align="left">Other race</td>
+<td align="right">1990</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">13</td>
+<td align="left">Two or more races</td>
+<td align="right">1990</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">14</td>
+<td align="left">White</td>
+<td align="right">1970</td>
+<td align="left">87.4%</td>
+</tr>
+<tr>
+<td align="right">15</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">1970</td>
+<td align="left">85.3%[112]</td>
+</tr>
+<tr>
+<td align="right">16</td>
+<td align="left">Black or African American</td>
+<td align="right">1970</td>
+<td align="left">7.1%</td>
+</tr>
+<tr>
+<td align="right">17</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">1970</td>
+<td align="left">2.0%[112]</td>
+</tr>
+<tr>
+<td align="right">18</td>
+<td align="left">Asian</td>
+<td align="right">1970</td>
+<td align="left">4.2%</td>
+</tr>
+<tr>
+<td align="right">19</td>
+<td align="left">Other race</td>
+<td align="right">1970</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">20</td>
+<td align="left">Two or more races</td>
+<td align="right">1970</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">21</td>
+<td align="left">White</td>
+<td align="right">1940</td>
+<td align="left">96.1%</td>
+</tr>
+<tr>
+<td align="right">22</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">1940</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">23</td>
+<td align="left">Black or African American</td>
+<td align="right">1940</td>
+<td align="left">1.0%</td>
+</tr>
+<tr>
+<td align="right">24</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">1940</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">25</td>
+<td align="left">Asian</td>
+<td align="right">1940</td>
+<td align="left">2.8%</td>
+</tr>
+<tr>
+<td align="right">26</td>
+<td align="left">Other race</td>
+<td align="right">1940</td>
+<td align="left">nan</td>
+</tr>
+<tr>
+<td align="right">27</td>
+<td align="left">Two or more races</td>
+<td align="right">1940</td>
+<td align="left">nan</td>
+</tr>
+</tbody>
+</table>
+<p>We still have a little cleaning to do in the <code>fraction</code> column:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">clean_fractions</span><span class="p">(</span><span class="n">series</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">series</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;%(\s*\[\d*\])?&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">/</span><span class="mi">100</span>
+
+<span class="n">demographic_long</span><span class="p">[</span><span class="s1">&#39;fraction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">clean_fractions</span><span class="p">(</span><span class="n">demographic_long</span><span class="p">[</span><span class="s1">&#39;fraction&#39;</span><span class="p">])</span>
+<span class="n">demographic_long</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Now we have our long form "tidy" dataset:</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left">Race</th>
+<th align="right">Year</th>
+<th align="right">fraction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">0</td>
+<td align="left">White</td>
+<td align="right">2010</td>
+<td align="right">0.695</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">2010</td>
+<td align="right">0.663</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="left">Black or African American</td>
+<td align="right">2010</td>
+<td align="right">0.079</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">2010</td>
+<td align="right">0.066</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="left">Asian</td>
+<td align="right">2010</td>
+<td align="right">0.138</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="left">Other race</td>
+<td align="right">2010</td>
+<td align="right">0.024</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td align="left">Two or more races</td>
+<td align="right">2010</td>
+<td align="right">0.051</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td align="left">White</td>
+<td align="right">1990</td>
+<td align="right">0.753</td>
+</tr>
+<tr>
+<td align="right">8</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">1990</td>
+<td align="right">0.737</td>
+</tr>
+<tr>
+<td align="right">9</td>
+<td align="left">Black or African American</td>
+<td align="right">1990</td>
+<td align="right">0.101</td>
+</tr>
+<tr>
+<td align="right">10</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">1990</td>
+<td align="right">0.036</td>
+</tr>
+<tr>
+<td align="right">11</td>
+<td align="left">Asian</td>
+<td align="right">1990</td>
+<td align="right">0.118</td>
+</tr>
+<tr>
+<td align="right">14</td>
+<td align="left">White</td>
+<td align="right">1970</td>
+<td align="right">0.874</td>
+</tr>
+<tr>
+<td align="right">15</td>
+<td align="left">—Non-Hispanic</td>
+<td align="right">1970</td>
+<td align="right">0.853</td>
+</tr>
+<tr>
+<td align="right">16</td>
+<td align="left">Black or African American</td>
+<td align="right">1970</td>
+<td align="right">0.071</td>
+</tr>
+<tr>
+<td align="right">17</td>
+<td align="left">Hispanic or Latino (of any race)</td>
+<td align="right">1970</td>
+<td align="right">0.02</td>
+</tr>
+<tr>
+<td align="right">18</td>
+<td align="left">Asian</td>
+<td align="right">1970</td>
+<td align="right">0.042</td>
+</tr>
+<tr>
+<td align="right">21</td>
+<td align="left">White</td>
+<td align="right">1940</td>
+<td align="right">0.961</td>
+</tr>
+<tr>
+<td align="right">23</td>
+<td align="left">Black or African American</td>
+<td align="right">1940</td>
+<td align="right">0.01</td>
+</tr>
+<tr>
+<td align="right">25</td>
+<td align="left">Asian</td>
+<td align="right">1940</td>
+<td align="right">0.028</td>
+</tr>
+</tbody>
+</table>
+<h2>Summary and next up</h2>
+<ul>
+<li>Going long to wide, where each element in the wide table comes from a single row.</li>
+<li>Use <code>DataFrame.pivot</code></li>
+<li>Reasonably straight-forward</li>
+<li>Going long to wide, where each element in the wide table is an aggregation of multiple rows.</li>
+<li>Use <code>DataFrame.pivot_table</code></li>
+<li>Will generate a copy of the aggregation for each unused varaible. This could strain memory if the number of columns is large. Possible work arounds are to <code>group_by</code> first (as described <a href="">here</a>), or select only the columns you are interested in.</li>
+<li>Going from wide to long:</li>
+<li>Usually done to store the data in tidy format.</li>
+<li>Can be done partially (i.e. convert some variables from wide format to long)</li>
+<li>Uses the <code>DataFrame.melt</code> command</li>
+</ul>
+<p>Other articles on reshaping data you might be interested in:</p>
+<ol>
+<li><a href="tidy.md">What is tidy data anyway?</a> (upcoming)</li>
+<li><a href="/munging-with-multiindices-election-data.html">Tidying the results of presidential elections</a></li>
+<li><a href="upcoming">Clusters for Supervised Learning: Olympic Spending</a></li>
+</ol>
+            </section>
+
+            <section class="post-info">
+                <div class="post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Long vs Wide Data&amp;url=/long-vs-wide-data.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=/long-vs-wide-data.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=/long-vs-wide-data.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="/tag/data-munging.html">Data munging</a><a href="/tag/pandas.html">Pandas</a>                </aside>
+
+                <div class="clear"></div>
+
+ 
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+    <footer id="footer">
+      <div class="inner">
+        <section class="credits">
+          <span class="credits-theme">Theme <a href="https://github.com/arulrajnet/attila" rel="nofollow">Attila</a></span>
+          <span class="credits-software">Published with <a href="https://github.com/getpelican/pelican" rel="nofollow">Pelican</a></span>
+        </section>
+      </div>
+    </footer>
+  </section>
+
+  <script type="text/javascript" src="/theme/js/script.js"></script>
+  
+</body>
+</html>

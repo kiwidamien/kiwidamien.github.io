@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Big commits in GitHub</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="/theme/css/code_blocks/monokai.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="/big-commits-in-github.html" rel="canonical" />
+
+        <meta name="description" content="What do you do when you have committed a large file to GitHub?">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Github">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="" />
+      <meta property="og:image" content="/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="/author/damien-martin.html">
+  <meta property="og:url" content="/big-commits-in-github.html">
+  <meta property="og:title" content="Big commits in GitHub">
+  <meta property="article:published_time" content="2018-09-10 13:00:00-07:00">
+            <meta property="og:description" content="What do you do when you have committed a large file to GitHub?">
+
+            <meta propery="og:image" content="/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Big commits in GitHub</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Mon 10 September 2018">Mon 10 September 2018</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="/category/tools.html">Tools</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+        
+            <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+        
+      </div>
+    </header>    
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <h2>Undoing a large commit</h2>
+<p>Accidentally committing a large file (i.e. greater than git's limit of 100MB) is a frustrating experience. For example, let's say you made some changes to <code>big_file.bin</code>, a 200MB file, and to your README in the following way:</p>
+<div class="highlight"><pre><span></span>$ dd <span class="k">if</span><span class="o">=</span>/dev/zero <span class="nv">of</span><span class="o">=</span>big_file.bin <span class="nv">count</span><span class="o">=</span><span class="m">200</span> <span class="nv">bs</span><span class="o">=</span><span class="m">1048576</span>  <span class="c1"># make 200 MB file</span>
+$ git add big_file.bin                              <span class="c1"># we will regret this!</span>
+$ git commit -m <span class="s2">&quot;committed huge binary file&quot;</span>
+<span class="o">[</span>master 9cee256<span class="o">]</span> committed huge binary file
+$ git add README.md
+$ git commit -m <span class="s2">&quot;... and made a small change to the README&quot;</span>
+<span class="o">[</span>master 0f1a832<span class="o">]</span> ... and made small change to the README
+</pre></div>
+
+
+<p>Everything is fine, until we try to push to our repo:</p>
+<div class="highlight"><pre><span></span>$ git push
+....
+remote: error: File big_file.bin is <span class="m">106</span>.00 MB<span class="p">;</span> this exceeds GitHub<span class="err">&#39;</span>s file size limit of <span class="m">100</span>.00 MB
+To YOUR_REPO_NAME
+! <span class="o">[</span>remote rejected<span class="o">]</span> master -&gt; master <span class="o">(</span>pre-receive hook declined<span class="o">)</span>
+error: failed to push some refs to YOUR_REPO_NAME
+</pre></div>
+
+
+<h2>Failed attempt to fix</h2>
+<p>Here is an attempt to fix that fails:</p>
+<div class="highlight"><pre><span></span>$ git rm big_file.bin
+$ git commit -m <span class="s2">&quot;removed big file&quot;</span>
+<span class="o">[</span>master 1eb14a7<span class="o">]</span> removed big_file
+$ git push
+.... <span class="o">(</span>still see message about failing to remove<span class="o">)</span>
+</pre></div>
+
+
+<p>The problem is that git is trying to keep track of the history of all your commits. Git wants to push both the file <em>and</em> the fact it was deleted, so other developers can rewind the deletion. To do this, git still needs to push the large file to the remote, which it cannot do for large files.</p>
+<p>We will look at two ways of fixing this problem:
+<em> Rewinding master locally, and pushing a new version of master. The downside is <code>big_file.bin</code> will still take up memory on your local repo.
+</em> Removing all mention of <code>big_file.bin</code> from your repo by rewriting your git history. The downside to this approach is that you can break git, and it cannot be done if you have untracked files.</p>
+<p>Let's look at these two approaches. If all else fails, the third option is to make a new clone of the repo, and copy over just the files you want -- but this should be a last resort.</p>
+<h3>Actual fix #1: keep history local</h3>
+<p>Our log of commits now looks like this on our local machine:</p>
+<div class="highlight"><pre><span></span>1eb14a7 <span class="o">(</span>HEAD -&gt; master<span class="o">)</span> removed big_file
+0f1a832 ... and made small change to the README
+9cee256 committed huge binary file
+a3a75bf commit before all this happened
+....... <span class="o">(</span>previous commits<span class="o">)</span>
+</pre></div>
+
+
+<p>We want to get rid of the file originally committed in commit <code>9cee256</code>. To do this:
+1. First, reset back to that commit:</p>
+<div class="highlight"><pre><span></span>$ git reset 9cee256~1 <span class="c1"># go back one more than the troublesome commit</span>
+</pre></div>
+
+
+<p>This is a <em>soft</em> reset, so your files will stay the same on your local machine.
+2. (Optional) If you haven't done so already, you can delete <code>big_file.bin</code>.
+3. Then add the README back to the repo, and commit it</p>
+<div class="highlight"><pre><span></span>$ git add README.md
+$ git commit -m <span class="s2">&quot;adding the README again&quot;</span>
+</pre></div>
+
+
+<ol>
+<li>Finally push the new commit back up.</li>
+</ol>
+<div class="highlight"><pre><span></span>$ git push origin master
+</pre></div>
+
+
+<p>In this approach, the local git history still has the "bad" commits in it
+<img alt="what the local branches look like" src="images/github_local.png">
+They are off the main "master" track, but they will still remain on your disk. The commit you pushed up doesn't have the commits in the red box in its history, so the remote repo will look like this:
+<img alt="what the remote branch looks like" src="images/github_remote.png"></p>
+<h3>Actual Fix 2: rewrite history with <code>filter-branch</code></h3>
+<p>This one will only work if you don't have unstaged work in your repo. It also means rewriting the history, so there is the potential to mess things up!</p>
+<p>With those warnings in mind, you can run</p>
+<div class="highlight"><pre><span></span>git filter-branch -f --tree-filter <span class="s1">&#39;rm  big_file.bin&#39;</span> 9cee256..HEAD
+</pre></div>
+
+
+<p>This will remove <code>big_file.bin</code> from every commit from <code>9cee256</code> to <code>1eb14a7</code> (the current HEAD).</p>
+<p>You should then be able to push to your repository with</p>
+<div class="highlight"><pre><span></span>git push
+</pre></div>
+            </section>
+
+            <section class="post-info">
+                <div class="post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Big commits in GitHub&amp;url=/big-commits-in-github.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=/big-commits-in-github.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=/big-commits-in-github.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="/tag/github.html">Github</a>                </aside>
+
+                <div class="clear"></div>
+
+ 
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+    <footer id="footer">
+      <div class="inner">
+        <section class="credits">
+          <span class="credits-theme">Theme <a href="https://github.com/arulrajnet/attila" rel="nofollow">Attila</a></span>
+          <span class="credits-software">Published with <a href="https://github.com/getpelican/pelican" rel="nofollow">Pelican</a></span>
+        </section>
+      </div>
+    </footer>
+  </section>
+
+  <script type="text/javascript" src="/theme/js/script.js"></script>
+  
+</body>
+</html>
