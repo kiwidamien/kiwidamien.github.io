@@ -1128,17 +1128,27 @@
 </table>
 <h2>Summary and next up</h2>
 <ul>
-<li>Going long to wide, where each element in the wide table comes from a single row.</li>
-<li>Use <code>DataFrame.pivot</code></li>
-<li>Reasonably straight-forward</li>
-<li>Going long to wide, where each element in the wide table is an aggregation of multiple rows.</li>
-<li>Use <code>DataFrame.pivot_table</code></li>
-<li>Will generate a copy of the aggregation for each unused varaible. This could strain memory if the number of columns is large. Possible work arounds are to <code>group_by</code> first (as described <a href="">here</a>), or select only the columns you are interested in.</li>
-<li>Going from wide to long:</li>
-<li>Usually done to store the data in tidy format.</li>
-<li>Can be done partially (i.e. convert some variables from wide format to long)</li>
-<li>Uses the <code>DataFrame.melt</code> command</li>
+  <li> Going long to wide, where each element in the wide table comes from a single row.
+    <ul>
+      <li> Use <code>DataFrame.pivot</code></li>
+      <li> Reasonably straight-forward</li>
+    </ul>
+  </li>
+  <li> Going long to wide, where each element in the wide table is an aggregation of multiple rows.
+    <ul>
+      <li> Use <code>DataFrame.pivot_table</code> </li>
+      <li> Will generate a copy of the aggregation for each unused varaible. This could strain memory if the number of columns is large. Possible work arounds are to `group_by` first, or select only the columns you are interested in.</li>
+    </ul>
+  </li>
+  <li> Going from wide to long:
+    <ul>
+      <li> Usually done to store the data in tidy format.</li>
+      <li> Can be done partially (i.e. convert some variables from wide format to long)</li>
+      <li> Uses the <code>DataFrame.melt</code> command</li>
+    </ul>
+  </li>
 </ul>
+
 <p>Other articles on reshaping data you might be interested in:</p>
 <ol>
 <li><a href="tidy.md">What is tidy data anyway?</a> (upcoming)</li>
