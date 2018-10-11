@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Stacked Turtles - Tools</title><link href="https://kiwidamien.github.io/" rel="alternate"></link><link href="https://kiwidamien.github.io/feeds/tools.atom.xml" rel="self"></link><id>https://kiwidamien.github.io/</id><updated>2018-09-12T23:00:00-07:00</updated><entry><title>Undo in Github (aka the elephants in the room)</title><link href="https://kiwidamien.github.io/undo-in-github-aka-the-elephants-in-the-room.html" rel="alternate"></link><published>2018-09-12T23:00:00-07:00</published><updated>2018-09-12T23:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-09-12:/undo-in-github-aka-the-elephants-in-the-room.html</id><summary type="html">&lt;p&gt;How to rollback in Github&lt;/p&gt;</summary><content type="html">&lt;p&gt;Git is a version control system, and is designed so you can "go back" to previous versions of your codebase. Initially the process can be a little intimidating; this guide is designed to help.&lt;/p&gt;
+&lt;p&gt;A few cautionary words are in order before we begin:
+&lt;em&gt; Git cannot recover files that you it never started tracking. If you delete a file that you have never committed, it will be gone once you delete it.
+&lt;/em&gt; Git cannot recover changes in your file that you have never committed, &lt;em&gt;even if you have committed this file in the past&lt;/em&gt;. You can only restore commits.
+* It is &lt;em&gt;much&lt;/em&gt; easier to restore to a particular commit. It is possible to use git's &lt;em&gt;&lt;a href="https://git-scm.com/docs/git-cherry-pick"&gt;cherry pick&lt;/a&gt;&lt;/em&gt; to take parts of some commits and mix them with others, but it should be avoided.&lt;/p&gt;
+&lt;p&gt;Hopefully the comments above convey that making lots of small commits are the way to work. This gives you a lot of stages to restore the code to. Because git commits only save the differences between files, making lots of small commits takes roughly the same amount of space as making a single large commit.&lt;/p&gt;
+&lt;p&gt;Committing should be like voting:
+&lt;strong&gt; Commit early, commit often &lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The plan for this blog post will be to make a small text document, &lt;code&gt;room.txt&lt;/code&gt;, make some changes to it, and then revert back to the original version of &lt;code&gt;room.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you are trying to remove a file that is too large from Github, you should look at &lt;a href="big-commits-in-github.html"&gt;these instructions&lt;/a&gt; instead.&lt;/p&gt;
+&lt;h2&gt;Setup&lt;/h2&gt;
+&lt;p&gt;You can do the setup in an existing git repo, or make a new one. First, on branch &lt;code&gt;git_experiment&lt;/code&gt;, we make the original document &lt;code&gt;room.txt&lt;/code&gt; as a shout out to Lin-Manuel Miranda:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;room.txt (original):
+No one else was in the room where it happened,
+the room where it happened,
+the room where it happened.
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;(Note that this would work equally well on the &lt;code&gt;master&lt;/code&gt; branch as well, but you should not be developing on &lt;code&gt;master&lt;/code&gt;!)&lt;/p&gt;
+&lt;p&gt;Let's add and commit this code:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git add room.txt &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span class="s2"&gt;&amp;quot;added room.txt&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;git_experiment eca0535&lt;span class="o"&gt;]&lt;/span&gt; added room.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The code &lt;code&gt;eca0535&lt;/code&gt; is the beginning of the &lt;em&gt;commit hash&lt;/em&gt; for the commit we just made. It helps us identify this commit at any point in the future.&lt;/p&gt;
+&lt;p&gt;Now let's add one line to &lt;code&gt;room.txt&lt;/code&gt;, so it reads&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;room.txt (modified):
+No one else was in the room where it happened,
+the room where it happened,
+the room where it happened.
+(Well, except the elephant)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can also add and commit this code:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git add room.txt &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span class="s2"&gt;&amp;quot;mentioned elephant in the room&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;git_experiment 997b13a&lt;span class="o"&gt;]&lt;/span&gt; mentioned elephants in the room
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;What we have so far:
+&lt;em&gt; A commit &lt;code&gt;eca0535&lt;/code&gt; where we made &lt;code&gt;room.txt&lt;/code&gt;
+&lt;/em&gt; A commit &lt;code&gt;997b13a&lt;/code&gt; where we added a line to &lt;code&gt;room.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Our goal is to restore the repo at the commit hash of &lt;code&gt;eca0535&lt;/code&gt;, where we have created &lt;code&gt;room.txt&lt;/code&gt; but haven't added the elephants in the room (because no-one talks about the elephant in the room).&lt;/p&gt;
+&lt;p&gt;In this specific case, it would be easiest to delete the line and commit again. We are going to do it the hard way to demonstrate how to rollback git commands.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Note about commit hashes&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you are following this in your own repo, you will have different hashes than &lt;code&gt;eca0535&lt;/code&gt; and &lt;code&gt;997b13a&lt;/code&gt;. That is OK! We also have two different ways of referring to this hashes with git:
+&lt;em&gt; &lt;code&gt;HEAD&lt;/code&gt; is the most recent commit (in this case, &lt;code&gt;997b13a&lt;/code&gt;)
+&lt;/em&gt; &lt;code&gt;HEAD~1&lt;/code&gt; is the previous commit (in this case &lt;code&gt;eca0535&lt;/code&gt;)&lt;/p&gt;
+&lt;h3&gt;Method 1: We haven't pushed to Github&lt;/h3&gt;
+&lt;p&gt;If we haven't pushed to Github, then we only have to deal with fixing our local version of &lt;code&gt;git&lt;/code&gt;. This is a one line command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git reset --hard HEAD~1
+HEAD is now at eca0535 added room.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here git is telling us our current position (HEAD) is at the old commit. Note that the commit message helps tell us which commit this is -- this is a reason to write good commit messages. We can use this same method to go back any number of commits (e.g. &lt;code&gt;HEAD~n&lt;/code&gt; goes back &lt;code&gt;n&lt;/code&gt; commits).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;hard vs soft git resets&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;git reset [COMMIT_HASH]&lt;/code&gt; resets our branch to the state it was in when we made the commit &lt;code&gt;COMMMIT_HASH&lt;/code&gt;. Specifically, it does a &lt;em&gt;soft reset&lt;/em&gt;, which is where git remembers the repo as it was at the point &lt;code&gt;COMMIT_HASH&lt;/code&gt;, but doesn't change your local files. So if you look at your &lt;code&gt;room.txt&lt;/code&gt; you would still have the elephants in the room. This is useful if you have committed files you didn't want to commit yet, as it gives you a chance to add different files to your commit.&lt;/p&gt;
+&lt;p&gt;If you want git to rewind to &lt;code&gt;COMMIT_HASH&lt;/code&gt; &lt;em&gt;and&lt;/em&gt; you want your files to change to the state they were in at &lt;code&gt;COMMIT_HASH&lt;/code&gt;, you should do a hard reset instead with &lt;code&gt;git reset --hard [COMMIT_HASH]&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Method 2: We have pushed to Github&lt;/h3&gt;
+&lt;p&gt;This gets a little trickier if you have already pushed your repository to Github. Hopefully you are working on your own branch (e.g. &lt;code&gt;git_experiment&lt;/code&gt;) so that you don't have to worry about your changes affecting other people's work.&lt;/p&gt;
+&lt;p&gt;Git provides two ways of doing this:
+1. &lt;code&gt;git reset --hard&lt;/code&gt; + &lt;code&gt;git push (force)&lt;/code&gt;
+2. &lt;code&gt;git revert&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;which both do the same thing if you are just going back one commit. If you are trying to go back multiple commits, you should use the first approach only (the second approach will do something subtly different).&lt;/p&gt;
+&lt;h4&gt;Method 2a: Using git reset and force push&lt;/h4&gt;
+&lt;p&gt;Our remote repo is on commit &lt;code&gt;997b13a&lt;/code&gt; (with the elephant), and we want to set it to &lt;code&gt;eca0535&lt;/code&gt; (with no elephant). We can do this with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git reset --hard eca0535
+HEAD is now at eca0535 added room.txt
+$ git push origin +HEAD:git_experiment
++ 997b13a...eca0535 HEAD -&amp;gt; git_experiment &lt;span class="o"&gt;(&lt;/span&gt;forced update&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The first line updated &lt;code&gt;HEAD&lt;/code&gt; to &lt;code&gt;eca0535&lt;/code&gt;, the commit we want, on the local machine. The second command pushes the current &lt;code&gt;HEAD&lt;/code&gt; (i.e. &lt;code&gt;eca0535&lt;/code&gt;) on the local machine to the remote branch &lt;code&gt;git_experiment&lt;/code&gt;. Once this is done, we &lt;em&gt;force pushed&lt;/em&gt; to Github.&lt;/p&gt;
+&lt;p&gt;You can use this method to go back any specific commit, and rewind your entire repo to that commit.&lt;/p&gt;
+&lt;h4&gt;Method 2b: Using git revert&lt;/h4&gt;
+&lt;p&gt;We still want to go from commit &lt;code&gt;997b13a&lt;/code&gt; (with the elephant), to &lt;code&gt;eca0535&lt;/code&gt; (with no elephant). Git revert takes a commit hash, and makes a new commit where we have erased the changes made in that commit:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git revert 997b13a
+&lt;span class="o"&gt;[&lt;/span&gt;git_experiment 4ac130a&lt;span class="o"&gt;]&lt;/span&gt; Revert &lt;span class="s2"&gt;&amp;quot;mentioned elephants in the room&amp;quot;&lt;/span&gt;
+$ git push
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now we are at a new commit &lt;code&gt;4ac130a&lt;/code&gt;, which has undone the changes made at commit &lt;code&gt;997b13&lt;/code&gt;. This means that commit &lt;code&gt;4ac130a&lt;/code&gt; has the files in the same state as the commit &lt;code&gt;997b13a&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;What &lt;code&gt;git revert [COMMIT_HASH]&lt;/code&gt; does behind the scenes is to try and remove all the changes made in &lt;code&gt;COMMIT_HASH&lt;/code&gt; while leaving future commits in place. So if &lt;code&gt;COMMIT_HASH&lt;/code&gt; was several commits back, you are only undoing the changes made in that commit -- not restoring the entire repo to a particular stage.&lt;/p&gt;
+&lt;p&gt;If you are removing the very last commit, removing the changes from that commit is the same as resetting to one commit prior. Sometimes this is what you want, but it this approach doesn't do what we advertised in this blog post (resetting to a particular commit).&lt;/p&gt;
+&lt;p&gt;One important advantage of this approach is that all the commits are retained. If we do &lt;code&gt;git log --oneline&lt;/code&gt; we get the following output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;4ac130a &lt;span class="o"&gt;(&lt;/span&gt;HEAD -&amp;gt; git_experiment, origin/git_experiment&lt;span class="o"&gt;)&lt;/span&gt; Revert &lt;span class="s2"&gt;&amp;quot;mentioned elephant in the room&amp;quot;&lt;/span&gt;
+997b13a mentioned elephants in the room
+eca0535 added room.txt
+... &lt;span class="o"&gt;(&lt;/span&gt;older commits&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;If we decided we want the elephant back, it would be possible with &lt;code&gt;git revert&lt;/code&gt;.&lt;/p&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Summing it up, we had our most recent commit (&lt;code&gt;HEAD&lt;/code&gt;) that we wanted to get rid of. Our approaches were&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;If we haven't pushed to Github&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git reset --hard HEAD~1&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;If we have pushed to Github, method 2a&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git reset --hard HEAD~1 &amp;amp;&amp;amp; git push origin +HEAD:git_experiment&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Note this method can be used with any commit hash, but will delete history.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;If we have pushed to Github, method 2b&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git revert HEAD &amp;amp;&amp;amp; git push&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This only does what we want when deleting the most recent commit, so don't swap HEAD with another commit. Creates a new commit and preserves history.&lt;/p&gt;
+&lt;p&gt;Jefferson, Madison, and Hamilton can now rest at ease, as no one will mention the elephant in the room.&lt;/p&gt;</content><category term="Github"></category></entry><entry><title>Big commits in GitHub</title><link href="https://kiwidamien.github.io/big-commits-in-github.html" rel="alternate"></link><published>2018-09-10T13:00:00-07:00</published><updated>2018-09-10T13:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-09-10:/big-commits-in-github.html</id><summary type="html">&lt;p&gt;What do you do when you have committed a large file to GitHub?&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Undoing a large commit&lt;/h2&gt;
+&lt;p&gt;Accidentally committing a large file (i.e. greater than git's limit of 100MB) is a frustrating experience. For example, let's say you made some changes to &lt;code&gt;big_file.bin&lt;/code&gt;, a 200MB file, and to your README in the following way:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ dd &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/dev/zero &lt;span class="nv"&gt;of&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;big_file.bin &lt;span class="nv"&gt;count&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;200&lt;/span&gt; &lt;span class="nv"&gt;bs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1048576&lt;/span&gt;  &lt;span class="c1"&gt;# make 200 MB file&lt;/span&gt;
+$ git add big_file.bin                              &lt;span class="c1"&gt;# we will regret this!&lt;/span&gt;
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;committed huge binary file&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;master 9cee256&lt;span class="o"&gt;]&lt;/span&gt; committed huge binary file
+$ git add README.md
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;... and made a small change to the README&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;master 0f1a832&lt;span class="o"&gt;]&lt;/span&gt; ... and made small change to the README
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Everything is fine, until we try to push to our repo:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git push
+....
+remote: error: File big_file.bin is &lt;span class="m"&gt;106&lt;/span&gt;.00 MB&lt;span class="p"&gt;;&lt;/span&gt; this exceeds GitHub&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;s file size limit of &lt;span class="m"&gt;100&lt;/span&gt;.00 MB
+To YOUR_REPO_NAME
+! &lt;span class="o"&gt;[&lt;/span&gt;remote rejected&lt;span class="o"&gt;]&lt;/span&gt; master -&amp;gt; master &lt;span class="o"&gt;(&lt;/span&gt;pre-receive hook declined&lt;span class="o"&gt;)&lt;/span&gt;
+error: failed to push some refs to YOUR_REPO_NAME
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;Failed attempt to fix&lt;/h2&gt;
+&lt;p&gt;Here is an attempt to fix that fails:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git rm big_file.bin
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;removed big file&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;master 1eb14a7&lt;span class="o"&gt;]&lt;/span&gt; removed big_file
+$ git push
+.... &lt;span class="o"&gt;(&lt;/span&gt;still see message about failing to remove&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The problem is that git is trying to keep track of the history of all your commits. Git wants to push both the file &lt;em&gt;and&lt;/em&gt; the fact it was deleted, so other developers can rewind the deletion. To do this, git still needs to push the large file to the remote, which it cannot do for large files.&lt;/p&gt;
+&lt;p&gt;We will look at two ways of fixing this problem:
+&lt;em&gt; Rewinding master locally, and pushing a new version of master. The downside is &lt;code&gt;big_file.bin&lt;/code&gt; will still take up memory on your local repo.
+&lt;/em&gt; Removing all mention of &lt;code&gt;big_file.bin&lt;/code&gt; from your repo by rewriting your git history. The downside to this approach is that you can break git, and it cannot be done if you have untracked files.&lt;/p&gt;
+&lt;p&gt;Let's look at these two approaches. If all else fails, the third option is to make a new clone of the repo, and copy over just the files you want -- but this should be a last resort.&lt;/p&gt;
+&lt;h3&gt;Actual fix #1: keep history local&lt;/h3&gt;
+&lt;p&gt;Our log of commits now looks like this on our local machine:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;1eb14a7 &lt;span class="o"&gt;(&lt;/span&gt;HEAD -&amp;gt; master&lt;span class="o"&gt;)&lt;/span&gt; removed big_file
+0f1a832 ... and made small change to the README
+9cee256 committed huge binary file
+a3a75bf commit before all this happened
+....... &lt;span class="o"&gt;(&lt;/span&gt;previous commits&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We want to get rid of the file originally committed in commit &lt;code&gt;9cee256&lt;/code&gt;. To do this:
+1. First, reset back to that commit:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git reset 9cee256~1 &lt;span class="c1"&gt;# go back one more than the troublesome commit&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This is a &lt;em&gt;soft&lt;/em&gt; reset, so your files will stay the same on your local machine.
+2. (Optional) If you haven't done so already, you can delete &lt;code&gt;big_file.bin&lt;/code&gt;.
+3. Then add the README back to the repo, and commit it&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git add README.md
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;adding the README again&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ol&gt;
+&lt;li&gt;Finally push the new commit back up.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git push origin master
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In this approach, the local git history still has the "bad" commits in it
+&lt;img alt="what the local branches look like" src="images/github_local.png"&gt;
+They are off the main "master" track, but they will still remain on your disk. The commit you pushed up doesn't have the commits in the red box in its history, so the remote repo will look like this:
+&lt;img alt="what the remote branch looks like" src="images/github_remote.png"&gt;&lt;/p&gt;
+&lt;h3&gt;Actual Fix 2: rewrite history with &lt;code&gt;filter-branch&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;This one will only work if you don't have unstaged work in your repo. It also means rewriting the history, so there is the potential to mess things up!&lt;/p&gt;
+&lt;p&gt;With those warnings in mind, you can run&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git filter-branch -f --tree-filter &lt;span class="s1"&gt;&amp;#39;rm  big_file.bin&amp;#39;&lt;/span&gt; 9cee256..HEAD
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This will remove &lt;code&gt;big_file.bin&lt;/code&gt; from every commit from &lt;code&gt;9cee256&lt;/code&gt; to &lt;code&gt;1eb14a7&lt;/code&gt; (the current HEAD).&lt;/p&gt;
+&lt;p&gt;You should then be able to push to your repository with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git push
+&lt;/pre&gt;&lt;/div&gt;</content><category term="Github"></category></entry></feed>

@@ -1,0 +1,1784 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Stacked Turtles</title><link href="https://kiwidamien.github.io/" rel="alternate"></link><link href="https://kiwidamien.github.io/feeds/all.atom.xml" rel="self"></link><id>https://kiwidamien.github.io/</id><updated>2018-10-01T17:00:00-07:00</updated><entry><title>Name to Age</title><link href="https://kiwidamien.github.io/name-to-age.html" rel="alternate"></link><published>2018-10-01T17:00:00-07:00</published><updated>2018-10-01T17:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-10-01:/name-to-age.html</id><summary type="html">&lt;p&gt;How much does your name say about your age? We use the database of names from the social security administration, as well as age distribution data from the US Census, to find out! See what your own name's age distribution looks like &lt;a href="https://kiwidamien.github.io/names_app/"&gt;here&lt;/a&gt;.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Names go in and out of fashion; by knowing someone's name you can get some idea of how old they are. For example, if you were meeting someone called Gertrude or Wilma, you would probably assume that they were reasonable old (the median age of a living Gertrude in 2017 is 80, while the median age of a living Wilma is 75). Other names have only recently come into fashion; for example Zoe is a relatively young name with a median age of 11.&lt;/p&gt;
+&lt;p&gt;There can be interesting cultural stories for why names go in an out of fashion. Take my name, Damien, as an example. The social security administration publishes the number of children born with a given name for each year. Here is the graph for number of Damien's born in the US per year:
+&lt;img alt="Damien's born in the US per year" src="images/names/damien_us.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can see "Damien" went from being a relatively obscure name before 1970, and then started increasing in popularity until the 1980s, when it underwent a steep decline. I am reasonably sure I know the culprit:
+&lt;img alt="The omen" src="images/names/the_omen.jpg"&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;The Omen&lt;/em&gt; is a series of films, spanning from 1976 - 1981, about the Antichrist being born as a small child, destined to bring about the end of the world. The name of our demonic baby is, as you may have guessed, Damien. The amusing thing about this graph is that immediately after the release of the first film, the name Damien actually &lt;em&gt;increased&lt;/em&gt; in popularity, but declines sharply once the series ends. We can now see a resurgence in the name, although we should be careful to normalize for the growing population. Still, from this graph it seems clear that if all we knew about someone is that his name was "Damien", we would expect him to be born around 2009 (i.e. approximately 8 years old).&lt;/p&gt;
+&lt;p&gt;A named that surprised me as being an "old" name was Alice. One of my colleagues at Metis, &lt;a href="http://adashofdata.com/"&gt;Alice Zhao&lt;/a&gt;, was telling me that there were very few Alice's in her classes growing up. The social security naming data backed her up on this:
+&lt;img alt="Alice's born in the US per year" src="images/names/alice_us.png"&gt;&lt;/p&gt;
+&lt;p&gt;In this case, would we really expect a randomly selected Alice to by born in 1920 (i.e. almost 100 years old)? Probably not. We see that around 2004 the name Alice started rising in popularity again, and many of the Alice's from the 1920s wouldn't be alive today.&lt;/p&gt;
+&lt;h2&gt;Our goal&lt;/h2&gt;
+&lt;p&gt;Our goal is to quantify the amount of information a name and gender give you about someone's age. Specifically, for each name and gender combination of someone who is still alive, we will get a probability distribution for the age. Mathematically, we are after the conditional probability
+&lt;/p&gt;
+&lt;div class="math"&gt;$$P(\text{age} | \text{living, name, and gender})$$&lt;/div&gt;
+&lt;h3&gt;Why is this interesting?&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;While it doesn't have great practical importance, it is a fun and easy to understand application of Baye's theorem and the Naive Bayes assumptions.&lt;/li&gt;
+&lt;li&gt;While &lt;code&gt;sklearn&lt;/code&gt; has methods for doing Naive Bayes, it turns out to be impractical to use for this problem (more about this in &lt;a href="#hard-on-sklearn"&gt;this section&lt;/a&gt;). This is a nice problem that shows how knowing an algorithm can save significant computational resources.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The data sets we will use for solving this problem are:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The US census &lt;a href="https://factfinder.census.gov/faces/tableservices/jsf/pages/productview.xhtml?src=bkmk"&gt;age distribution&lt;/a&gt;. This will tell us &lt;code&gt;P(Age=a)&lt;/code&gt;, the probability that a randomly selected (living) person is &lt;code&gt;a&lt;/code&gt; years old.&lt;/li&gt;
+&lt;li&gt;The Social Security &lt;a href="https://catalog.data.gov/dataset/baby-names-from-social-security-card-applications-national-level-data"&gt;baby name database&lt;/a&gt;. This will tell us the number of baby's per year with a given name and gender. This can get us &lt;code&gt;P(Name=n, gender=g | year of birth=y)&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Let's pretend for a moment that if I know &lt;code&gt;P(Name=n, gender=g | year of birth=y)&lt;/code&gt; then I know &lt;code&gt;P(Name=n, gender=g | age=a)&lt;/code&gt;, using the simple heuristic &lt;code&gt;a = 2018 - y&lt;/code&gt;. Then we can use Bayes's theorem to get the probability that we are interested in:
+&lt;/p&gt;
+&lt;div class="math"&gt;$$P((\text{age} | \text{name, and gender}) \propto P(\text{Name=n} | \text{age=a and gender=g})\,P(\text{age=a and gender=g})$$&lt;/div&gt;
+&lt;p&gt;This is ultimately the answer we are going to use. The tricky part about this project is getting the data into a suitable format. I won't cover the cleaning here, but you are welcome to look at the &lt;a href="https://github.com/kiwidamien/naive_bayes_names/"&gt;github repo&lt;/a&gt; where this is done. The end product of all the cleaning is to produce the graphs used in this blog post, and a nicely formatted JSON file with the probabilistic information in it.&lt;/p&gt;
+&lt;p&gt;This JSON file is used by a separate &lt;a href="https://kiwidamien.github.io/names_app/"&gt;application&lt;/a&gt;, which allows you to select the names you are interested in without downloading the data or running any notebook code.&lt;/p&gt;
+&lt;h3&gt;The problematic link between age and year of birth&lt;/h3&gt;
+&lt;p&gt;Because people die, we cannot say that all people born in year &lt;code&gt;y&lt;/code&gt; will be an age of &lt;code&gt;2017-y&lt;/code&gt;. If the rate people die is independent of their name and gender, then we could still assume that&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;P(Name=n |gender=g and year of birth=y) = P(Name=n | gender=g and age=2017 - y)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;even taking death into account.&lt;/p&gt;
+&lt;p&gt;Unfortunately it is unlikely that the probability that someone lives to a certain age is independent of name and gender. We certainly know that women have a longer lifespan than men, but this could easily be accounted for by using the demographic distribution for each gender. More subtly, names are not evenly distributed amongst ethnicity or socioeconomic classes.&lt;/p&gt;
+&lt;p&gt;We also get the age distribution from census data. This data represents people in the US, including immigrants, while excluding those born in the US that have emigrated. The social security name database only includes people born in the United States. We should be a little skeptical when reviewing this model's answers for names that belong primarily to people that immigrate to the US, rather than people that were born here.&lt;/p&gt;
+&lt;p&gt;This is the "naive" part of our Naive Bayes approach. When making a data science model, some simplifications of reality are inevitable, but it is good to know where they are.&lt;/p&gt;
+&lt;h2&gt;The demographic data&lt;/h2&gt;
+&lt;p&gt;Let's have a look at the age distribution in the US:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Age distribution in the US" src="images/names/age_distribution.png"&gt;&lt;/p&gt;
+&lt;p&gt;We can see that the distribution is relatively flat to age 60, with a little bit of a bump around 25. It could be an indication of people immigrating to the US after getting their first degree. We don't see a sharp decline until age 60.&lt;/p&gt;
+&lt;p&gt;Roughly, this means when looking at birth charts like the ones we have seen for "Damien" and "Alice", we can expect the plots to be reasonably representative of living people as far back as 1960. When we start going further back than that, the rate at which people survive starts to have a big impact on the typical age of a person we meet.&lt;/p&gt;
+&lt;h2&gt;Basic approach&lt;/h2&gt;
+&lt;p&gt;Instead of using the builtin sklearn Naive Bayes methods, we constructed the probabilities by hand. The complete notebook processing the data can be found in &lt;a href="https://github.com/kiwidamien/naive_bayes_names/"&gt;this repository&lt;/a&gt;, but here are the main steps:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;First we group by each &lt;code&gt;gender&lt;/code&gt;, and &lt;code&gt;birth_year&lt;/code&gt; combination, calculating the percentage of people with each name. This gives us &lt;code&gt;P(name | gender and birth_year)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Then we find &lt;code&gt;P(age)&lt;/code&gt; from the demographic data. We assume that &lt;code&gt;P(age and gender) = P(age)&lt;/code&gt;, although we could do a better job here.&lt;/li&gt;
+&lt;li&gt;We calculate the numerator from Bayes's theorem: &lt;code&gt;P(name | gender and birth_year)P(age)&lt;/code&gt;, where we join rows where &lt;code&gt;age = 2017 - birth_year&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Then we find the normalizing factor by summing all rows with the same name to give us the probabilities.&lt;/li&gt;
+&lt;li&gt;Finally, we make a cumulative probability, so that we can find the quartiles.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;I also made the choice to exclude names and gender combinations that occurred fewer than 5000 times. This is because the social security names seemed quite dirty; for example according to the data there are 280 women named "Damien" between 1880 and today, which I found unlikely. Some other oddities: there are 2132 male "Amanda"s, 1493 male "Alice"s, and 1545 female "Fred"s.&lt;/p&gt;
+&lt;p&gt;Because of this crude way of dropping data without sufficient support, I did not feel I needed to include &lt;a href="https://en.wikipedia.org/wiki/Additive_smoothing"&gt;Laplace smoothing&lt;/a&gt;, a technique used in Naive Bayes for adding "fake counts" to data to ensure rare events don't get assigned a probability of zero.&lt;/p&gt;
+&lt;h2&gt;Some examples&lt;/h2&gt;
+&lt;p&gt;With all the pre-word behind us, let's see what the distribution of ages of people named Alice is
+&lt;img alt="Age distribution of Alice" src="images/names/age_of_alice.png"&gt;
+From the distribution, we can find that the median age of Alice is 67 years old (the lower and upper quartiles are 51 and 78 years, respectively).&lt;/p&gt;
+&lt;p&gt;We saw above that the name Damien hasn't been popular for very long; as expected the distribution of ages is almost the reflection of the distribution of years born:
+&lt;img alt="Age distribution of Damien" src="images/names/age_of_damien.png"&gt;&lt;/p&gt;
+&lt;p&gt;There are some other interesting patterns in this data. For example, some names like "Lindsey" have changed from being a predominately male name, to a predominately female name. It is interesting to look at both genders on the same plot:
+&lt;img alt="Age distribution of Lindsey" src="images/names/age_of_lindsey.png"&gt;&lt;/p&gt;
+&lt;p&gt;For women, we see that there are almost no women older than 42 named Lindsey. There are a significant proportion of men named Lindsey that are older than 60, but it might surprise us not to see a very sharp cutoff. One of the drawbacks of this graph is that we don't get relative sizes of the data sets; the number of women named Lindsey is 155788, compared to only 7030 for men. The reason that this graph doesn't include the raw numbers is because our question was "given a name and a gender, determine the likelihood of each age". The raw numbers would help us answer a different question, namely how likely it would be to encounter someone with that name and gender.&lt;/p&gt;
+&lt;p id='hard-on-sklearn'&gt;&lt;/p&gt;
+
+&lt;h2&gt;Hard on sklearn&lt;/h2&gt;
+&lt;p&gt;One of the interesting things about this dataset is that sklearn has a builtin Naive Bayes classifier, yet in this case it is easier to write Naive Bayes from scratch. To see why, let's start with a very limited population with only two distinct names, and 3 distinct ages&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;name&lt;/th&gt;
+&lt;th&gt;gender&lt;/th&gt;
+&lt;th&gt;count&lt;/th&gt;
+&lt;th&gt;age&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Alice&lt;/td&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;500&lt;/td&gt;
+&lt;td&gt;30&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Alice&lt;/td&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;500&lt;/td&gt;
+&lt;td&gt;25&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Alice&lt;/td&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;500&lt;/td&gt;
+&lt;td&gt;20&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sam&lt;/td&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;1000&lt;/td&gt;
+&lt;td&gt;30&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sam&lt;/td&gt;
+&lt;td&gt;F&lt;/td&gt;
+&lt;td&gt;500&lt;/td&gt;
+&lt;td&gt;25&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sam&lt;/td&gt;
+&lt;td&gt;M&lt;/td&gt;
+&lt;td&gt;500&lt;/td&gt;
+&lt;td&gt;30&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Sam&lt;/td&gt;
+&lt;td&gt;M&lt;/td&gt;
+&lt;td&gt;1000&lt;/td&gt;
+&lt;td&gt;25&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;If we wanted the age distribution of men named Sam in this population, we would predict an age of 30 with probability of 500/1500 (i.e. 1/3), and an age of 25 with probability of 1000/1500 (i.e. 2/3).&lt;/p&gt;
+&lt;p&gt;In terms of an sklearn approach, the features ("inputs") are the name and gender, and we want to predict the probability of the age column. The &lt;code&gt;count&lt;/code&gt; column tells us how many identical rows we have in the data. So a literal interpretation would mean repeating the columns:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;sklearn.naive_bayes&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;BernoulliNB&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;numpy&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;np&lt;/span&gt;
+
+&lt;span class="n"&gt;nb&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;BernoulliNB&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;alpha&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;1e-5&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="c1"&gt;# make Laplace smoothing parameter small&lt;/span&gt;
+&lt;span class="n"&gt;name_vectorizer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Alice&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Sam&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="n"&gt;gender_vectorizer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;F&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;M&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="n"&gt;X&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;np&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="p"&gt;([[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;1500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;1500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;1500&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;y&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;25&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;1000&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;25&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;500&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;25&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="mi"&gt;1000&lt;/span&gt;
+&lt;span class="n"&gt;nb&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;X&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can get the prediction with the following method:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;nb&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;predict_proba&lt;/span&gt;&lt;span class="p"&gt;([[&lt;/span&gt;&lt;span class="n"&gt;name_vectorizer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Sam&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;gender_vectorizer&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;M&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]]])&lt;/span&gt;
+&lt;span class="c1"&gt;# returns [0, 0.666, 0.333]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;i.e. there is no chance of the smallest age (20), and the probability of ages 25 and 30 are 0.666 and 0.333 respectively. Note that in order to do this calculation, we went from 7 "binned" rows to 4500 rows (one for each individual person).&lt;/p&gt;
+&lt;p&gt;For our actual dataset, this would be a huge problem. Our binned data (i.e. unique name, gender combinations) has 3793 records. The number of individual people represented by 29 &lt;strong&gt;BILLION&lt;/strong&gt; rows! Even with sklearn's support for partial fitting, this is an enormous number of rows!&lt;/p&gt;
+&lt;p&gt;There should probably be a way for sklearn's Naive Bayes implementation to deal with binned data, but even without it a little bit of math can allow us to make predictions while reducing the dataset by a factor of 7 million!&lt;/p&gt;
+&lt;h2&gt;Related work&lt;/h2&gt;
+&lt;p&gt;Once I started this project, I came across Nate Silver's similar analysis, &lt;a href="https://fivethirtyeight.com/features/how-to-tell-someones-age-when-all-you-know-is-her-name/"&gt;"How to tell someone' s age when all you know is her name"&lt;/a&gt;. The idea to find the quartiles for the different ages, which is incorporated into the &lt;a href="https://kiwidamien.github.io/names_app/"&gt;web application&lt;/a&gt;, came from his article.&lt;/p&gt;
+&lt;script type="text/javascript"&gt;if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width &lt; 768) ? "left" : align;
+        indent = (screen.width &lt; 768) ? "0em" : indent;
+        linebreak = (screen.width &lt; 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+&lt;/script&gt;</content><category term="Data Analysis"></category><category term="Naive Bayes"></category></entry><entry><title>Munging with MultiIndices: election data</title><link href="https://kiwidamien.github.io/munging-with-multiindices-election-data.html" rel="alternate"></link><published>2018-09-27T11:00:00-07:00</published><updated>2018-09-27T11:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-09-27:/munging-with-multiindices-election-data.html</id><summary type="html">&lt;p&gt;We show how to take an Excel spreadsheet, with merged column headings, and process it for further analysis.&lt;/p&gt;</summary><content type="html">&lt;p&gt;There is lots of data available for the &lt;a href="https://data.opendatasoft.com/explore/dataset/usa-2016-presidential-election-by-county@public/"&gt;2016&lt;/a&gt; and &lt;a href="https://www.kaggle.com/joelwilson/2012-2016-presidential-elections"&gt;2012 presidential&lt;/a&gt; elections, broken down to the county level.&lt;/p&gt;
+&lt;p&gt;The other election years can typically be found in the form of PDFs, and have to be manually converted. Finding a comprehensive list of election results for multiple years is challenging. Stephen Wolf of the Daily Kos has created an &lt;a href="https://drive.google.com/folderview?id=0Bz_uFI8VY7xLekx0cWdVcGhJblk&amp;amp;usp=sharing"&gt;Excel spreadsheet&lt;/a&gt; from &lt;a href="http://uselectionatlas.org/"&gt;Dave Leip's Atlas&lt;/a&gt;, which gives the election results back as far as 1828.&lt;/p&gt;
+&lt;p&gt;The trouble is, the Excel sheet is difficult to import into Pandas.
+&lt;img alt="Screenshot of presidential election spreadsheet" src="images/presidential_spreadsheet_screenshot.png"&gt;&lt;/p&gt;
+&lt;p&gt;Note the data is &lt;em&gt;wide&lt;/em&gt;, with a multiple headers. The &lt;code&gt;Year&lt;/code&gt; spans multiple columns, which is then broken down by candidate. Also note that some years have two candidates, while other years have three or more.&lt;/p&gt;
+&lt;p&gt;The data shown in the screenshot are shown by percentages of the vote. If we scroll across to column &lt;strong&gt;HG&lt;/strong&gt;, the votes are reported again in raw numbers.&lt;/p&gt;
+&lt;p&gt;Our goal is to read the data into the following format:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;year,state,votes,candidate,party,short_state
+2016,Alabama,729547,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,AL
+2016,Alaska,116454,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,AK
+2016,Arizona,1161167,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,AZ
+2016,Arkansas,380494,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,AR
+2016,California,8753788,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,CA
+2016,Colorado,1338870,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,CO
+2016,Connecticut,897572,&amp;quot;Clinton, Hillary&amp;quot;,Democratic,CT
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In this post we will walk through the main steps, but a repository including the full code for processing this data set is available &lt;a href="https://github.com/kiwidamien/presidential_election_data"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;Dealing with a MultiIndex&lt;/h2&gt;
+&lt;p&gt;Let's start with a simplified excel spreadsheet with the following format:&lt;/p&gt;
+&lt;table&gt;
+&lt;tr&gt;
+  &lt;th&gt;Year&lt;/th&gt;
+  &lt;th colspan=3 style="text-align:center"&gt;2012&lt;/th&gt;
+  &lt;th colspan=3 style="text-align:center"&gt;2008&lt;/th&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;&lt;b&gt;State&lt;/b&gt;&lt;/td&gt;
+  &lt;td&gt;Total&lt;/td&gt;
+  &lt;td&gt;Obama, Barak -  Democratic&lt;/td&gt;
+  &lt;td&gt;Romney, Mitt - Republican &lt;/td&gt;
+  &lt;td&gt;Total&lt;/td&gt;
+  &lt;td&gt;Obama, Barak -  Democratic&lt;/td&gt;
+  &lt;td&gt;McCain, John - Republican &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;&lt;b&gt;Alabama&lt;/b&gt;&lt;/td&gt;
+  &lt;td&gt;2074338&lt;/td&gt;
+  &lt;td&gt;795696&lt;/td&gt;
+  &lt;td&gt;1255925&lt;/td&gt;
+  &lt;td&gt;2099819&lt;/td&gt;
+  &lt;td&gt;813479&lt;/td&gt;
+  &lt;td&gt;1266546&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;&lt;b&gt;Alaska&lt;/b&gt;&lt;/td&gt;
+  &lt;td&gt;300495&lt;/td&gt;
+  &lt;td&gt;122640&lt;/td&gt;
+  &lt;td&gt;164676&lt;/td&gt;
+  &lt;td&gt;326197&lt;/td&gt;
+  &lt;td&gt;123594&lt;/td&gt;
+  &lt;td&gt;193841&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Note that the sum of the "major" candidates don't sum to the totals. Presumably there are some write-ins that are not counted.&lt;/p&gt;
+&lt;p&gt;We have also skipped the percentages that occurred at the beginning of the real spreadsheet. Our goal here is to be able to unpack the multiindex.&lt;/p&gt;
+&lt;p&gt;Let's start by reading in the dataset. We don't try and name the headers.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;pandas&lt;/span&gt; &lt;span class="kn"&gt;as&lt;/span&gt; &lt;span class="nn"&gt;pd&lt;/span&gt;
+
+&lt;span class="n"&gt;df&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_excel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;filename&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;header&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;None&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Our dataframe now looks like&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Year&lt;/th&gt;
+&lt;th&gt;2012&lt;/th&gt;
+&lt;th&gt;NaN&lt;/th&gt;
+&lt;th&gt;NaN&lt;/th&gt;
+&lt;th&gt;2008&lt;/th&gt;
+&lt;th&gt;NaN&lt;/th&gt;
+&lt;th&gt;NaN&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;State&lt;/td&gt;
+&lt;td&gt;Total&lt;/td&gt;
+&lt;td&gt;Obama, Barak -  Democratic&lt;/td&gt;
+&lt;td&gt;Romney, Mitt - Republican&lt;/td&gt;
+&lt;td&gt;Total&lt;/td&gt;
+&lt;td&gt;Obama, Barack - Democratic&lt;/td&gt;
+&lt;td&gt;McCain, John - Republican&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Alabama&lt;/td&gt;
+&lt;td&gt;2074338&lt;/td&gt;
+&lt;td&gt;795696&lt;/td&gt;
+&lt;td&gt;1255925&lt;/td&gt;
+&lt;td&gt;2099819&lt;/td&gt;
+&lt;td&gt;813479&lt;/td&gt;
+&lt;td&gt;1266546&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Alaska&lt;/td&gt;
+&lt;td&gt;300495&lt;/td&gt;
+&lt;td&gt;122640&lt;/td&gt;
+&lt;td&gt;164676&lt;/td&gt;
+&lt;td&gt;326197&lt;/td&gt;
+&lt;td&gt;123594&lt;/td&gt;
+&lt;td&gt;193841&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The merged cells have been split, and the year only appears in the first one. The other cells have been replaced by NaNs.&lt;/p&gt;
+&lt;p&gt;Now let's make a MultiIndex using the first two rows (year and candidate). Let's start by replacing the NAs using &lt;code&gt;ffill&lt;/code&gt; (foward fill). This moves the last non-null value "forward" over null values:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;multi_index_values&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ffill&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;axis&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;[:&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Note that when we only kept the first couple of columsn, and dropped the first row. Now &lt;code&gt;multi_index_values&lt;/code&gt; is&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;2012&lt;/th&gt;
+&lt;th&gt;2012&lt;/th&gt;
+&lt;th&gt;2012&lt;/th&gt;
+&lt;th&gt;2008&lt;/th&gt;
+&lt;th&gt;2008&lt;/th&gt;
+&lt;th&gt;2008&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Total&lt;/td&gt;
+&lt;td&gt;Obama, Barak -  Democratic&lt;/td&gt;
+&lt;td&gt;Romney, Mitt - Republican&lt;/td&gt;
+&lt;td&gt;Total&lt;/td&gt;
+&lt;td&gt;Obama, Barack - Democratic&lt;/td&gt;
+&lt;td&gt;McCain, John - Republican&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Let's make a multi-index, and make a dataframe out of it. Recall the first two rows included the headers, so we are copying the index from row 2 down. We are making the state (i.e. column 0) the row index.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;multi_index&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;MultiIndex&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;from_arrays&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;multi_index_values&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;names&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;year&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;CANDIDATES&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;span class="n"&gt;multi_df&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;DataFrame&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;:],&lt;/span&gt; &lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;multi_index&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now our dataframe in pandas is almost in the same layout as the original worksheet.&lt;/p&gt;
+&lt;table&gt;
+&lt;tr&gt;
+  &lt;th&gt;Year&lt;/th&gt;
+  &lt;th colspan=3 style="text-align:center"&gt;2012&lt;/th&gt;
+  &lt;th colspan=3 style="text-align:center"&gt;2008&lt;/th&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;&lt;b&gt;CANDIDATES&lt;/b&gt;&lt;/td&gt;
+  &lt;td&gt;Total&lt;/td&gt;
+  &lt;td&gt;Obama, Barak -  Democratic&lt;/td&gt;
+  &lt;td&gt;Romney, Mitt - Republican &lt;/td&gt;
+  &lt;td&gt;Total&lt;/td&gt;
+  &lt;td&gt;Obama, Barak -  Democratic&lt;/td&gt;
+  &lt;td&gt;McCain, John - Republican &lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;&lt;b&gt;Alabama&lt;/b&gt;&lt;/td&gt;
+  &lt;td&gt;2074338&lt;/td&gt;
+  &lt;td&gt;795696&lt;/td&gt;
+  &lt;td&gt;1255925&lt;/td&gt;
+  &lt;td&gt;2099819&lt;/td&gt;
+  &lt;td&gt;813479&lt;/td&gt;
+  &lt;td&gt;1266546&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td&gt;&lt;b&gt;Alaska&lt;/b&gt;&lt;/td&gt;
+  &lt;td&gt;300495&lt;/td&gt;
+  &lt;td&gt;122640&lt;/td&gt;
+  &lt;td&gt;164676&lt;/td&gt;
+  &lt;td&gt;326197&lt;/td&gt;
+  &lt;td&gt;123594&lt;/td&gt;
+  &lt;td&gt;193841&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/table&gt;
+
+&lt;h2&gt;Unstacking&lt;/h2&gt;
+&lt;p&gt;We have the problem that our columns are actually names of variables. At the top level of the column index, we have the years. At the lower level, we have the candidates. We can undo this with the &lt;code&gt;unstack&lt;/code&gt; command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;unstacked_df&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;multi_df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;unstack&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here &lt;code&gt;unstacked_df&lt;/code&gt; has the form&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;2012  Obama, Barack - Democratic  Alabama     795696
+                                  Alaska     122640
+      Romney, Mitt - Republican   Alabama    1255925
+                                  Alaska     164676
+2008  Obama, Barack - Democratic  Alabama    813479
+                                  Alaska     123594
+      McCain, John - Republican   Alabama    1266546
+                                  Alaska     193841
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Calling &lt;code&gt;unstacked_df.reset_index()&lt;/code&gt; fills out the columns:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;year      CANDIDATES               level_2      0
+2012  Obama, Barack - Democratic   Alabama   795696
+2012  Obama, Barack - Democratic   Alaska    122640
+2012  Romney, Mitt - Republican    Alabama  1255925
+2012  Romney, Mitt - Republican    Alaska    164676
+2008  Obama, Barack - Democratic   Alabama   813479
+2008  Obama, Barack - Democratic   Alaska    123594
+2008  McCain, John - Republican    Alabama  1266546
+2008  McCain, John - Republican    Alaska    193841
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can separate the candidate and party information with the following lines:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;unstacked_df&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;candidate&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;unstacked_df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CANDIDATES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;-&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;unstacked_df&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;party&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;unstacked_df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CANDIDATES&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;-&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;str&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strip&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="n"&gt;unstacked_df&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;drop&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;CANDIDATES&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;axis&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;inplace&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;The final product&lt;/h2&gt;
+&lt;p&gt;Once we have this, a rename on the columns &lt;code&gt;level_2&lt;/code&gt; and &lt;code&gt;0&lt;/code&gt; give us&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;   year  state      votes    candidate      party
+0  2012  Alabama   795696  Obama, Barack  Democratic
+1  2012   Alaska   122640  Obama, Barack  Democratic
+2  2012  Alabama  1255925   Romney, Mitt  Republican
+3  2012   Alaska   164676   Romney, Mitt  Republican
+4  2008  Alabama   813479  Obama, Barack  Democratic
+5  2008   Alaska   123594  Obama, Barack  Democratic
+6  2008  Alabama  1266546   McCain, John  Republican
+7  2008   Alaska   193841   McCain, John  Republican
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This is a simplified process. We didn't show the join to create the "short state code", or show how to skip the columns in the spreadsheet that contain the percentages.  A complete description of the process can be found in &lt;a href="https://github.com/kiwidamien/presidential_election_data"&gt;this github repo&lt;/a&gt;. If you are just interested in the results, you can find them in &lt;a href="https://gist.github.com/kiwidamien/6b069a63fa204cd7d2b893510e2efe7c"&gt;this gist&lt;/a&gt; instead.&lt;/p&gt;</content><category term="Data munging"></category><category term="Pandas"></category></entry><entry><title>Long vs Wide Data</title><link href="https://kiwidamien.github.io/long-vs-wide-data.html" rel="alternate"></link><published>2018-09-19T11:00:00-07:00</published><updated>2018-09-19T11:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-09-19:/long-vs-wide-data.html</id><summary type="html">&lt;p&gt;What does it mean for data to be in long form vs wide form, and when would you use each? In Pandas, how do you convert from one form to another?&lt;/p&gt;</summary><content type="html">&lt;p&gt;The way we store data is often different from the way it is used to create visualizations, or how it is fed into models. Often the data stored in a database is in &lt;a href="http://vita.had.co.nz/papers/tidy-data.pdf"&gt;tidy format&lt;/a&gt; (as described in this paper by Hadley Wickham), and we have to transform it into a form appropriate for our analysis.&lt;/p&gt;
+&lt;p&gt;The two forms of data we will talk about are &lt;em&gt;long&lt;/em&gt; and &lt;em&gt;wide&lt;/em&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Long form&lt;/strong&gt;
+  This is very close to the tidy format. It typically makes the data easy to store, and allows easy transformations to other types.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Wide form&lt;/strong&gt;
+  Useful when looking at multiple lines / series on a graph, or when making tables for quick comparison.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Which format is more useful for a machine learning model depends on the details of the model. These descriptions can seem a little abstract without some explicit examples.&lt;/p&gt;
+&lt;h2&gt;Stock price: long to wide via &lt;code&gt;pivot&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;Let's look at the stock prices for Apple (&lt;a href="https://www.nasdaq.com/symbol/aapl/historical"&gt;AAPL&lt;/a&gt;), Amazon (&lt;a href="https://www.nasdaq.com/symbol/amzn/historical"&gt;AMZN&lt;/a&gt;), and Google (&lt;a href="https://www.nasdaq.com/symbol/googl/historical"&gt;GOOGL&lt;/a&gt;). We can use quandl, or simply scrape the Nasdaq pages, to get some information on how these stocks are doing. Here is a snapshot of the dataframe &lt;code&gt;stock_price_long&lt;/code&gt; in "long form"/"tidy form":&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Symbol&lt;/th&gt;
+&lt;th&gt;Date&lt;/th&gt;
+&lt;th&gt;Open&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;AAPL&lt;/td&gt;
+&lt;td&gt;2018-09-18&lt;/td&gt;
+&lt;td&gt;217.79&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AAPL&lt;/td&gt;
+&lt;td&gt;2018-09-17&lt;/td&gt;
+&lt;td&gt;222.15&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AAPL&lt;/td&gt;
+&lt;td&gt;2018-09-14&lt;/td&gt;
+&lt;td&gt;225.75&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AAPL&lt;/td&gt;
+&lt;td&gt;2018-09-13&lt;/td&gt;
+&lt;td&gt;223.52&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AMZN&lt;/td&gt;
+&lt;td&gt;2018-09-18&lt;/td&gt;
+&lt;td&gt;1918.65&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AMZN&lt;/td&gt;
+&lt;td&gt;2018-09-17&lt;/td&gt;
+&lt;td&gt;1954.73&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AMZN&lt;/td&gt;
+&lt;td&gt;2018-09-14&lt;/td&gt;
+&lt;td&gt;1992.93&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;AMZN&lt;/td&gt;
+&lt;td&gt;2018-09-13&lt;/td&gt;
+&lt;td&gt;2000.00&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;GOOGL&lt;/td&gt;
+&lt;td&gt;2018-09-18&lt;/td&gt;
+&lt;td&gt;1162.66&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;GOOGL&lt;/td&gt;
+&lt;td&gt;2018-09-17&lt;/td&gt;
+&lt;td&gt;1177.77&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;GOOGL&lt;/td&gt;
+&lt;td&gt;2018-09-14&lt;/td&gt;
+&lt;td&gt;1188.00&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;GOOGL&lt;/td&gt;
+&lt;td&gt;2018-09-13&lt;/td&gt;
+&lt;td&gt;1179.70&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Here every row tells us about a specific stock on a specific day. If we wanted to plot the performance of the stock over time, we could use seaborn (which works well with long data sets):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;sns&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lineplot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;x&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Date&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;y&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Open&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;hue&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Symbol&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;stock_price_long&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;INSERT GRAPH HERE&lt;/p&gt;
+&lt;p&gt;If using &lt;code&gt;matplotlib&lt;/code&gt;, long form isn't ideal for making this plot. We can use &lt;code&gt;groupby&lt;/code&gt; (or filter) to make the plots:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;group_index&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;group_frame&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;stock_frame_long&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;groupby&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Symbol&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;plot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;group_frame&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Date&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;group_frame&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Open&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;label&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;group_index&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ylabel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Open price&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legend&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;INSERT GRAPH HERE&lt;/p&gt;
+&lt;p&gt;An alternative is to use a &lt;em&gt;wide&lt;/em&gt; dataframe. We can make one using the &lt;code&gt;pivot&lt;/code&gt; method:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;stock_frame_wide&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;stock_frame_long&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pivot&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Date&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Symbol&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;values&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Open&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;which produces the following dataframe:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Symbol&lt;/th&gt;
+&lt;th&gt;AAPL&lt;/th&gt;
+&lt;th&gt;AMZN&lt;/th&gt;
+&lt;th&gt;GOOGL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;Date&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2018-09-13&lt;/td&gt;
+&lt;td&gt;223.52&lt;/td&gt;
+&lt;td&gt;2000.00&lt;/td&gt;
+&lt;td&gt;1179.70&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2018-09-12&lt;/td&gt;
+&lt;td&gt;225.75&lt;/td&gt;
+&lt;td&gt;1992.93&lt;/td&gt;
+&lt;td&gt;1188.00&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2018-09-17&lt;/td&gt;
+&lt;td&gt;222.15&lt;/td&gt;
+&lt;td&gt;1954.73&lt;/td&gt;
+&lt;td&gt;1177.77&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;2018-09-18&lt;/td&gt;
+&lt;td&gt;217.79&lt;/td&gt;
+&lt;td&gt;1918.65&lt;/td&gt;
+&lt;td&gt;1162.66&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Note that the dates have been moved into the index, which makes plotting relatively simple&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;col&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;stock_frame_wide&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;stock_frame_wide&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;col&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;plot&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+
+&lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ylabel&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Open price&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;plt&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;legend&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The advantages of the wide format in this case is that it is a lot easier to present the information to people, and is slightly more natural to use with plotting. The disadvantages of the wide form is that it becomes cumbersome to add or remove columns. For example, if a company goes bankrupt, you have to decide whether to add blank rows, or drop the column. Likewise, if a new company starts, we have missing values for the dates before that company opens.&lt;/p&gt;
+&lt;h2&gt;Olympic Medals: long vs wide with &lt;code&gt;pivot_table&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;Kaggle has an easy to read &lt;a href="https://www.kaggle.com/the-guardian/olympic-games"&gt;data set of Olympic medal winners&lt;/a&gt;. Loading the data from the summer olympics we see&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="right"&gt;Year&lt;/th&gt;
+&lt;th align="left"&gt;City&lt;/th&gt;
+&lt;th align="left"&gt;Sport&lt;/th&gt;
+&lt;th align="left"&gt;Discipline&lt;/th&gt;
+&lt;th align="left"&gt;Athlete&lt;/th&gt;
+&lt;th align="left"&gt;Country&lt;/th&gt;
+&lt;th align="left"&gt;Gender&lt;/th&gt;
+&lt;th align="left"&gt;Event&lt;/th&gt;
+&lt;th align="left"&gt;Medal&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;HAJOS, Alfred&lt;/td&gt;
+&lt;td align="left"&gt;HUN&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;100M Freestyle&lt;/td&gt;
+&lt;td align="left"&gt;Gold&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;HERSCHMANN, Otto&lt;/td&gt;
+&lt;td align="left"&gt;AUT&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;100M Freestyle&lt;/td&gt;
+&lt;td align="left"&gt;Silver&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;DRIVAS, Dimitrios&lt;/td&gt;
+&lt;td align="left"&gt;GRE&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;100M Freestyle For Sailors&lt;/td&gt;
+&lt;td align="left"&gt;Bronze&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;MALOKINIS, Ioannis&lt;/td&gt;
+&lt;td align="left"&gt;GRE&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;100M Freestyle For Sailors&lt;/td&gt;
+&lt;td align="left"&gt;Gold&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;CHASAPIS, Spiridon&lt;/td&gt;
+&lt;td align="left"&gt;GRE&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;100M Freestyle For Sailors&lt;/td&gt;
+&lt;td align="left"&gt;Silver&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;5&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;CHOROPHAS, Efstathios&lt;/td&gt;
+&lt;td align="left"&gt;GRE&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;1200M Freestyle&lt;/td&gt;
+&lt;td align="left"&gt;Bronze&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;6&lt;/td&gt;
+&lt;td align="right"&gt;1896&lt;/td&gt;
+&lt;td align="left"&gt;Athens&lt;/td&gt;
+&lt;td align="left"&gt;Aquatics&lt;/td&gt;
+&lt;td align="left"&gt;Swimming&lt;/td&gt;
+&lt;td align="left"&gt;HAJOS, Alfred&lt;/td&gt;
+&lt;td align="left"&gt;HUN&lt;/td&gt;
+&lt;td align="left"&gt;Men&lt;/td&gt;
+&lt;td align="left"&gt;1200M Freestyle&lt;/td&gt;
+&lt;td align="left"&gt;Gold&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;This information is already in long form, which is convenient for storage. The wide form is better for:
+&lt;em&gt; Visualization: The data is too detailed and not well organized to allow quick visual comparisons.
+&lt;/em&gt; Point summarization: If we wanted to calculate a weighted medal scores - for example 5 points for gold, 3 for silver, and 1 for gold - then this format isn't great for analysis.
+* Some machine learning models: we might use this data to see if performance in previous Olympic games can help predict the spending of that country in the next Olympic games. In this case, we want to feed the model all the information about a countries performance in a given set of games on a single row to allow it to make predictions.&lt;/p&gt;
+&lt;p&gt;Let's convert this to a "wide form" with the count of medals, broken down by year, country, gender, and medal type.&lt;/p&gt;
+&lt;p&gt;Last time we converted from long form to wide form, we used &lt;code&gt;DataFrame.pivot&lt;/code&gt;. In that case, each element in the wide table came from a single row. For this problem, we want to aggregate many rows by counting how many occurred, which &lt;code&gt;pivot&lt;/code&gt; cannot do. Instead, we are going to use &lt;a href="https://pandas.pydata.org/pandas-docs/stable/generated/pandas.pivot_table.html"&gt;&lt;code&gt;DataFrame.pivot_table&lt;/code&gt;&lt;/a&gt; in the following way:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;summer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_csv&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;summer.csv&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;summer_wide&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;summer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pivot_table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Year&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                        &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Country&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Gender&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Medal&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+                        &lt;span class="n"&gt;aggfunc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;count&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fillna&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;astype&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                     &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;loc&lt;/span&gt;&lt;span class="p"&gt;[:,(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Athlete&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt;
+               &lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;All the columns in &lt;code&gt;summer&lt;/code&gt; that are not used in the &lt;code&gt;index&lt;/code&gt; or &lt;code&gt;columns&lt;/code&gt; call to &lt;code&gt;pivot_table&lt;/code&gt; (such as "Athlete", "Discipline", and "City") are copied at the top level. The call &lt;code&gt;.loc[:, ('Athlete')]&lt;/code&gt; selects just the copy for Athletes.&lt;/p&gt;
+&lt;p&gt;This dataframe has up to 6 columns per country (3 medal types for each gender), with a total of 558 columns, which is still hard to visualize. We can focus down to just American medals which has only 6 columns, and can keep the number of rows reasonable by looking Olympics ceremonies starting in 1984, using &lt;code&gt;summer_wide.loc[1984:, ('USA')]&lt;/code&gt;&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="right"&gt;('Men', 'Bronze')&lt;/th&gt;
+&lt;th align="right"&gt;('Men', 'Gold')&lt;/th&gt;
+&lt;th align="right"&gt;('Men', 'Silver')&lt;/th&gt;
+&lt;th align="right"&gt;('Women', 'Bronze')&lt;/th&gt;
+&lt;th align="right"&gt;('Women', 'Gold')&lt;/th&gt;
+&lt;th align="right"&gt;('Women', 'Silver')&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1984&lt;/td&gt;
+&lt;td align="right"&gt;26&lt;/td&gt;
+&lt;td align="right"&gt;106&lt;/td&gt;
+&lt;td align="right"&gt;70&lt;/td&gt;
+&lt;td align="right"&gt;24&lt;/td&gt;
+&lt;td align="right"&gt;62&lt;/td&gt;
+&lt;td align="right"&gt;45&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1988&lt;/td&gt;
+&lt;td align="right"&gt;37&lt;/td&gt;
+&lt;td align="right"&gt;49&lt;/td&gt;
+&lt;td align="right"&gt;45&lt;/td&gt;
+&lt;td align="right"&gt;15&lt;/td&gt;
+&lt;td align="right"&gt;28&lt;/td&gt;
+&lt;td align="right"&gt;19&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1992&lt;/td&gt;
+&lt;td align="right"&gt;35&lt;/td&gt;
+&lt;td align="right"&gt;57&lt;/td&gt;
+&lt;td align="right"&gt;31&lt;/td&gt;
+&lt;td align="right"&gt;50&lt;/td&gt;
+&lt;td align="right"&gt;32&lt;/td&gt;
+&lt;td align="right"&gt;19&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1996&lt;/td&gt;
+&lt;td align="right"&gt;40&lt;/td&gt;
+&lt;td align="right"&gt;59&lt;/td&gt;
+&lt;td align="right"&gt;32&lt;/td&gt;
+&lt;td align="right"&gt;12&lt;/td&gt;
+&lt;td align="right"&gt;101&lt;/td&gt;
+&lt;td align="right"&gt;16&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2000&lt;/td&gt;
+&lt;td align="right"&gt;22&lt;/td&gt;
+&lt;td align="right"&gt;68&lt;/td&gt;
+&lt;td align="right"&gt;29&lt;/td&gt;
+&lt;td align="right"&gt;30&lt;/td&gt;
+&lt;td align="right"&gt;62&lt;/td&gt;
+&lt;td align="right"&gt;37&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2004&lt;/td&gt;
+&lt;td align="right"&gt;33&lt;/td&gt;
+&lt;td align="right"&gt;51&lt;/td&gt;
+&lt;td align="right"&gt;33&lt;/td&gt;
+&lt;td align="right"&gt;40&lt;/td&gt;
+&lt;td align="right"&gt;65&lt;/td&gt;
+&lt;td align="right"&gt;42&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2008&lt;/td&gt;
+&lt;td align="right"&gt;57&lt;/td&gt;
+&lt;td align="right"&gt;67&lt;/td&gt;
+&lt;td align="right"&gt;29&lt;/td&gt;
+&lt;td align="right"&gt;24&lt;/td&gt;
+&lt;td align="right"&gt;58&lt;/td&gt;
+&lt;td align="right"&gt;80&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2012&lt;/td&gt;
+&lt;td align="right"&gt;19&lt;/td&gt;
+&lt;td align="right"&gt;42&lt;/td&gt;
+&lt;td align="right"&gt;27&lt;/td&gt;
+&lt;td align="right"&gt;27&lt;/td&gt;
+&lt;td align="right"&gt;105&lt;/td&gt;
+&lt;td align="right"&gt;30&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;To show selection using the multi-index, we could also look at women's medals from the US and Canada, starting in 1984:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;summer_women&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;summer_wide&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;loc&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1984&lt;/span&gt;&lt;span class="p"&gt;:,&lt;/span&gt; &lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;USA&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;CAN&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Women&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Gold&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Silver&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;Bronze&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="right"&gt;('CAN', 'Women', 'Bronze')&lt;/th&gt;
+&lt;th align="right"&gt;('CAN', 'Women', 'Gold')&lt;/th&gt;
+&lt;th align="right"&gt;('CAN', 'Women', 'Silver')&lt;/th&gt;
+&lt;th align="right"&gt;('USA', 'Women', 'Bronze')&lt;/th&gt;
+&lt;th align="right"&gt;('USA', 'Women', 'Gold')&lt;/th&gt;
+&lt;th align="right"&gt;('USA', 'Women', 'Silver')&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1984&lt;/td&gt;
+&lt;td align="right"&gt;11&lt;/td&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="right"&gt;21&lt;/td&gt;
+&lt;td align="right"&gt;24&lt;/td&gt;
+&lt;td align="right"&gt;62&lt;/td&gt;
+&lt;td align="right"&gt;45&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1988&lt;/td&gt;
+&lt;td align="right"&gt;7&lt;/td&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;15&lt;/td&gt;
+&lt;td align="right"&gt;28&lt;/td&gt;
+&lt;td align="right"&gt;19&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1992&lt;/td&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="right"&gt;16&lt;/td&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="right"&gt;50&lt;/td&gt;
+&lt;td align="right"&gt;32&lt;/td&gt;
+&lt;td align="right"&gt;19&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1996&lt;/td&gt;
+&lt;td align="right"&gt;7&lt;/td&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="right"&gt;23&lt;/td&gt;
+&lt;td align="right"&gt;12&lt;/td&gt;
+&lt;td align="right"&gt;101&lt;/td&gt;
+&lt;td align="right"&gt;16&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2000&lt;/td&gt;
+&lt;td align="right"&gt;20&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="right"&gt;30&lt;/td&gt;
+&lt;td align="right"&gt;62&lt;/td&gt;
+&lt;td align="right"&gt;37&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2004&lt;/td&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="right"&gt;40&lt;/td&gt;
+&lt;td align="right"&gt;65&lt;/td&gt;
+&lt;td align="right"&gt;42&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2008&lt;/td&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="right"&gt;24&lt;/td&gt;
+&lt;td align="right"&gt;58&lt;/td&gt;
+&lt;td align="right"&gt;80&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2012&lt;/td&gt;
+&lt;td align="right"&gt;29&lt;/td&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="right"&gt;10&lt;/td&gt;
+&lt;td align="right"&gt;27&lt;/td&gt;
+&lt;td align="right"&gt;105&lt;/td&gt;
+&lt;td align="right"&gt;30&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Even so, we are left with a lot of different countries, and a very wide table. Still focusing on games from 1984 onward, lets select the countries that have won the most medals:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;summer_countries&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;summer&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pivot_table&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;index&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Year&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+                            &lt;span class="n"&gt;columns&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Country&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="n"&gt;aggfunc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;count&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;fillna&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;astype&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+                          &lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;loc&lt;/span&gt;&lt;span class="p"&gt;[:,(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Athlete&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)]&lt;/span&gt;
+                   &lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;medal_totals&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;summer_countries&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sum&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;axis&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;country_mask&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;medal_totals&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;rank&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ascending&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;False&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;=&lt;/span&gt; &lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;summer_countries&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;loc&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1984&lt;/span&gt;&lt;span class="p"&gt;:,&lt;/span&gt; &lt;span class="n"&gt;country_mask&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="right"&gt;AUS&lt;/th&gt;
+&lt;th align="right"&gt;FRA&lt;/th&gt;
+&lt;th align="right"&gt;GBR&lt;/th&gt;
+&lt;th align="right"&gt;GER&lt;/th&gt;
+&lt;th align="right"&gt;HUN&lt;/th&gt;
+&lt;th align="right"&gt;ITA&lt;/th&gt;
+&lt;th align="right"&gt;NED&lt;/th&gt;
+&lt;th align="right"&gt;SWE&lt;/th&gt;
+&lt;th align="right"&gt;URS&lt;/th&gt;
+&lt;th align="right"&gt;USA&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1984&lt;/td&gt;
+&lt;td align="right"&gt;50&lt;/td&gt;
+&lt;td align="right"&gt;68&lt;/td&gt;
+&lt;td align="right"&gt;72&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;63&lt;/td&gt;
+&lt;td align="right"&gt;40&lt;/td&gt;
+&lt;td align="right"&gt;32&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;333&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1988&lt;/td&gt;
+&lt;td align="right"&gt;34&lt;/td&gt;
+&lt;td align="right"&gt;29&lt;/td&gt;
+&lt;td align="right"&gt;53&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;44&lt;/td&gt;
+&lt;td align="right"&gt;29&lt;/td&gt;
+&lt;td align="right"&gt;44&lt;/td&gt;
+&lt;td align="right"&gt;16&lt;/td&gt;
+&lt;td align="right"&gt;294&lt;/td&gt;
+&lt;td align="right"&gt;193&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1992&lt;/td&gt;
+&lt;td align="right"&gt;57&lt;/td&gt;
+&lt;td align="right"&gt;57&lt;/td&gt;
+&lt;td align="right"&gt;50&lt;/td&gt;
+&lt;td align="right"&gt;198&lt;/td&gt;
+&lt;td align="right"&gt;45&lt;/td&gt;
+&lt;td align="right"&gt;46&lt;/td&gt;
+&lt;td align="right"&gt;33&lt;/td&gt;
+&lt;td align="right"&gt;35&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;224&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1996&lt;/td&gt;
+&lt;td align="right"&gt;132&lt;/td&gt;
+&lt;td align="right"&gt;51&lt;/td&gt;
+&lt;td align="right"&gt;26&lt;/td&gt;
+&lt;td align="right"&gt;124&lt;/td&gt;
+&lt;td align="right"&gt;43&lt;/td&gt;
+&lt;td align="right"&gt;71&lt;/td&gt;
+&lt;td align="right"&gt;73&lt;/td&gt;
+&lt;td align="right"&gt;31&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;260&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2000&lt;/td&gt;
+&lt;td align="right"&gt;183&lt;/td&gt;
+&lt;td align="right"&gt;66&lt;/td&gt;
+&lt;td align="right"&gt;55&lt;/td&gt;
+&lt;td align="right"&gt;119&lt;/td&gt;
+&lt;td align="right"&gt;53&lt;/td&gt;
+&lt;td align="right"&gt;65&lt;/td&gt;
+&lt;td align="right"&gt;79&lt;/td&gt;
+&lt;td align="right"&gt;32&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;248&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2004&lt;/td&gt;
+&lt;td align="right"&gt;157&lt;/td&gt;
+&lt;td align="right"&gt;53&lt;/td&gt;
+&lt;td align="right"&gt;57&lt;/td&gt;
+&lt;td align="right"&gt;149&lt;/td&gt;
+&lt;td align="right"&gt;40&lt;/td&gt;
+&lt;td align="right"&gt;102&lt;/td&gt;
+&lt;td align="right"&gt;76&lt;/td&gt;
+&lt;td align="right"&gt;12&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;264&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2008&lt;/td&gt;
+&lt;td align="right"&gt;149&lt;/td&gt;
+&lt;td align="right"&gt;76&lt;/td&gt;
+&lt;td align="right"&gt;77&lt;/td&gt;
+&lt;td align="right"&gt;101&lt;/td&gt;
+&lt;td align="right"&gt;27&lt;/td&gt;
+&lt;td align="right"&gt;42&lt;/td&gt;
+&lt;td align="right"&gt;62&lt;/td&gt;
+&lt;td align="right"&gt;7&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;315&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2012&lt;/td&gt;
+&lt;td align="right"&gt;114&lt;/td&gt;
+&lt;td align="right"&gt;82&lt;/td&gt;
+&lt;td align="right"&gt;126&lt;/td&gt;
+&lt;td align="right"&gt;94&lt;/td&gt;
+&lt;td align="right"&gt;26&lt;/td&gt;
+&lt;td align="right"&gt;68&lt;/td&gt;
+&lt;td align="right"&gt;69&lt;/td&gt;
+&lt;td align="right"&gt;23&lt;/td&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="right"&gt;250&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We have reduced the dataset down enough that someone would be able to look at it and discern patterns in the data.&lt;/p&gt;
+&lt;h2&gt;Demographic data: wide to long with &lt;code&gt;melt&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;The &lt;a href="https://en.wikipedia.org/wiki/Seattle"&gt;wikipedia page for Seattle&lt;/a&gt; has the following demographic information presented&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="left"&gt;Race&lt;/th&gt;
+&lt;th align="left"&gt;2010&lt;/th&gt;
+&lt;th align="left"&gt;1990&lt;/th&gt;
+&lt;th align="left"&gt;1970&lt;/th&gt;
+&lt;th align="left"&gt;1940&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="left"&gt;69.5%&lt;/td&gt;
+&lt;td align="left"&gt;75.3%&lt;/td&gt;
+&lt;td align="left"&gt;87.4%&lt;/td&gt;
+&lt;td align="left"&gt;96.1%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="left"&gt;66.3%&lt;/td&gt;
+&lt;td align="left"&gt;73.7%&lt;/td&gt;
+&lt;td align="left"&gt;85.3%[112]&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="left"&gt;7.9%&lt;/td&gt;
+&lt;td align="left"&gt;10.1%&lt;/td&gt;
+&lt;td align="left"&gt;7.1%&lt;/td&gt;
+&lt;td align="left"&gt;1.0%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="left"&gt;6.6%&lt;/td&gt;
+&lt;td align="left"&gt;3.6%&lt;/td&gt;
+&lt;td align="left"&gt;2.0%[112]&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;5&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="left"&gt;13.8%&lt;/td&gt;
+&lt;td align="left"&gt;11.8%&lt;/td&gt;
+&lt;td align="left"&gt;4.2%&lt;/td&gt;
+&lt;td align="left"&gt;2.8%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;6&lt;/td&gt;
+&lt;td align="left"&gt;Other race&lt;/td&gt;
+&lt;td align="left"&gt;2.4%&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;7&lt;/td&gt;
+&lt;td align="left"&gt;Two or more races&lt;/td&gt;
+&lt;td align="left"&gt;5.1%&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;td align="left"&gt;NaN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The numbers in brackets are the classic wikipedia citations. Here we see some of the problems with wide format: early on the questionnaires didn't ask about "other", "two or more races" or "non-hispanic" as categories, so we are forced to use &lt;code&gt;NaN&lt;/code&gt;s instead. In long format, we simple wouldn't store this data.&lt;/p&gt;
+&lt;p&gt;The long format should include the &lt;code&gt;race&lt;/code&gt;, the &lt;code&gt;year&lt;/code&gt;, and the &lt;code&gt;percentage&lt;/code&gt; of population. We will also have to clear the data a little (for example, eliminating the percentage signs and the citation brackets).&lt;/p&gt;
+&lt;p&gt;We can grab the table with a little experimentation:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Grab all the tables on the wikipedia page&lt;/span&gt;
+&lt;span class="n"&gt;seattle_tables&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;pd&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read_html&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;https://en.wikipedia.org/wiki/Seattle&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;demographic_wide&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;seattle_tables&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;4&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="c1"&gt;# Convert to long form:&lt;/span&gt;
+&lt;span class="n"&gt;demographic_long&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;demographic_wide&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;melt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id_vars&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Race&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+    &lt;span class="n"&gt;value_vars&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2010&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1990&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1970&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1940&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt;
+    &lt;span class="n"&gt;var_name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Year&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;value_name&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;fraction&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This command changes the dataframe to have two new columns: the "variable" column called &lt;code&gt;Year&lt;/code&gt; and the "value" called &lt;code&gt;fraction&lt;/code&gt;. Each entry in the columns &lt;code&gt;1940&lt;/code&gt;, ..., &lt;code&gt;2010&lt;/code&gt; gets copied onto its own row, where the column name is entered for the year, and the entry value is used for the &lt;code&gt;fraction&lt;/code&gt;:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="left"&gt;Race&lt;/th&gt;
+&lt;th align="right"&gt;Year&lt;/th&gt;
+&lt;th align="left"&gt;fraction&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;69.5%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;66.3%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;7.9%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;6.6%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;13.8%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;5&lt;/td&gt;
+&lt;td align="left"&gt;Other race&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;2.4%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;6&lt;/td&gt;
+&lt;td align="left"&gt;Two or more races&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="left"&gt;5.1%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;7&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;75.3%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;8&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;73.7%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;9&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;10.1%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;10&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;3.6%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;11&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;11.8%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;12&lt;/td&gt;
+&lt;td align="left"&gt;Other race&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;13&lt;/td&gt;
+&lt;td align="left"&gt;Two or more races&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;14&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;87.4%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;15&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;85.3%[112]&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;16&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;7.1%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;17&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;2.0%[112]&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;18&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;4.2%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;19&lt;/td&gt;
+&lt;td align="left"&gt;Other race&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;20&lt;/td&gt;
+&lt;td align="left"&gt;Two or more races&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;21&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;96.1%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;22&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;23&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;1.0%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;24&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;25&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;2.8%&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;26&lt;/td&gt;
+&lt;td align="left"&gt;Other race&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;27&lt;/td&gt;
+&lt;td align="left"&gt;Two or more races&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="left"&gt;nan&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;We still have a little cleaning to do in the &lt;code&gt;fraction&lt;/code&gt; column:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;clean_fractions&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;series&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;series&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;replace&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;r&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;%(\s*\[\d*\])?&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;regex&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;astype&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;float&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;100&lt;/span&gt;
+
+&lt;span class="n"&gt;demographic_long&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;fraction&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;clean_fractions&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;demographic_long&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;fraction&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+&lt;span class="n"&gt;demographic_long&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;dropna&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;inplace&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="bp"&gt;True&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now we have our long form "tidy" dataset:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th align="right"&gt;&lt;/th&gt;
+&lt;th align="left"&gt;Race&lt;/th&gt;
+&lt;th align="right"&gt;Year&lt;/th&gt;
+&lt;th align="right"&gt;fraction&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;0&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.695&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;1&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.663&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;2&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.079&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;3&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.066&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;4&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.138&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;5&lt;/td&gt;
+&lt;td align="left"&gt;Other race&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.024&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;6&lt;/td&gt;
+&lt;td align="left"&gt;Two or more races&lt;/td&gt;
+&lt;td align="right"&gt;2010&lt;/td&gt;
+&lt;td align="right"&gt;0.051&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;7&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="right"&gt;0.753&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;8&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="right"&gt;0.737&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;9&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="right"&gt;0.101&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;10&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="right"&gt;0.036&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;11&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;1990&lt;/td&gt;
+&lt;td align="right"&gt;0.118&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;14&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="right"&gt;0.874&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;15&lt;/td&gt;
+&lt;td align="left"&gt;—Non-Hispanic&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="right"&gt;0.853&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;16&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="right"&gt;0.071&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;17&lt;/td&gt;
+&lt;td align="left"&gt;Hispanic or Latino (of any race)&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="right"&gt;0.02&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;18&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;1970&lt;/td&gt;
+&lt;td align="right"&gt;0.042&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;21&lt;/td&gt;
+&lt;td align="left"&gt;White&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="right"&gt;0.961&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;23&lt;/td&gt;
+&lt;td align="left"&gt;Black or African American&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="right"&gt;0.01&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td align="right"&gt;25&lt;/td&gt;
+&lt;td align="left"&gt;Asian&lt;/td&gt;
+&lt;td align="right"&gt;1940&lt;/td&gt;
+&lt;td align="right"&gt;0.028&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2&gt;Summary and next up&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Going long to wide, where each element in the wide table comes from a single row.&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;DataFrame.pivot&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Reasonably straight-forward&lt;/li&gt;
+&lt;li&gt;Going long to wide, where each element in the wide table is an aggregation of multiple rows.&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;DataFrame.pivot_table&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Will generate a copy of the aggregation for each unused varaible. This could strain memory if the number of columns is large. Possible work arounds are to &lt;code&gt;group_by&lt;/code&gt; first (as described &lt;a href=""&gt;here&lt;/a&gt;), or select only the columns you are interested in.&lt;/li&gt;
+&lt;li&gt;Going from wide to long:&lt;/li&gt;
+&lt;li&gt;Usually done to store the data in tidy format.&lt;/li&gt;
+&lt;li&gt;Can be done partially (i.e. convert some variables from wide format to long)&lt;/li&gt;
+&lt;li&gt;Uses the &lt;code&gt;DataFrame.melt&lt;/code&gt; command&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Other articles on reshaping data you might be interested in:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href="tidy.md"&gt;What is tidy data anyway?&lt;/a&gt; (upcoming)&lt;/li&gt;
+&lt;li&gt;&lt;a href="/munging-with-multiindices-election-data.html"&gt;Tidying the results of presidential elections&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="upcoming"&gt;Clusters for Supervised Learning: Olympic Spending&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;</content><category term="Data munging"></category><category term="Pandas"></category></entry><entry><title>Undo in Github (aka the elephants in the room)</title><link href="https://kiwidamien.github.io/undo-in-github-aka-the-elephants-in-the-room.html" rel="alternate"></link><published>2018-09-12T23:00:00-07:00</published><updated>2018-09-12T23:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-09-12:/undo-in-github-aka-the-elephants-in-the-room.html</id><summary type="html">&lt;p&gt;How to rollback in Github&lt;/p&gt;</summary><content type="html">&lt;p&gt;Git is a version control system, and is designed so you can "go back" to previous versions of your codebase. Initially the process can be a little intimidating; this guide is designed to help.&lt;/p&gt;
+&lt;p&gt;A few cautionary words are in order before we begin:
+&lt;em&gt; Git cannot recover files that you it never started tracking. If you delete a file that you have never committed, it will be gone once you delete it.
+&lt;/em&gt; Git cannot recover changes in your file that you have never committed, &lt;em&gt;even if you have committed this file in the past&lt;/em&gt;. You can only restore commits.
+* It is &lt;em&gt;much&lt;/em&gt; easier to restore to a particular commit. It is possible to use git's &lt;em&gt;&lt;a href="https://git-scm.com/docs/git-cherry-pick"&gt;cherry pick&lt;/a&gt;&lt;/em&gt; to take parts of some commits and mix them with others, but it should be avoided.&lt;/p&gt;
+&lt;p&gt;Hopefully the comments above convey that making lots of small commits are the way to work. This gives you a lot of stages to restore the code to. Because git commits only save the differences between files, making lots of small commits takes roughly the same amount of space as making a single large commit.&lt;/p&gt;
+&lt;p&gt;Committing should be like voting:
+&lt;strong&gt; Commit early, commit often &lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The plan for this blog post will be to make a small text document, &lt;code&gt;room.txt&lt;/code&gt;, make some changes to it, and then revert back to the original version of &lt;code&gt;room.txt&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;NOTE&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you are trying to remove a file that is too large from Github, you should look at &lt;a href="big-commits-in-github.html"&gt;these instructions&lt;/a&gt; instead.&lt;/p&gt;
+&lt;h2&gt;Setup&lt;/h2&gt;
+&lt;p&gt;You can do the setup in an existing git repo, or make a new one. First, on branch &lt;code&gt;git_experiment&lt;/code&gt;, we make the original document &lt;code&gt;room.txt&lt;/code&gt; as a shout out to Lin-Manuel Miranda:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;room.txt (original):
+No one else was in the room where it happened,
+the room where it happened,
+the room where it happened.
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;(Note that this would work equally well on the &lt;code&gt;master&lt;/code&gt; branch as well, but you should not be developing on &lt;code&gt;master&lt;/code&gt;!)&lt;/p&gt;
+&lt;p&gt;Let's add and commit this code:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git add room.txt &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span class="s2"&gt;&amp;quot;added room.txt&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;git_experiment eca0535&lt;span class="o"&gt;]&lt;/span&gt; added room.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The code &lt;code&gt;eca0535&lt;/code&gt; is the beginning of the &lt;em&gt;commit hash&lt;/em&gt; for the commit we just made. It helps us identify this commit at any point in the future.&lt;/p&gt;
+&lt;p&gt;Now let's add one line to &lt;code&gt;room.txt&lt;/code&gt;, so it reads&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;room.txt (modified):
+No one else was in the room where it happened,
+the room where it happened,
+the room where it happened.
+(Well, except the elephant)
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We can also add and commit this code:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git add room.txt &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; git commit -m &lt;span class="s2"&gt;&amp;quot;mentioned elephant in the room&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;git_experiment 997b13a&lt;span class="o"&gt;]&lt;/span&gt; mentioned elephants in the room
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;What we have so far:
+&lt;em&gt; A commit &lt;code&gt;eca0535&lt;/code&gt; where we made &lt;code&gt;room.txt&lt;/code&gt;
+&lt;/em&gt; A commit &lt;code&gt;997b13a&lt;/code&gt; where we added a line to &lt;code&gt;room.txt&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Our goal is to restore the repo at the commit hash of &lt;code&gt;eca0535&lt;/code&gt;, where we have created &lt;code&gt;room.txt&lt;/code&gt; but haven't added the elephants in the room (because no-one talks about the elephant in the room).&lt;/p&gt;
+&lt;p&gt;In this specific case, it would be easiest to delete the line and commit again. We are going to do it the hard way to demonstrate how to rollback git commands.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Note about commit hashes&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you are following this in your own repo, you will have different hashes than &lt;code&gt;eca0535&lt;/code&gt; and &lt;code&gt;997b13a&lt;/code&gt;. That is OK! We also have two different ways of referring to this hashes with git:
+&lt;em&gt; &lt;code&gt;HEAD&lt;/code&gt; is the most recent commit (in this case, &lt;code&gt;997b13a&lt;/code&gt;)
+&lt;/em&gt; &lt;code&gt;HEAD~1&lt;/code&gt; is the previous commit (in this case &lt;code&gt;eca0535&lt;/code&gt;)&lt;/p&gt;
+&lt;h3&gt;Method 1: We haven't pushed to Github&lt;/h3&gt;
+&lt;p&gt;If we haven't pushed to Github, then we only have to deal with fixing our local version of &lt;code&gt;git&lt;/code&gt;. This is a one line command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git reset --hard HEAD~1
+HEAD is now at eca0535 added room.txt
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here git is telling us our current position (HEAD) is at the old commit. Note that the commit message helps tell us which commit this is -- this is a reason to write good commit messages. We can use this same method to go back any number of commits (e.g. &lt;code&gt;HEAD~n&lt;/code&gt; goes back &lt;code&gt;n&lt;/code&gt; commits).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;hard vs soft git resets&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;git reset [COMMIT_HASH]&lt;/code&gt; resets our branch to the state it was in when we made the commit &lt;code&gt;COMMMIT_HASH&lt;/code&gt;. Specifically, it does a &lt;em&gt;soft reset&lt;/em&gt;, which is where git remembers the repo as it was at the point &lt;code&gt;COMMIT_HASH&lt;/code&gt;, but doesn't change your local files. So if you look at your &lt;code&gt;room.txt&lt;/code&gt; you would still have the elephants in the room. This is useful if you have committed files you didn't want to commit yet, as it gives you a chance to add different files to your commit.&lt;/p&gt;
+&lt;p&gt;If you want git to rewind to &lt;code&gt;COMMIT_HASH&lt;/code&gt; &lt;em&gt;and&lt;/em&gt; you want your files to change to the state they were in at &lt;code&gt;COMMIT_HASH&lt;/code&gt;, you should do a hard reset instead with &lt;code&gt;git reset --hard [COMMIT_HASH]&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Method 2: We have pushed to Github&lt;/h3&gt;
+&lt;p&gt;This gets a little trickier if you have already pushed your repository to Github. Hopefully you are working on your own branch (e.g. &lt;code&gt;git_experiment&lt;/code&gt;) so that you don't have to worry about your changes affecting other people's work.&lt;/p&gt;
+&lt;p&gt;Git provides two ways of doing this:
+1. &lt;code&gt;git reset --hard&lt;/code&gt; + &lt;code&gt;git push (force)&lt;/code&gt;
+2. &lt;code&gt;git revert&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;which both do the same thing if you are just going back one commit. If you are trying to go back multiple commits, you should use the first approach only (the second approach will do something subtly different).&lt;/p&gt;
+&lt;h4&gt;Method 2a: Using git reset and force push&lt;/h4&gt;
+&lt;p&gt;Our remote repo is on commit &lt;code&gt;997b13a&lt;/code&gt; (with the elephant), and we want to set it to &lt;code&gt;eca0535&lt;/code&gt; (with no elephant). We can do this with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git reset --hard eca0535
+HEAD is now at eca0535 added room.txt
+$ git push origin +HEAD:git_experiment
++ 997b13a...eca0535 HEAD -&amp;gt; git_experiment &lt;span class="o"&gt;(&lt;/span&gt;forced update&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The first line updated &lt;code&gt;HEAD&lt;/code&gt; to &lt;code&gt;eca0535&lt;/code&gt;, the commit we want, on the local machine. The second command pushes the current &lt;code&gt;HEAD&lt;/code&gt; (i.e. &lt;code&gt;eca0535&lt;/code&gt;) on the local machine to the remote branch &lt;code&gt;git_experiment&lt;/code&gt;. Once this is done, we &lt;em&gt;force pushed&lt;/em&gt; to Github.&lt;/p&gt;
+&lt;p&gt;You can use this method to go back any specific commit, and rewind your entire repo to that commit.&lt;/p&gt;
+&lt;h4&gt;Method 2b: Using git revert&lt;/h4&gt;
+&lt;p&gt;We still want to go from commit &lt;code&gt;997b13a&lt;/code&gt; (with the elephant), to &lt;code&gt;eca0535&lt;/code&gt; (with no elephant). Git revert takes a commit hash, and makes a new commit where we have erased the changes made in that commit:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git revert 997b13a
+&lt;span class="o"&gt;[&lt;/span&gt;git_experiment 4ac130a&lt;span class="o"&gt;]&lt;/span&gt; Revert &lt;span class="s2"&gt;&amp;quot;mentioned elephants in the room&amp;quot;&lt;/span&gt;
+$ git push
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now we are at a new commit &lt;code&gt;4ac130a&lt;/code&gt;, which has undone the changes made at commit &lt;code&gt;997b13&lt;/code&gt;. This means that commit &lt;code&gt;4ac130a&lt;/code&gt; has the files in the same state as the commit &lt;code&gt;997b13a&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;What &lt;code&gt;git revert [COMMIT_HASH]&lt;/code&gt; does behind the scenes is to try and remove all the changes made in &lt;code&gt;COMMIT_HASH&lt;/code&gt; while leaving future commits in place. So if &lt;code&gt;COMMIT_HASH&lt;/code&gt; was several commits back, you are only undoing the changes made in that commit -- not restoring the entire repo to a particular stage.&lt;/p&gt;
+&lt;p&gt;If you are removing the very last commit, removing the changes from that commit is the same as resetting to one commit prior. Sometimes this is what you want, but it this approach doesn't do what we advertised in this blog post (resetting to a particular commit).&lt;/p&gt;
+&lt;p&gt;One important advantage of this approach is that all the commits are retained. If we do &lt;code&gt;git log --oneline&lt;/code&gt; we get the following output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;4ac130a &lt;span class="o"&gt;(&lt;/span&gt;HEAD -&amp;gt; git_experiment, origin/git_experiment&lt;span class="o"&gt;)&lt;/span&gt; Revert &lt;span class="s2"&gt;&amp;quot;mentioned elephant in the room&amp;quot;&lt;/span&gt;
+997b13a mentioned elephants in the room
+eca0535 added room.txt
+... &lt;span class="o"&gt;(&lt;/span&gt;older commits&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;If we decided we want the elephant back, it would be possible with &lt;code&gt;git revert&lt;/code&gt;.&lt;/p&gt;
+&lt;h2&gt;Summary&lt;/h2&gt;
+&lt;p&gt;Summing it up, we had our most recent commit (&lt;code&gt;HEAD&lt;/code&gt;) that we wanted to get rid of. Our approaches were&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;If we haven't pushed to Github&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git reset --hard HEAD~1&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;If we have pushed to Github, method 2a&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git reset --hard HEAD~1 &amp;amp;&amp;amp; git push origin +HEAD:git_experiment&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Note this method can be used with any commit hash, but will delete history.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;If we have pushed to Github, method 2b&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;git revert HEAD &amp;amp;&amp;amp; git push&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;This only does what we want when deleting the most recent commit, so don't swap HEAD with another commit. Creates a new commit and preserves history.&lt;/p&gt;
+&lt;p&gt;Jefferson, Madison, and Hamilton can now rest at ease, as no one will mention the elephant in the room.&lt;/p&gt;</content><category term="Github"></category></entry><entry><title>Big commits in GitHub</title><link href="https://kiwidamien.github.io/big-commits-in-github.html" rel="alternate"></link><published>2018-09-10T13:00:00-07:00</published><updated>2018-09-10T13:00:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2018-09-10:/big-commits-in-github.html</id><summary type="html">&lt;p&gt;What do you do when you have committed a large file to GitHub?&lt;/p&gt;</summary><content type="html">&lt;h2&gt;Undoing a large commit&lt;/h2&gt;
+&lt;p&gt;Accidentally committing a large file (i.e. greater than git's limit of 100MB) is a frustrating experience. For example, let's say you made some changes to &lt;code&gt;big_file.bin&lt;/code&gt;, a 200MB file, and to your README in the following way:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ dd &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;/dev/zero &lt;span class="nv"&gt;of&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;big_file.bin &lt;span class="nv"&gt;count&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;200&lt;/span&gt; &lt;span class="nv"&gt;bs&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1048576&lt;/span&gt;  &lt;span class="c1"&gt;# make 200 MB file&lt;/span&gt;
+$ git add big_file.bin                              &lt;span class="c1"&gt;# we will regret this!&lt;/span&gt;
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;committed huge binary file&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;master 9cee256&lt;span class="o"&gt;]&lt;/span&gt; committed huge binary file
+$ git add README.md
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;... and made a small change to the README&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;master 0f1a832&lt;span class="o"&gt;]&lt;/span&gt; ... and made small change to the README
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Everything is fine, until we try to push to our repo:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git push
+....
+remote: error: File big_file.bin is &lt;span class="m"&gt;106&lt;/span&gt;.00 MB&lt;span class="p"&gt;;&lt;/span&gt; this exceeds GitHub&lt;span class="err"&gt;&amp;#39;&lt;/span&gt;s file size limit of &lt;span class="m"&gt;100&lt;/span&gt;.00 MB
+To YOUR_REPO_NAME
+! &lt;span class="o"&gt;[&lt;/span&gt;remote rejected&lt;span class="o"&gt;]&lt;/span&gt; master -&amp;gt; master &lt;span class="o"&gt;(&lt;/span&gt;pre-receive hook declined&lt;span class="o"&gt;)&lt;/span&gt;
+error: failed to push some refs to YOUR_REPO_NAME
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;Failed attempt to fix&lt;/h2&gt;
+&lt;p&gt;Here is an attempt to fix that fails:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git rm big_file.bin
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;removed big file&amp;quot;&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;master 1eb14a7&lt;span class="o"&gt;]&lt;/span&gt; removed big_file
+$ git push
+.... &lt;span class="o"&gt;(&lt;/span&gt;still see message about failing to remove&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The problem is that git is trying to keep track of the history of all your commits. Git wants to push both the file &lt;em&gt;and&lt;/em&gt; the fact it was deleted, so other developers can rewind the deletion. To do this, git still needs to push the large file to the remote, which it cannot do for large files.&lt;/p&gt;
+&lt;p&gt;We will look at two ways of fixing this problem:
+&lt;em&gt; Rewinding master locally, and pushing a new version of master. The downside is &lt;code&gt;big_file.bin&lt;/code&gt; will still take up memory on your local repo.
+&lt;/em&gt; Removing all mention of &lt;code&gt;big_file.bin&lt;/code&gt; from your repo by rewriting your git history. The downside to this approach is that you can break git, and it cannot be done if you have untracked files.&lt;/p&gt;
+&lt;p&gt;Let's look at these two approaches. If all else fails, the third option is to make a new clone of the repo, and copy over just the files you want -- but this should be a last resort.&lt;/p&gt;
+&lt;h3&gt;Actual fix #1: keep history local&lt;/h3&gt;
+&lt;p&gt;Our log of commits now looks like this on our local machine:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;1eb14a7 &lt;span class="o"&gt;(&lt;/span&gt;HEAD -&amp;gt; master&lt;span class="o"&gt;)&lt;/span&gt; removed big_file
+0f1a832 ... and made small change to the README
+9cee256 committed huge binary file
+a3a75bf commit before all this happened
+....... &lt;span class="o"&gt;(&lt;/span&gt;previous commits&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;We want to get rid of the file originally committed in commit &lt;code&gt;9cee256&lt;/code&gt;. To do this:
+1. First, reset back to that commit:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git reset 9cee256~1 &lt;span class="c1"&gt;# go back one more than the troublesome commit&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This is a &lt;em&gt;soft&lt;/em&gt; reset, so your files will stay the same on your local machine.
+2. (Optional) If you haven't done so already, you can delete &lt;code&gt;big_file.bin&lt;/code&gt;.
+3. Then add the README back to the repo, and commit it&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git add README.md
+$ git commit -m &lt;span class="s2"&gt;&amp;quot;adding the README again&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;ol&gt;
+&lt;li&gt;Finally push the new commit back up.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;$ git push origin master
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In this approach, the local git history still has the "bad" commits in it
+&lt;img alt="what the local branches look like" src="images/github_local.png"&gt;
+They are off the main "master" track, but they will still remain on your disk. The commit you pushed up doesn't have the commits in the red box in its history, so the remote repo will look like this:
+&lt;img alt="what the remote branch looks like" src="images/github_remote.png"&gt;&lt;/p&gt;
+&lt;h3&gt;Actual Fix 2: rewrite history with &lt;code&gt;filter-branch&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;This one will only work if you don't have unstaged work in your repo. It also means rewriting the history, so there is the potential to mess things up!&lt;/p&gt;
+&lt;p&gt;With those warnings in mind, you can run&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git filter-branch -f --tree-filter &lt;span class="s1"&gt;&amp;#39;rm  big_file.bin&amp;#39;&lt;/span&gt; 9cee256..HEAD
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This will remove &lt;code&gt;big_file.bin&lt;/code&gt; from every commit from &lt;code&gt;9cee256&lt;/code&gt; to &lt;code&gt;1eb14a7&lt;/code&gt; (the current HEAD).&lt;/p&gt;
+&lt;p&gt;You should then be able to push to your repository with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;git push
+&lt;/pre&gt;&lt;/div&gt;</content><category term="Github"></category></entry><entry><title>Using Folium: What is the furthest you can get from Starbucks in Seattle?</title><link href="https://kiwidamien.github.io/using-folium-what-is-the-furthest-you-can-get-from-starbucks-in-seattle.html" rel="alternate"></link><published>2017-04-08T20:30:00-07:00</published><updated>2017-04-08T20:30:00-07:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2017-04-08:/using-folium-what-is-the-furthest-you-can-get-from-starbucks-in-seattle.html</id><summary type="html">&lt;p&gt;It seems that Starbucks is ubiquitous in Seattle. Where in Seattle is furthest from a Starbucks store?&lt;/p&gt;
+&lt;p&gt;In order to work this out, we need a list of all the stores in Seattle. The open data project &lt;a href="https://opendata.socrata.com/"&gt;Socrata&lt;/a&gt; makes it easy to find out - you can pull the address, as …&lt;/p&gt;</summary><content type="html">&lt;p&gt;It seems that Starbucks is ubiquitous in Seattle. Where in Seattle is furthest from a Starbucks store?&lt;/p&gt;
+&lt;p&gt;In order to work this out, we need a list of all the stores in Seattle. The open data project &lt;a href="https://opendata.socrata.com/"&gt;Socrata&lt;/a&gt; makes it easy to find out - you can pull the address, as well as longitude and latitude  all the Starbucks locations in the any given city.&lt;/p&gt;
+&lt;p&gt;This question was also a fun way for me to experiment with methods for presenting data and calculations on maps. My ultimate goal was to have something people could interact with on this blog, without having to install extra plugins.&lt;/p&gt;
+&lt;h2&gt;Methodolgy&lt;/h2&gt;
+&lt;p&gt;First we had to decide what counted as "Seattle" for the purposes of this calculation. To make it easy to reproduce similar calculations for other cities, I decided that I would choose the bounding longitudes as the lower quartile and upper quartiles of longitudes for stores retrieved by Socrata. The same cut was made for the latitudes. This restriction hopefully makes an interesting answer, rather than telling us the middle of a residential district like &lt;em&gt;Magnolia&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;I broke Seattle into regions, called &lt;a href="https://en.wikipedia.org/wiki/Voronoi_diagram"&gt;Voronoi Cells&lt;/a&gt;. The idea is that each region has single Starbucks store in it, and is defined as the collection of points that are closest to that Starbucks. For example, taking a square city with two stores, the line halfway between the stores divides the city in two: on one side you are closer to store #1, on the other you are closer to store #2.&lt;/p&gt;
+&lt;div class="veronoi" style="width:20%;margin-left:auto;margin-right:auto"&gt;
+&lt;svg&gt;
+&lt;rect x ="0" y="0" width="125" height="200"
+      style="fill:yellow;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+&lt;rect x ="125" y="0" width="125" height="200"
+      style="fill:blue;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+&lt;circle cx="50" cy="40" r="15" stroke="yellow" stroke-width="2"
+        fill="yellow" /&gt;
+&lt;circle cx = "200" cy = "40" r="15"
+        stroke="green" stroke-width ="2" fill="cyan" /&gt;
+&lt;line x1="125" y1="0" x2="125" y2="200"
+      style="stroke:rgb(0,0,0);stroke-width:2" /&gt;
+&lt;text x="46" y="45"&gt;1&lt;/text&gt;
+&lt;text x="195" y="45"&gt;2&lt;/text&gt;
+&lt;text x="10" y="140"&gt;Region closer to 1&lt;/text&gt;
+&lt;text x="130" y="140"&gt;Region closer to 2&lt;/text&gt;
+&lt;/svg&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Adding a third store changes the picture. Placing it toward the bottom of the city, but centered horizontally gives the following cells:&lt;/p&gt;
+&lt;div class="veronoi" style="width:20%;margin-left:auto;margin-right:auto"&gt;
+  &lt;svg width="250" height="200"&gt;
+  &lt;rect x ="0" y="0" width="125" height="80" style="fill:yellow;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+  &lt;rect x ="125" y="0" width="125" height="80" style="fill:blue;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+  &lt;rect x="0" y="80" width="250" height ="120" style="fill:green;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+  &lt;circle cx="50" cy="40" r="15" stroke="yellow" stroke-width="2" fill="yellow" /&gt;
+  &lt;circle cx = "200" cy = "40" r="15" stroke="green" stroke-width ="2" fill="cyan"&gt;&lt;/circle&gt;
+  &lt;circle cx = "125" cy = "120" r="15" stroke="green" stroke-width ="2" fill="green" /&gt;
+   &lt;line x1="125" y1="0" x2="125" y2="80" style="stroke:rgb(0,0,0);stroke-width:2" /&gt;
+   &lt;line x1="0" y1="80" x2="250" y2="80" style="stroke:rgb(0,0,0);stroke-width:2" /&gt;
+   &lt;text x="46" y="45"&gt;1&lt;/text&gt;
+   &lt;text x="195" y="45"&gt;2&lt;/text&gt;
+   &lt;text x="121" y="125"&gt;3&lt;/text&gt;
+&lt;/svg&gt;
+&lt;/div&gt;
+
+&lt;p&gt;If the third store is directly below store 1, we get&lt;/p&gt;
+&lt;div class="veronoi" style="width:20%;margin-left:auto;margin-right:auto"&gt;
+  &lt;svg width="250" height="200"&gt;
+  &lt;rect x ="0" y="0" width="125" height="80" style="fill:yellow;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+   &lt;polygon points="250,0 125,0 125,80 189,200 250,200" style="fill:blue;fill-opacity:0.1;" /&gt;
+   &lt;polygon points="0,80 125,80 189,200 0,200"
+   style="fill:green;fill-opacity:0.1;stroke-opacity:0.9"/&gt;
+  &lt;circle cx="50" cy="40" r="15" stroke="yellow" stroke-width="2" fill="yellow" /&gt;
+  &lt;circle cx = "200" cy = "40" r="15" stroke="green" stroke-width ="2" fill="cyan" /&gt;
+  &lt;circle cx = "50" cy = "120" r="15" stroke="green" stroke-width ="2" fill="green" /&gt;
+   &lt;line x1="125" y1="0" x2="125" y2="80" style="stroke:rgb(0,0,0);stroke-width:2" /&gt;
+   &lt;line x1="0" y1="80" x2="125" y2="80" style="stroke:rgb(0,0,0);stroke-width:2" /&gt;
+   &lt;!--
+   midpoint between 1 and 2:
+   [ (200,40) + (50,120)]/2 = (125,80)
+   Gradient of line joining them:
+   Dy/Dx = (120-40)/(50-200) = -80/150
+   Gradient of normal
+   150/80 = 15/8 = 1.875
+
+   Eqn of line:
+   y - 80 = (150/80)(x - 125)
+   --&gt;
+   &lt;line x1="125" y1="80" x2="189" y2="200" style="stroke:rgb(0,0,0);stroke-width:2" /&gt;
+   &lt;text x="46" y="45"&gt;1&lt;/text&gt;
+   &lt;text x="195" y="45"&gt;2&lt;/text&gt;
+   &lt;text x="45" y="125"&gt;3&lt;/text&gt;
+&lt;/svg&gt;
+&lt;/div&gt;
+
+&lt;p&gt;The location furthest from a Starbucks has to either by an intersection point between the regions (the examples with three stores have one intersection point, the example with two stores has none), or a point on the boundary of the city. I was able to use &lt;code&gt;scipy.spatial.Voronoi&lt;/code&gt; to calculate the Voronoi cells and get a list of intersection points, rather than trying to do it by hand. It was useful practice to annotate the maps with the cells as well.&lt;/p&gt;
+&lt;h2&gt;The map&lt;/h2&gt;
+&lt;p&gt;Here is the final map produced. You can highlight the Voronoi cells by mousing over them to get an idea of how large an area each store "controls". You can also bring up information about the stores by clicking on them.&lt;/p&gt;
+&lt;div style="width:10%;float:left;"&gt;&lt;/div&gt;
+
+&lt;div style="width:80%;margin-left: auto; margin-right:auto;"&gt;
+&lt;iframe width="100%" height="600" src="furthest_starbucks.html" frameborder="0" align="center" allowfullscreen&gt;&lt;/iframe&gt;
+&lt;/div&gt;
+
+&lt;p&gt;We find that the furthest we can get from Starbucks in Seattle is the corner of Meridian Avenue North with North 36th street (a few streets north of Gas Works Park), shown as an orange dot. The bounding box is also shown in orange.&lt;/p&gt;
+&lt;h2&gt;Folium compared to other packages&lt;/h2&gt;
+&lt;p&gt;There are many ways to plot data on top of maps with Python. Here are a few I considered before using folium:&lt;/p&gt;
+&lt;h4&gt;Basemap (part of matplotlib)&lt;/h4&gt;
+&lt;p&gt;This is a great way to create attractive graphs in Python. There are lots of tutorials, and the package is well documented. The disadvantages are that basemap expects you to obtain and manage shapefiles, and the output are static images (like the plots in matplotlib). This is easy to work with in an interactive environment, but makes it difficult to just the results of your work to someone else.&lt;/p&gt;
+&lt;p&gt;Tutorials for basemap:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href="http://www.datadependence.com/2016/06/creating-map-visualisations-in-python/"&gt;Creating attractive informative maps visualizations in Python with Basemap&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="http://sensitivecities.com/so-youd-like-to-make-a-map-using-python-EN.html#.WOncl1KZOgQ"&gt;So you'd like to make a map using (basemap) python&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h4&gt;Plot.ly&lt;/h4&gt;
+&lt;p&gt;This was one of the slickest options I considered. To use it, you need to create an account (free trials are offered), and it seemed difficult to embed directly on a static site. These considerations led me to dismiss &lt;code&gt;Plot.ly&lt;/code&gt; fairly early, although it looks like a good option if you don't mind paying for an account.&lt;/p&gt;
+&lt;h4&gt;Bokeh&lt;/h4&gt;
+&lt;p&gt;Bokeh is a collection of plots that uses the &lt;strong&gt;grammar of graphics&lt;/strong&gt; to build up plots. The plots are interactive on the development machine, and you can setup your server to run Bokeh plots to allow other people to interact with your plots online. When working with static pages on a server designed to serve static pages, I would have to either embed or link to an external Bokeh plot. If I was running this off my own server, using Bokeh would certainly be viable.&lt;/p&gt;
+&lt;h4&gt;Folium&lt;/h4&gt;
+&lt;p&gt;Folium seems to be the extension of the now defunct &lt;strong&gt;Vincent&lt;/strong&gt; package for python. Folium makes maps that use &lt;strong&gt;Leaflet.js&lt;/strong&gt; to remain interactive, so you can save the output to HTML. Anyone with a browser can open the HTML (or visit it on your blog) and still pan, zoom, and have the interactive mouse-overs and tool tips still function.&lt;/p&gt;
+&lt;p&gt;The downside to folium is that there are a &lt;a href="http://www.digital-geography.com/python-and-webmaps-folium/#.WOnulFKZOgT"&gt;lot&lt;/a&gt; &lt;a href="https://greek0.net/blog/2016/01/27/plotting_maps_with_folium/"&gt;of&lt;/a&gt; &lt;a href="https://blog.dominodatalab.com/creating-interactive-crime-maps-with-folium/"&gt;great&lt;/a&gt; &lt;a href="https://ocefpaf.github.io/python4oceanographers/blog/2015/12/14/geopandas_folium/"&gt;tutorials&lt;/a&gt; ..... for version 0.2.0. The current version, 0.3.0, introduced a lot of reorganization and the documentation is lagging. All of the tutorials have commands that break in version 0.3.0. For example, in 0.2.0 the command to create a dot on the map was &lt;code&gt;folium.Map.circle_marker&lt;/code&gt;, while in 0.3.0 it is &lt;code&gt;folium.CircleMarker&lt;/code&gt;. The documentation is improving, and GitHub has a collection of 0.3.0 &lt;a href="https://github.com/python-visualization/folium/tree/master/examples"&gt;examples&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Once written, the code is very readable, and there is great integration with Open Street Maps, so you don't have to keep your own shape files on hand. One of the goals of this project was to be able to refer back to it as an example of how to use folium 0.3.0!&lt;/p&gt;
+&lt;h4&gt;Geoplotlib and Kartograph.py&lt;/h4&gt;
+&lt;p&gt;I only found out about these package once I had completed the project.&lt;/p&gt;
+&lt;p&gt;It looks like geoplotlib only produces static maps, similar to Basemap, but seems like it is very expressive and able to do a lot without much code. It is also integrated with GeoPandas.&lt;/p&gt;
+&lt;p&gt;Kartograph is designed to produce maps in python that are then coverted into SVG elements with embedded javascript, to enable the maps to be shared with anyone with a browser.&lt;/p&gt;
+&lt;p&gt;I will experiment with both of these in a future blog post.&lt;/p&gt;
+&lt;h3&gt;Useful links&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://github.com/kiwidamien/StarbucksVeronoi"&gt;The github page&lt;/a&gt; for this project, or use a direct link to the &lt;a href="https://github.com/kiwidamien/StarbucksVeronoi/blob/master/TidyStarbuckSeattle.ipynb"&gt;Python notebook&lt;/a&gt;. You can experiment with your own choice of city.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://opendata.socrata.com/Business/All-Starbucks-Locations-in-the-World/xy4y-c4mk"&gt;Socrata list of Starbucks Stores&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://github.com/python-visualization/folium/tree/master/examples"&gt;Folium 0.3.0 example repository&lt;/a&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://github.com/andrea-cuttone/geoplotlib"&gt;Geoplotlib&lt;/a&gt; and &lt;a href="http://kartograph.org"&gt;Kartograph&lt;/a&gt; projects.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;</content><category term="geocoding"></category><category term="visualization"></category><category term="folium"></category></entry><entry><title>A/B Test simulator</title><link href="https://kiwidamien.github.io/ab_calc/" rel="alternate"></link><published>2017-03-10T11:00:00-08:00</published><updated>2017-03-10T11:00:00-08:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2017-03-10:/ab_calc/</id><summary type="html">&lt;p&gt;Determine the sample size needed to discover differences between two treatments, given your tolerance for false acceptances of inferior treatments, and false rejection of good treatments. Also includes a simulation of a trial, so that you can see an example of what the experimental results could look like with the given sample size.&lt;/p&gt;</summary><content type="html">&lt;h1&gt;An A/B sample size calculator and simulator&lt;/h1&gt;
+&lt;p&gt;This post leads to (yet another) online calculator for determining the sample size needed to reliably find an effect when testing two different "treatments". These treatments could be different layouts on a website, different drugs in a trial, different teaching methodologies.&lt;/p&gt;
+&lt;p&gt;Unlike many other calculators, this one will run a simulation and ask you to decide on a course of action &amp;mdash; accept or reject the alternative treatment &amp;mdash; as well as offering you feedback on the decision that you made. This approach of using simulated data gives a better understanding of Type I and Type II errors, without ruining the data from expensive experiments.&lt;/p&gt;
+&lt;script&gt;
+&lt;!--
+            function Redirect() {
+               window.location="https://kiwidamien.github.io/ab_calc/" ;
+            }
+         //--&gt;
+&lt;/script&gt;
+
+&lt;p&gt;If you are not redirected automatically, please visit &lt;a href="https://kiwidamien.github.io/ab_calc"&gt;https://kiwidamien.github.io/ab_calc/&lt;/a&gt;&lt;/p&gt;</content><category term="A/B test"></category><category term="test"></category><category term="data"></category><category term="simulation"></category></entry><entry><title>Snake on a cube with ReactJS</title><link href="https://kiwidamien.github.io/reactJS-and-cubenet.html" rel="alternate"></link><published>2017-02-17T00:00:00-08:00</published><updated>2017-02-17T00:00:00-08:00</updated><author><name>Damien Martin</name></author><id>tag:kiwidamien.github.io,2017-02-17:/reactJS-and-cubenet.html</id><summary type="html"></summary><content type="html"></content><category term="ReactJS"></category><category term="visualization"></category><category term="Javascript"></category></entry></feed>

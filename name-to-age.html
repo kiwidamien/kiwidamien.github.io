@@ -14,17 +14,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="origin" />
   <meta name="generator" content="Pelican" />
-  <link href="" rel="canonical" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
 
   <!-- Feed -->
+        <link href="https://kiwidamien.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Stacked Turtles Full Atom Feed" />
+          <link href="https://kiwidamien.github.io/feeds/posts.atom.xml" type="application/atom+xml" rel="alternate" title="Stacked Turtles Categories Atom Feed" />
 
-  <link href="/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
 
   <!-- Code highlight color scheme -->
-      <link href="/theme/css/code_blocks/monokai.css" rel="stylesheet">
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
 
     <!-- CSS specified by the user -->
-    <link href="/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
 
   <!-- Custom fonts -->
   <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
@@ -38,7 +40,7 @@
   <![endif]-->
 
 
-    <link href="/name-to-age.html" rel="canonical" />
+    <link href="https://kiwidamien.github.io/name-to-age.html" rel="canonical" />
 
         <meta name="description" content="How much does your name say about your age? We use the database of names from the social security administration, as well as age...">
 
@@ -52,17 +54,17 @@
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Stacked Turtles" />
     <meta property="og:description" content="View the blog." />
-    <meta property="og:url" content="" />
-      <meta property="og:image" content="/assets/images/tools.png" />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
 
   <meta property="og:type" content="article">
-            <meta property="article:author" content="/author/damien-martin.html">
-  <meta property="og:url" content="/name-to-age.html">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/name-to-age.html">
   <meta property="og:title" content="Name to Age">
   <meta property="article:published_time" content="2018-10-01 17:00:00-07:00">
             <meta property="og:description" content="How much does your name say about your age? We use the database of names from the social security administration, as well as age...">
 
-            <meta propery="og:image" content="/assets/images/pandas.png">
+            <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/pandas.png">
 </head>
 <!-- TODO : Body class -->
 <body class="home-template">
@@ -91,7 +93,7 @@
       <div class="inner">
         <nav id="navigation">
             <span id="home-button" class="nav-button">
-                <a class="home-button" href="" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
             </span>
           <span id="menu-button" class="nav-button">
             <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
@@ -100,11 +102,11 @@
         <h1 class="post-title">Name to Age</h1>
         <!-- TODO : Proper class for headline -->
         <span class="post-meta">
-                <a href="/author/damien-martin.html">Damien martin</a>
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
             | <time datetime="Mon 01 October 2018">Mon 01 October 2018</time>
         </span>
         <span class="post-meta">
-          Filed under: <b><a href="/category/posts.html">Posts</a></b>
+          Filed under: <b><a href="https://kiwidamien.github.io/category/posts.html">Posts</a></b>
         </span>
 
         <!-- TODO : Modified check -->
@@ -133,7 +135,8 @@
 <p>In this case, would we really expect a randomly selected Alice to by born in 1920 (i.e. almost 100 years old)? Probably not. We see that around 2004 the name Alice started rising in popularity again, and many of the Alice's from the 1920s wouldn't be alive today.</p>
 <h2>Our goal</h2>
 <p>Our goal is to quantify the amount of information a name and gender give you about someone's age. Specifically, for each name and gender combination of someone who is still alive, we will get a probability distribution for the age. Mathematically, we are after the conditional probability
-$$P(\text{age} | \text{living, name, and gender})$$</p>
+</p>
+<div class="math">$$P(\text{age} | \text{living, name, and gender})$$</div>
 <h3>Why is this interesting?</h3>
 <ul>
 <li>While it doesn't have great practical importance, it is a fun and easy to understand application of Baye's theorem and the Naive Bayes assumptions.</li>
@@ -145,7 +148,8 @@ $$P(\text{age} | \text{living, name, and gender})$$</p>
 <li>The Social Security <a href="https://catalog.data.gov/dataset/baby-names-from-social-security-card-applications-national-level-data">baby name database</a>. This will tell us the number of baby's per year with a given name and gender. This can get us <code>P(Name=n, gender=g | year of birth=y)</code>.</li>
 </ul>
 <p>Let's pretend for a moment that if I know <code>P(Name=n, gender=g | year of birth=y)</code> then I know <code>P(Name=n, gender=g | age=a)</code>, using the simple heuristic <code>a = 2018 - y</code>. Then we can use Bayes's theorem to get the probability that we are interested in:
-$$P((\text{age} | \text{name, and gender}) \propto P(\text{Name=n} | \text{age=a and gender=g})\,P(\text{age=a and gender=g})$$</p>
+</p>
+<div class="math">$$P((\text{age} | \text{name, and gender}) \propto P(\text{Name=n} | \text{age=a and gender=g})\,P(\text{age=a and gender=g})$$</div>
 <p>This is ultimately the answer we are going to use. The tricky part about this project is getting the data into a suitable format. I won't cover the cleaning here, but you are welcome to look at the <a href="https://github.com/kiwidamien/naive_bayes_names/">github repo</a> where this is done. The end product of all the cleaning is to produce the graphs used in this blog post, and a nicely formatted JSON file with the probabilistic information in it.</p>
 <p>This JSON file is used by a separate <a href="https://kiwidamien.github.io/names_app/">application</a>, which allows you to select the names you are interested in without downloading the data or running any notebook code.</p>
 <h3>The problematic link between age and year of birth</h3>
@@ -267,24 +271,79 @@ From the distribution, we can find that the median age of Alice is 67 years old 
 <p>There should probably be a way for sklearn's Naive Bayes implementation to deal with binned data, but even without it a little bit of math can allow us to make predictions while reducing the dataset by a factor of 7 million!</p>
 <h2>Related work</h2>
 <p>Once I started this project, I came across Nate Silver's similar analysis, <a href="https://fivethirtyeight.com/features/how-to-tell-someones-age-when-all-you-know-is-her-name/">"How to tell someone' s age when all you know is her name"</a>. The idea to find the quartiles for the different ages, which is incorporated into the <a href="https://kiwidamien.github.io/names_app/">web application</a>, came from his article.</p>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
             </section>
 
             <section class="post-info">
                 <div class="post-share">
-                    <a class="twitter" href="https://twitter.com/share?text=Name to Age&amp;url=/name-to-age.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <a class="twitter" href="https://twitter.com/share?text=Name to Age&amp;url=https://kiwidamien.github.io/name-to-age.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
                     <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
                     </a>
-                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=/name-to-age.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/name-to-age.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
                     <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
                     </a>
-                    <a class="googleplus" href="https://plus.google.com/share?url=/name-to-age.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/name-to-age.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
                     <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
                     </a>
                     <div class="clear"></div>
                 </div>
 
                 <aside class="post-tags">
-<a href="/tag/data-analysis.html">Data Analysis</a><a href="/tag/naive-bayes.html">Naive Bayes</a>                </aside>
+<a href="https://kiwidamien.github.io/tag/data-analysis.html">Data Analysis</a><a href="https://kiwidamien.github.io/tag/naive-bayes.html">Naive Bayes</a>                </aside>
 
                 <div class="clear"></div>
 
@@ -294,7 +353,7 @@ From the distribution, we can find that the median age of Alice is 67 years old 
 
 
                 <aside class="post-nav">
-                    <a class="post-nav-prev" href="/munging-with-multiindices-election-data.html">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/munging-with-multiindices-election-data.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-right"></i>
                                 <h2 class="post-nav-title">Munging with MultiIndices: election data</h2>
@@ -320,7 +379,7 @@ From the distribution, we can find that the median age of Alice is 67 years old 
     </footer>
   </section>
 
-  <script type="text/javascript" src="/theme/js/script.js"></script>
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
   
 </body>
 </html>
