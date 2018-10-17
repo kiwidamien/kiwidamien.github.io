@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Getting data with OAuth</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/getting-data-with-oauth.html" rel="canonical" />
+
+        <meta name="description" content="An example of using OAuth2.0 to access an API using Python's requests module, using Spotify as an example.">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Data mining">
+        <meta name="tags" content="OAuth">
+        <meta name="tags" content="API">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/getting-data-with-oauth.html">
+  <meta property="og:title" content="Getting data with OAuth">
+  <meta property="article:published_time" content="2018-10-14 11:00:00-07:00">
+            <meta property="og:description" content="An example of using OAuth2.0 to access an API using Python's requests module, using Spotify as an example.">
+
+            <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/cover_background/web_background.svg">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Getting data with OAuth</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sun 14 October 2018">Sun 14 October 2018</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/web.html">Web</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover"
+      style="background-image: url('assets/images/cover_background/web_background.svg'); background-repeat: repeat; background-size: 100px 100px; background-color: rgb(240,180,82);">
+      <div class="logoimg">
+        <img src='https://kiwidamien.github.io/assets/images/icon/turtle.svg'/>
+      </div>
+      <div class="logoimg">
+        <img src='assets/images/icon/web_icon.png'/>
+      </div>
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>You have found a great data source, with a published API. This means that you don't have to scrape pages, and do messy error prone parsing of HTML. Only one problem: you need to authenticate your script in order to use the API! Furthermore, the documentation gives you a list of endpoints you can query, such as</p>
+<div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">list_of_current_movies</span><span class="o">/</span><span class="p">{</span><span class="n">zipcode</span><span class="p">}</span><span class="o">/</span>
+</pre></div>
+
+
+<p>but it isn't always clear how to pass along the authentication information.</p>
+<h2>The old way</h2>
+<p>In some sites, you simply have to make a POST request with a couple of keys. Usually these are a username and password, or a client id and a client secret. A request might look like this:</p>
+<div class="highlight"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="mi">12345</span><span class="p">,</span>
+  <span class="s1">&#39;client_secret&#39;</span><span class="p">:</span> <span class="s1">&#39;AFASGou1821945u82109570912412098&#39;</span>
+<span class="p">}</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://api.myawesomesite.com/list_of_current_movies/98144/&#39;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+<span class="n">information</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</pre></div>
+
+
+<p>The <code>client_id</code> is typically used to track who is making calls to the API (so that you can be limited to the number of calls you are paying for), and the <code>client_secret</code> acts like a password.</p>
+<p>Passing this information in every request isn't that secure, so more and more sites are using OAuth2, which requires tokens.</p>
+<h2>Overview of the OAuth2.0 process</h2>
+<p>We are going to focus on <em>two-legged authentication</em>, in which you register an application with the site, and then use the application to collect data. This is two-legged because there are two parties involved: the site, and your application.</p>
+<p>If your app wants to access private user data, you generally need the user to agree to give you app permission, which is what happens with <em>three-legged</em> authentication, because we need to identify the user, the site, and the application. If you have ever used a Facebook app that asks for permission to use certain types of data from your profile, you have participated in three-legged authentication.</p>
+<p>Application developers will probably want to focus on three-legged authentication. As data scientists, we are probably happy grabbing the publicly available data (that is, until we want to make personalized recommendations and predictions), so we will focus on the simpler two-legged authentication.</p>
+<p>The basic process for getting setup for OAuth2 is to register an application, to get an <code>id</code> and a <code>secret</code>. To actually use the <code>id</code> and <code>secret</code> is a little more involved:</p>
+<ol>
+<li>First, we use the <code>id</code> and <code>secret</code> to get a <em>token</em> from the authorization endpoint.</li>
+<li>Then we can use the token from step 1 in future requests to authorize us.</li>
+</ol>
+<p>The token generated in step 1 is similar to the old method of passing your <code>id</code> and <code>secret</code> each time, except that tokens expire. If someone gets hold of your token, then they can access the API as your app until the token expires (tokens are typically valid for about an hour on most sites). If they access your <code>id</code> and <code>secret</code>, then they can pretend to be your app forever.</p>
+<p>The rest of this post will show how to authenticate your requests for the Spotify API. From here, you should be able to generalize to other APIs with small changes. For the impatient, a simple version of the code has been posted <a href="https://gist.github.com/kiwidamien/f1f310f81c48c57a531b8464b877bf9c">here</a>, as well as a slightly more robust <a href="https://gist.github.com/kiwidamien/09bb2d4a55c9fb3b265697ba12c1ff8e">class-based version</a>.</p>
+<h2>Spotify API</h2>
+<p>The <a href="https://developer.spotify.com/documentation/web-api/reference/tracks/">Spotify API documentation</a> shows a list of endpoints we can use. We are going to try and access the following endpoint:</p>
+<div class="highlight"><pre><span></span><span class="n">GET</span> <span class="o">/</span><span class="n">v1</span><span class="o">/</span><span class="n">tracks</span><span class="o">/</span><span class="p">{</span><span class="nb">id</span><span class="p">}</span>
+</pre></div>
+
+
+<p>This endpoint will tell us a lot of information about where the track labeled by <code>id</code> is played, the duration, and the artists. An <a href="https://developer.spotify.com/documentation/web-api/reference/tracks/get-track/">example from the documentation</a> is gives the curl request, and the output for the track <code>11dFghVXANMlKmJXsNCbNl</code>:</p>
+<div class="highlight"><pre><span></span> curl -X GET <span class="s2">&quot;https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl&quot;</span> -H <span class="s2">&quot;Authorization: Bearer {your access token}&quot;</span>
+ <span class="sb">```</span>
+ The <span class="o">(</span>truncated<span class="o">)</span> output is
+ <span class="sb">```</span>python
+ <span class="o">{</span>
+  <span class="s2">&quot;album&quot;</span>: <span class="o">{</span>
+    <span class="s2">&quot;album_type&quot;</span>: <span class="s2">&quot;single&quot;</span>,
+    <span class="s2">&quot;artists&quot;</span>: <span class="o">[</span>
+      <span class="o">{</span>
+        <span class="s2">&quot;external_urls&quot;</span>: <span class="o">{</span>
+          <span class="s2">&quot;spotify&quot;</span>: <span class="s2">&quot;https://open.spotify.com/artist/6sFIWsNpZYqfjUpaCgueju&quot;</span>
+        <span class="o">}</span>,
+        <span class="s2">&quot;href&quot;</span>: <span class="s2">&quot;https://api.spotify.com/v1/artists/6sFIWsNpZYqfjUpaCgueju&quot;</span>,
+        <span class="s2">&quot;id&quot;</span>: <span class="s2">&quot;6sFIWsNpZYqfjUpaCgueju&quot;</span>,
+        <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;Carly Rae Jepsen&quot;</span>,
+        <span class="s2">&quot;type&quot;</span>: <span class="s2">&quot;artist&quot;</span>,
+        <span class="s2">&quot;uri&quot;</span>: <span class="s2">&quot;spotify:artist:6sFIWsNpZYqfjUpaCgueju&quot;</span>
+      <span class="o">}</span>
+    <span class="o">]</span>,
+    <span class="s2">&quot;available_markets&quot;</span>: <span class="o">[</span> ....<span class="o">]</span>,
+    ....
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>Our goals are to be able to create the access token so we can make this request, and then make the request in Python rather than using cURL.</p>
+<h3>Setting up an app</h3>
+<p>The first thing we need to do is create an application on Spotify's website, so that Spotify can track and limit our API usage. To do this:</p>
+<ol>
+<li>Go to the Spotify developer page https://developer.spotify.com/</li>
+<li>Log in (or create an account if necessary)</li>
+<li>Click on 'dashboard' (or go to https://developer.spotify.com/dashboard/applications)</li>
+<li>Click on 'Create a client id' on the upper right-hand side</li>
+</ol>
+<p><img alt="The client dashboard" src="images/spotify/dashboard.png"></p>
+<p>You will have to fill in a little bit about your application, and then you will get redirected to your application page. This page will give you access to your client id, and you will be able to click "SHOW CLIENT SECRET" to see your client secret.</p>
+<p><img alt="The page for your app containing client_id and client_secret" src="images/spotify/client.png"></p>
+<p>Copy the client id and client secret into your script.</p>
+<h3>Getting a token</h3>
+<p>For Spotify, we get tokens by passing our client id and secret to https://accounts.spotify.com/api/token. Each service using OAuth will have a similar location to get tokens.</p>
+<p>We will have to explain how to encode the client id and secret, but the basic structure of the token request is</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+
+<span class="c1">#.....</span>
+<span class="c1"># Some code here to make base64_encoded_id_secret</span>
+<span class="c1">#</span>
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/x-www-form-urlencoded&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s1">&#39;Basic {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base64_encoded_id_secret</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;grant_type&#39;</span><span class="p">:</span> <span class="s1">&#39;client_credentials&#39;</span><span class="p">}</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://accounts.spotify.com/api/token&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+<span class="n">token</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;access_token&#39;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>The header object is telling us how the request is encoded (using <code>application/x-www-form-urlencoded</code> is standard for OAuth requests), and passing in the client id and secret. This part is transferrable to other applications. Spotify also requires we tell it what sort of token we want in the <code>params</code>, and generally won't be the same in different applications (you will need to check the documentation for the service you are using to see what, if anything, it requires).</p>
+<p>The request object returns a few more fields:</p>
+<div class="highlight"><pre><span></span><span class="p">{</span><span class="s1">&#39;access_token&#39;</span><span class="p">:</span> <span class="s1">&#39;BQBOBniuRmoc1tZzTCV4PWidAgSf2JufLwR4YdzQ8Dbiu0XmSeNvxNfUY9U_b_ZItrXKbsXpZVj5bzssOBE&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;expires_in&#39;</span><span class="p">:</span> <span class="mi">3600</span><span class="p">,</span>
+ <span class="s1">&#39;scope&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+ <span class="s1">&#39;token_type&#39;</span><span class="p">:</span> <span class="s1">&#39;Bearer&#39;</span><span class="p">}</span>
+</pre></div>
+
+
+<p>The one we are interested in is the <code>access_token</code>. The <code>expires_in</code> tells us how many seconds this access token is valid for, which in this case translates to 1 hour. Any requests we want to make after that will require we get a new token and use that instead.</p>
+<p>Now we need to encode the id and secret so the above code will run!</p>
+<h3>Base64 encoding</h3>
+<p>To keep this example concrete, let's say:</p>
+<ul>
+<li>my <code>client_id</code> is <code>12345</code></li>
+<li>my <code>client_secret</code> is <code>8ACDC</code></li>
+</ul>
+<p>To get my token, I need the <code>Authorization</code> field of the header to be the <em>base64 encoded string</em> <code>client_id:client_secret</code>, i.e. <code>12345:8ACDC</code>.</p>
+<p>Python3 makes this a little cumbersome, because it treats base64 as <code>bytes</code>, which are distinct from strings. Let's show the answer, and then talk about what is happening at each step:</p>
+<div class="highlight"><pre><span></span><span class="c1"># get the base64 encoded STRING for &#39;12345:8ACDC&#39;</span>
+<span class="n">base64_encoded_id_secret</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="s1">&#39;12345:8ACDC&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Here are the steps:</p>
+<ol>
+<li>We start with the string we want to encode: <code>'12345:8ACDC'</code></li>
+<li>We need to convert it to bytes, because Python3 won't allow base64 encoding on strings. The <code>encode()</code> method turns a string into bytes. Note this is usually pretty boring, as <code>'random string'.encode()</code> will return <code>b'random string'</code> in the Python interpreter, where the <code>b</code> at the front is telling us Python is now thinking of this object as bytes rather than a string.</li>
+<li>Then we do the base64 encoding. Here <code>base64.b64encode('12345:8ACDC'.encode())</code> returns a <code>b'MTIzNDU6OEFDREM='</code>.</li>
+<li>We still need to do string operations to this, because we end up passing <code>Basic MTIzNDU6OEFDREM=</code> to the <code>Authorization</code> field. To convert from bytes back to a string, we use <code>decode()</code>.</li>
+</ol>
+<h3>Final code to get token</h3>
+<p>Here is all the code to get the token:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">base64</span>
+
+<span class="n">client_id</span> <span class="o">=</span> <span class="s1">&#39;12345&#39;</span>      <span class="c1"># replace with your_client_id</span>
+<span class="n">client_secret</span> <span class="o">=</span> <span class="s1">&#39;8ACDC&#39;</span>  <span class="c1"># replace with your_client_secret</span>
+<span class="n">to_encode</span> <span class="o">=</span> <span class="n">client_id</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="n">client_secret</span>
+<span class="n">base64_encoded_id_secret</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">to_encode</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+<span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s1">&#39;Content-Type&#39;</span><span class="p">:</span> <span class="s1">&#39;application/x-www-form-urlencoded&#39;</span><span class="p">,</span>
+  <span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s1">&#39;Basic {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base64_encoded_id_secret</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;grant_type&#39;</span><span class="p">:</span> <span class="s1">&#39;client_credentials&#39;</span><span class="p">}</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s1">&#39;https://accounts.spotify.com/api/token&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+
+<span class="n">token</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="s1">&#39;access_token&#39;</span><span class="p">]</span>
+</pre></div>
+
+
+<h2>Using the token</h2>
+<p>Recall our goal was to query the endpoint <code>v1/tracks/11dFghVXANMlKmJXsNCbNl</code> to get information track <code>11dFghVXANMlKmJXsNCbNl</code>. We already saw the cURL request that could do this:</p>
+<div class="highlight"><pre><span></span> curl -X GET <span class="s2">&quot;https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl&quot;</span> -H <span class="s2">&quot;Authorization: Bearer {your access token}&quot;</span>
+</pre></div>
+
+
+<p>If we copied-and-pasted in the token we got above for the access token, the request would work. Let's see how we can get it to work in Python:</p>
+<div class="highlight"><pre><span></span><span class="c1"># we have token from before</span>
+<span class="n">header</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="s1">&#39;Bearer &#39;</span> <span class="o">+</span> <span class="n">token</span> <span class="p">}</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;https://api.spotify.com/v1/tracks/11dFghVXANMlKmJXsNCbNl&#39;</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Notice a few things here:</p>
+<ul>
+<li>We didn't have to put the content type into the header</li>
+<li>We pass the token directly; <strong>DON'T</strong> try and do any base64 encoding on it</li>
+<li>The Authorization type has changed from <code>Basic</code> (using encoded client:secret) to <code>Bearer</code> (using the token directly)</li>
+</ul>
+<h2>Summary</h2>
+<p>Using two-legged OAuth requires three steps:</p>
+<ol>
+<li>Register an app, to get client id and secret</li>
+<li>Find out the URL to get tokens, and make a POST request to generate tokens. In the case of Spotify, this is https://accounts.spotify.com/api/token. Requires a base64 encoding of the <code>id:secret</code> string.</li>
+<li>Make all future requests with the header <code>{'Authorization': 'Bearer &lt;the token&gt;'}</code>.</li>
+</ol>
+<p>There is an <a href="https://gist.github.com/kiwidamien/f1f310f81c48c57a531b8464b877bf9c">example of the full source</a> for this application. A slightly more <a href="https://gist.github.com/kiwidamien/09bb2d4a55c9fb3b265697ba12c1ff8e">sophisticated example</a> refreshes the token once it expires, which can be useful when you have long running scraping jobs.</p>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Getting data with OAuth&amp;url=https://kiwidamien.github.io/getting-data-with-oauth.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/getting-data-with-oauth.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/getting-data-with-oauth.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/data-mining.html">Data mining</a><a href="https://kiwidamien.github.io/tag/oauth.html">OAuth</a><a href="https://kiwidamien.github.io/tag/api.html">API</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/webscraping-beyond-beautifulsoup-and-selenium.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">Webscraping beyond BeautifulSoup and Selenium</h2>
+                            <p class="post-nav-excerpt">First article in the advanced web-scraping series. Clarifies the difference between...</p>
+                        </section>
+                    </a>
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/name-to-age.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Name to Age</h2>
+                            <p class="post-nav-excerpt">How much does your name say about your age? We use the database of names from the...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+</body>
+</html>
