@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>An Introduction to ARIMA</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/an-introduction-to-arima.html" rel="canonical" />
+
+        <meta name="description" content="An article that outlines the standard approach to time series.">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Time series">
+        <meta name="tags" content="ARIMA">
+        <meta name="tags" content="Classical time series">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/an-introduction-to-arima.html">
+  <meta property="og:title" content="An Introduction to ARIMA">
+  <meta property="article:published_time" content="2018-10-22 23:00:00-07:00">
+            <meta property="og:description" content="An article that outlines the standard approach to time series.">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">An Introduction to ARIMA</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Mon 22 October 2018">Mon 22 October 2018</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+		    <p>This post is part 1 of the "ARIMA" series:</p>
+    		    <ol class="parts">
+            	        <li class="active">
+                          <a href='https://kiwidamien.github.io/an-introduction-to-arima.html'>An Introduction to ARIMA</a>
+                        </li>
+                    </ol>
+                <h1>What is a time series?</h1>
+<p>A time series is any variable that is recorded at <em>regularly spaced</em> intervals. For example, if we recorded the temperature every day at the same time, we might get the following time series:</p>
+<table>
+<thead>
+<tr>
+<th>Day/Time</th>
+<th>1/12:00</th>
+<th>2/12:00</th>
+<th>3/12:00</th>
+<th>4/12:00</th>
+<th>5/12:00</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temp (F)</td>
+<td>65</td>
+<td>68</td>
+<td>70</td>
+<td>71</td>
+<td>70</td>
+</tr>
+</tbody>
+</table>
+<p>The following set of observations are <strong>not</strong> a time series:</p>
+<table>
+<thead>
+<tr>
+<th>Day/Time</th>
+<th>1/12:00</th>
+<th>2/13:00</th>
+<th>3/10:00</th>
+<th>4/9:00</th>
+<th>5/16:00</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temp (F)</td>
+<td>65</td>
+<td>70</td>
+<td>71</td>
+<td>68</td>
+<td>66</td>
+</tr>
+</tbody>
+</table>
+<p>Even though they measure how a variable (temperature) changes in time, the time intervals are not regularly spaced.</p>
+<h1>Modeling with time series</h1>
+<p>When building predictive models, we are looking to take some <em>features</em> to predict a <em>target</em>. For example, a machine learning model might predict house prices using square footage, neighborhood, number of bedrooms and number of bathrooms. In this case, the features are <code>(square footage, neighborhood, number of bedrooms, number of bathrooms)</code> and the target is <code>house price</code>.</p>
+<p>For a time series model, we are considering two types of features:</p>
+<ul>
+<li>Features that don't include the target variable, called <em>exogenous variables</em></li>
+<li>Previous values of the target variable, called <em>lags</em></li>
+</ul>
+<p>For example, we could try and predict the temperature (target) tomorrow using the amount of cloud cover today (an exogenous variable) and the temperature in each of the last three days (the lags).</p>
+<p>The simplest time series don't use any exogenous variables; instead they try to predict future values of the target using only the past values. Formally, this is an example of the <a href="https://en.wikipedia.org/wiki/Sequence_learning">sequence prediction problem</a>. The state of the art techniques for learning a general sequence is to use <strong>Long Short-term Memory</strong> (LSTM) neural networks. While LSTMs can be used for neural networks, many time series problems show variation on a "natural cycle", so it can help to use techniques that manipulate this pattern. For example:</p>
+<ul>
+<li>Food sales see weekly cycles (Saturdays are similar to other Saturdays), monthly cycles related to people being paid.</li>
+<li>Drink driving incidents also see weekly cycles (as well as sharp peaks around holidays).</li>
+<li>Weather events typically don't see weekly cycles, but do see strong yearly cycles (related to the seasons).</li>
+</ul>
+<p>Many time series techniques "anticipate" cyclic behavior, and give up flexibility in order to gain interpretability and </p>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=An Introduction to ARIMA&amp;url=https://kiwidamien.github.io/an-introduction-to-arima.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/an-introduction-to-arima.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/an-introduction-to-arima.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/time-series.html">Time series</a><a href="https://kiwidamien.github.io/tag/arima.html">ARIMA</a><a href="https://kiwidamien.github.io/tag/classical-time-series.html">Classical time series</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/an-introduction-to-simpleprophet.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">An introduction to SimpleProphet</h2>
+                            <p class="post-nav-excerpt">Introduces SimpleProphet, a less automated version of Facebook's time series analysis...</p>
+                        </section>
+                    </a>
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/prepping-for-the-interview-sql.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Prepping for the interview - SQL</h2>
+                            <p class="post-nav-excerpt">Links to a couple of useful resources for preparing for the SQL, whether it is for a...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+</body>
+</html>
