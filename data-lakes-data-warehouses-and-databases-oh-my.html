@@ -135,17 +135,19 @@
                 <h1>Types of data storage</h1>
 <p>In this article, we look at the difference between three different storage types:</p>
 <ul>
-<li><strong>Production database</strong> (aka "Prod")</li>
+<li>
+<p><strong>Production database</strong> (aka "Prod")
+  Fast, responsive database used by your application to display information to end users. Typically the perview/responsibility of software engineering. Exists in pretty much all applications.</p>
+</li>
+<li>
+<p><strong>Data warehouse</strong>
+  Stores more information than prod in a structured way. Used by analysts, data scientists, and machine learning engineers. Data in a data warehouse typically has an end goal in mind (e.g. we need this data to track metric X). Generally the responsibility of the data science and product teams. Exists in pretty much all applciations.</p>
+</li>
+<li>
+<p><strong>Data lake</strong>
+  Place that raw / unstructured data is placed. If there are changes in definitions or proxies, this allows reprocessing of data into the data warehouse. It also allows exploration of data that isn't currently being used for additional relevant signals. Generally of interest to the data science team, or new ideas from the product team. </p>
+</li>
 </ul>
-<p>Fast, responsive database used by your application to display information to end users. Typically the perview/responsibility of software engineering. Exists in pretty much all applications.</p>
-<ul>
-<li><strong>Data warehouse</strong></li>
-</ul>
-<p>Stores more information than prod in a structured way. Used by analysts, data scientists, and machine learning engineers. Data in a data warehouse typically has an end goal in mind (e.g. we need this data to track metric X). Generally the responsibility of the data science and product teams. Exists in pretty much all applciations.</p>
-<ul>
-<li><strong>Data lake</strong></li>
-</ul>
-<p>Place that raw / unstructured data is placed. If there are changes in definitions or proxies, this allows reprocessing of data into the data warehouse. It also allows exploration of data that isn't currently being used for additional relevant signals. Generally of interest to the data science team, or new ideas from the product team. </p>
 <h2>Production database</h2>
 <p>The production database is the database used by your application when it actually retrieves information. For example, a customers orders would appear in a production database because the application needs that information to display it when the user clicks on the "Order history" button. The production database might not include every page the user has visited, unless the application needs that for a recommendation engine (even then, we might only record the items the user viewed, rather than every single page and click in the production database). </p>
 <p>The production database is generally designed for the software developers, and needs to be fast and responsibe (the application has to wait until the production database returns information before it can be displayed to the user). </p>
@@ -213,6 +215,7 @@
 </table>
 <h3>Other resources</h3>
 <ul>
+<li><a href="https://www.blue-granite.com/blog/bid/402596/top-five-differences-between-data-lakes-and-data-warehouses">Five differences between data lakes and data warehouses</a></li>
 <li><a href="https://iianalytics.com/analytics-resources/the-data-lake-debate">International Institute Of Analytics: The Data Lake Debate</a> featuring Tamara Dull (for the pro-data lake side) and Anne Buff (for the cons)</li>
 <li><a href="https://opentextbc.ca/dbdesign01/chapter/chapter-13-database-development-process/">Database design from OpenCampus</a></li>
 <li><a href="https://aws.amazon.com/big-data/datalakes-and-analytics/what-is-a-data-lake/">Amazon's data lake page</a></li>
