@@ -164,13 +164,14 @@
 s_0 = \mu\left(\frac{\mu(1-\mu)}{s^2} - 1\right)\\
 f_0 = (1-\mu)\left(\frac{\mu(1-\mu)}{s^2} - 1\right) = \frac{(1-\mu)}{\mu}s_0
 $$</div>
-<p>If we apply the method of moments to this data, we find <code>s0</code> and <code>f0</code> as negative numbers! i.e. there is no choice of (valid) parameters that make a beta distribution where the mean and variance match.</p>
+<p>If we apply the method of moments to this data, we find <code>s0</code> and <code>f0</code> as negative numbers! This means we cannot have a beta distribution that simultaneously has the same mean and variance as the data.</p>
 <p>Instead of trying to match mean and variance, we can use the built-in <code>fit</code> method for finding the parameters:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">beta</span>
-<span class="n">s0</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">incidence</span><span class="p">[</span><span class="s1">&#39;Rate_per_100k&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">1e5</span><span class="p">,</span> <span class="n">floc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">fscale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
+<span class="n">s0</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="o">*</span><span class="n">extra_params</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">incidence</span><span class="p">[</span><span class="s1">&#39;Rate_per_100k&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">1e5</span><span class="p">,</span> <span class="n">floc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">fscale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
 </pre></div>
 
 
+<p>The values for these parameters are <span class="math">\(s_0=19.4\)</span> and <span class="math">\(f_0=106389\)</span>. That is, for every county we imagine there are an additional 19 sick people, and an additional 106389 healthy people.</p>
 <p>We can visualize how well this plot did with the following code, using <code>beta.pdf</code> with our parameters to plot our fitted beta distribution.</p>
 <div class="highlight"><pre><span></span><span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">dpi</span><span class="o">=</span><span class="mi">130</span><span class="p">)</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
