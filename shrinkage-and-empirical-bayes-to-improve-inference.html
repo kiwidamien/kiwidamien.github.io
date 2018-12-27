@@ -128,16 +128,20 @@
         <div class="inner">
             <section class="post-content">
                 <h1>Shrinkage and Empirical Bayes to improve inference</h1>
-<p>There is a common problem when ranking items: if we just average the observations, fluctuations tend to make the very best (and very worst) items be those with very few observations. Consider the following three examples:
-<em> We are trying to measure the batters with the best hit rate. A rookie that has hit 2 balls out of 2 at-bats would have a hit rate of 1.0, handily beating Barry Bond's career hit rate of 0.306. To get hit rates over 0.300 is rare in major league baseball, so we are confident that the rookie's actual hit rate isn't 1.000.
-</em> When looking at kidney cancer incidence rates per county. It is a relatively rare disease, with the bottom rate being 6.6 per 100k in Garfield County (4 out of 60000), and a highest rate of 41.1 per 100k in Cass County (7 out of 17000). Having just one fewer person diagnosed with kidney cancer in Cass County would drop the rate to 35.2 per 100k. There are 63 counties that where the 95% confidence interval in the rate exceeds 41.1 per 100k.
-* We are trying to measure the rating of a book. A book with two 5 star ratings probably isn't better than a book with ten thousand ratings that average to 4.85.</p>
+<p>There is a common problem when ranking items: if we just average the observations, fluctuations tend to make the very best (and very worst) items be those with very few observations. Consider the following three examples:</p>
+<ul>
+<li>We are trying to measure the batters with the best hit rate. A rookie that has hit 2 balls out of 2 at-bats would have a hit rate of 1.0, handily beating Barry Bond's career hit rate of 0.306. To get hit rates over 0.300 is rare in major league baseball, so we are confident that the rookie's actual hit rate isn't 1.000.</li>
+<li>When looking at kidney cancer incidence rates per county. It is a relatively rare disease, with the bottom rate being 6.6 per 100k in Garfield County (4 out of 60000), and a highest rate of 41.1 per 100k in Cass County (7 out of 17000). Having just one fewer person diagnosed with kidney cancer in Cass County would drop the rate to 35.2 per 100k. There are 63 counties that where the 95% confidence interval in the rate exceeds 41.1 per 100k.</li>
+<li>We are trying to measure the rating of a book. A book with two 5 star ratings probably isn't better than a book with ten thousand ratings that average to 4.85.</li>
+</ul>
 <p>In each of these cases, just measuring the average over all items isn't useful. We want to know what the hit rate is of an individual player, the counties that have abnormally high kidney cancer rates, or the our best estimate of the actual book. One way of approaching this would be to have a cutoff and refuse to make any inference before we had "enough" data.</p>
 <p>Empirical Bayes approaches this problem differently. We use the entire population (that is, all players, all counties, or all books) to estimate what a "typical" result looks like. If we had no batting data, for example, we can still say based on all major league players that a given player is likely to have a hit rate between 0.2 and 0.3. We use this as the <em>prior</em>. This is the <em>empirical</em> part.  As we collect more and more data, we use Bayes's rule to update our prior. When we have only a little bit of data on a player, county, or book, the prior is important for keeping our estimates grounded. As we get more data, the initial prior becomes less and less important, which matches our intuition that the large fluctuations needed to significantly bias large datasets are rare.</p>
 <p>This general technique of moving the observed data toward the mean is also called "shrinkage" (although maybe "regression", as in "regression to the mean" would be a better name).</p>
-<p>David Robinson has already given an <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">excellent treatment</a> of empirical Bayes in the context of baseball statistics on his blog, <a href="http://varianceexplained.org/">variance explained</a>. We will look at the two other examples above in this blog post:
-<em> We will look at the kidney cancer rates per county. This example has been discussed in "Thinking Fast and Slow" by Daniel Kahneman. The data set is available <a href="http://statecancerprofiles.cancer.gov/map/map.withimage.php?99&amp;001&amp;072&amp;00&amp;0&amp;01&amp;0&amp;1&amp;6&amp;0#results">here</a>
-</em> We will look at the ratings of boardgames given at boardgamegeek. This problem was inspired by the 538 article <a href="">""</a>. In this case, the ratings were not shrunk, so games with fewer reviews typically showed more variance. The data set for this problem is available <a href="https://github.com/rasmusgreve/BoardGameGeek/blob/master/DataMining/data2014-04-03_03-35-14.csv">here</a>.</p>
+<p>David Robinson has already given an <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">excellent treatment</a> of empirical Bayes in the context of baseball statistics on his blog, <a href="http://varianceexplained.org/">variance explained</a>. We will look at the two other examples above in this blog post:</p>
+<ul>
+<li>We will look at the kidney cancer rates per county. This example has been discussed in "Thinking Fast and Slow" by Daniel Kahneman. The data set is available <a href="http://statecancerprofiles.cancer.gov/map/map.withimage.php?99&amp;001&amp;072&amp;00&amp;0&amp;01&amp;0&amp;1&amp;6&amp;0#results">here</a></li>
+<li>We will look at the ratings of boardgames given at boardgamegeek. This problem was inspired by the 538 article <a href="">""</a>. In this case, the ratings were not shrunk, so games with fewer reviews typically showed more variance. The data set for this problem is available <a href="https://github.com/rasmusgreve/BoardGameGeek/blob/master/DataMining/data2014-04-03_03-35-14.csv">here</a>.</li>
+</ul>
 <p>By using these two examples, we can show how to apply the empirical Bayes's technique of "shrinking" (or regressing) our observed values toward the mean when estimating a proportion (kidney cancer rates) as well as a continuous variable (board game ratings).</p>
 <h2>Case study 1: Shrinking proportions with kidney cancer data</h2>
 <p>Let's start by getting an overall view of the kidney cancer rates. Our first attempt might be to simply make a histogram of the kidney cancer rate.</p>
@@ -152,14 +156,14 @@
 <div class="math">$$ p_i = \frac{\text{num actually sick}}{\text{total actual people}} = \frac{s_i}{s_i + f_i} $$</div>
 <p>The empirical Bayes method would adjust this estimate to
 </p>
-<div class="math">$$ p_i = \frac{s_i + s0}{s_i + f_i + (s0 + f0)} $$</div>
+<div class="math">$$ p_i = \frac{s_i + s_0}{s_i + f_i + (s_0 + f_0)} $$</div>
 <p>One way of thinking about this result is that we are pretending that we have <code>s0</code> sick people and <code>f0</code> healthy people that are not actually part of our population. When calculating the rate, we still look at the ratio of sick people to the total, but we also include the <code>(s0 + f0)</code> "imaginary people" we are using to represent the rest of the population.</p>
 <h3>Step 1: Use population data to get prior</h3>
 <p>Since we are modeling a binomial process (in each county, an individual either does or does not get sick), it is convenient if we can model this distribution with a <span class="math">\(\beta\)</span>-distribution. One way of doing this is called the "method of moments", where we find <code>s0</code> and <code>f0</code> to make the mean and variance of the beta distribution match the mean and variance of our data. The formula are</p>
-<div class="math">\begin{align*}
+<div class="math">\begin{align}
 s_0 = \mu\left(\frac{\mu(1-\mu)}{s^2} - 1)\\
 f_0 = (1-\mu)\left(\frac{\mu(1-\mu)}{s^2} - 1) = \frac{(1-\mu)}{\mu}s_0
-\end{align*}</div>
+\end{align}</div>
 <p>If we apply the method of moments to this data, we find <code>s0</code> and <code>f0</code> as negative numbers! i.e. there is no choice of (valid) parameters that make a beta distribution where the mean and variance match.</p>
 <p>Instead of trying to match mean and variance, we can use the built-in <code>fit</code> method for finding the paramters:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">beta</span>
@@ -180,17 +184,19 @@ f_0 = (1-\mu)\left(\frac{\mu(1-\mu)}{s^2} - 1) = \frac{(1-\mu)}{\mu}s_0
 </pre></div>
 
 
-<p><img src='images/kidney/beta_distribution_nofit.png' alt='Histogram of cancer rates per county' style="width:80%; margin: 0 auto;"/></p>
+<p><img src='images/kidney/beta_distribution_fit.png' alt='Histogram of cancer rates per county' style="width:80%; margin: 0 auto;"/></p>
 <p>The fit isn't terrible, but a slightly smaller lump around 0.00023 suggests we might have two different mixed beta distributions. We could improve the fit slightly by modeling our prior as two beta distributions, but this would complicate our shrinkage. We still find a reasonable fit with <code>s0</code> and <code>f0</code>.</p>
 <p>The downside to using the best-fit method is that the average rate is shrunk toward the average of the beta distribution, not the average of the data. We can find the average of the beta distribution directly from the parameters <code>s0</code> and <code>f0</code>:
 </p>
-<div class="math">$$\text{average} = \frac{s0}{s0 + f0} = 0.000182 \text{ (i.e. 18.2 per 100k)}$$</div>
+<div class="math">$$\text{average of beta distribution} = \frac{s_0}{s_0 + f_0} = 0.000182 \text{ (i.e. 18.2 per 100k)}$$</div>
 <p>
-By comparison, the average from the data is 16.1 per 100k,.</p>
+By comparison, the average from the data is 16.1 per 100k.</p>
 <h3>Step 2: Use prior to "shrink" estimates to population values</h3>
-<p>Our dataframe has the following columns:
-<em> <code>'average_annual_count'</code>: the number of people in the county that we found the disease.
-</em> <code>'population'</code>: the population of the people in the country.</p>
+<p>Our dataframe has the following columns:</p>
+<ul>
+<li><code>'average_annual_count'</code>: the number of people in the county that we found the disease.</li>
+<li><code>'population'</code>: the population of the people in the country.</li>
+</ul>
 <p>To get our empirical bayes estimate needs us to add <code>s0</code> to the number of detected cases, and <code>s0 + f0</code> to the population. We have</p>
 <div class="highlight"><pre><span></span><span class="n">incidence</span><span class="p">[</span><span class="s1">&#39;shrinkage&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e5</span><span class="o">*</span><span class="p">(</span><span class="n">incidence</span><span class="p">[</span><span class="s1">&#39;average_annual_count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">s0</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">incidence</span><span class="p">[</span><span class="s1">&#39;population&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">s0</span> <span class="o">+</span> <span class="n">f0</span><span class="p">)</span>
 </pre></div>
