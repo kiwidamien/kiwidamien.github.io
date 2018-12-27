@@ -161,8 +161,8 @@
 <h3>Step 1: Use population data to get prior</h3>
 <p>Since we are modeling a binomial process (in each county, an individual either does or does not get sick), it is convenient if we can model this distribution with a <span class="math">\(\beta\)</span>-distribution. One way of doing this is called the "method of moments", where we find <code>s0</code> and <code>f0</code> to make the mean and variance of the beta distribution match the mean and variance of our data. The formula are</p>
 <div class="math">$$
-s_0 = \mu\left(\frac{\mu(1-\mu)}{s^2} - 1)\\
-f_0 = (1-\mu)\left(\frac{\mu(1-\mu)}{s^2} - 1) = \frac{(1-\mu)}{\mu}s_0
+s_0 = \mu\left(\frac{\mu(1-\mu)}{s^2} - 1\right)\\
+f_0 = (1-\mu)\left(\frac{\mu(1-\mu)}{s^2} - 1\right) = \frac{(1-\mu)}{\mu}s_0
 $$</div>
 <p>If we apply the method of moments to this data, we find <code>s0</code> and <code>f0</code> as negative numbers! i.e. there is no choice of (valid) parameters that make a beta distribution where the mean and variance match.</p>
 <p>Instead of trying to match mean and variance, we can use the built-in <code>fit</code> method for finding the parameters:</p>
