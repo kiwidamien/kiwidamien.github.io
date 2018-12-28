@@ -143,7 +143,145 @@
                         </li>
                     </ol>
                 <h1>Derivations and Conjugate Priors (average ratings)</h1>
-<p>Placeholder</p>
+<h2>The problem statement</h2>
+<p>We have a lot  of items (such as boardgames) <span class="math">\(i\)</span>, and each item has multiple reviews. We are interested in making the best estimate of the average rating <span class="math">\(\theta_i\)</span> of each item. Item <span class="math">\(i\)</span> has received <span class="math">\(n_i\)</span> ratings, with an observed average rating of <span class="math">\(\bar{x}_i\)</span> and observed variance <span class="math">\(\sigma_i\)</span>.  In particular, we want to use information about the <em>global</em> distribution of ratings for items to improve the estimates of <span class="math">\(\theta_i\)</span> for each individual item.</p>
+<p>Under some reasonable assumption, we will show the "most likely value" for <span class="math">\(\theta_i\)</span> (technically the MAP estimate) is
+</p>
+<div class="math">$$\theta_i = B_i \bar{x}_i + (1-B_i)\mu, \quad\quad\quad B_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}$$</div>
+<p>
+where</p>
+<ul>
+<li><span class="math">\(\mu\)</span> is the average rating of all the items,</li>
+<li><span class="math">\(\tau^2\)</span> is the variance of the average rating of all the items,</li>
+<li><span class="math">\(\bar{x}_i\)</span> is the observed average rating of item <span class="math">\(i\)</span>,</li>
+<li><span class="math">\(\sigma_i^2\)</span> is the observed variance of the ratings for item <span class="math">\(i\)</span>,</li>
+<li><span class="math">\(n_i\)</span> is the number of reviews of item <span class="math">\(i\)</span>,</li>
+<li><span class="math">\(\epsilon_i^2 = \sigma_i^2/n_i\)</span> is the standard error in $\bar{x}_i.</li>
+</ul>
+<h3>Bayes's theorem and conjugate prior</h3>
+<p>We want to find the most likely value of <span class="math">\(\theta_i\)</span> given the data we have collected. i.e. we are looking to maximize <span class="math">\(P(\theta_i | \text{data})\)</span>. This is called the <em>a posteriori</em> distribution, as we are making our decision <em>after</em> looking at the data. Bayes's theorem allows us to calculate this provided we have two other pieces of information:
+</p>
+<div class="math">$$P(\theta_i | \bar{x}_i) = \frac{P(\bar{x}_i|\theta_i)P(\theta_i)}{P(\bar{x}_i)}$$</div>
+<p>
+Since the denominator is independent of our choices of parameter <span class="math">\(\theta_i\)</span> (i.e. it can be thought of as a normalizing factor), and we are interested in maximizing, it is more convenient to write Bayes's theorem as
+</p>
+<div class="math">$$P(\theta_i | \bar{x}_i) \propto P(\bar{x}_i|\theta_i)P(\theta_i)$$</div>
+<p>The central limit theorem takes care of the first factor for us. It tells us explicitly that <span class="math">\(P(\bar{x_i} | \theta_i)\)</span> follows a normal distribution:
+</p>
+<div class="math">$$P(\bar{x}_i|\theta_i) \propto \exp\left(-\frac{(\bar{x}_i - \theta_i)^2}{2\epsilon_i^2}\right)$$</div>
+<p>
+where <span class="math">\(\epsilon_i = \sigma_i/\sqrt{n_i}\)</span> is the standard error.</p>
+<p>The <em>prior</em>, <span class="math">\(P(\theta_i)\)</span>, is up for grabs. One of the criticisms of approaching things like a Bayesian is the arbitrariness in picking a prior, as different choices will lead to different results, and there is no one "right way" to select one. The prior used here will be the <em>conjugate prior</em> to the normal distribution. This choice is one of convenience, although we can use the philosophy of empirical Bayes to see if it is a reasonable prior.</p>
+<h4>What is a conjugate prior?</h4>
+<p>A useful way of motivating the idea of a conjugate prior is to think of data collection as a continuous process. When we first collect our data, we make up some prior <span class="math">\(P_0(\theta_i)\)</span>, and use Bayes's theorem to get
+</p>
+<div class="math">$$P(\theta_i | \text{data set 1}) = \frac{P(\text{data set 1}|\theta_i)P(\theta_i)}{P(\text{data set 1})}$$</div>
+<p>The a posteriori distribution, <span class="math">\(P(\theta_i | \text{data set 1})\)</span>,  represents our confidence in the values of <span class="math">\(\theta_i\)</span> <em>after</em> looking at the data. If we have a new data set, it makes sense for <span class="math">\(P(\theta_i | \text{data set 1})\)</span> to act as the <em>new</em> prior, since we have more information than we did when looking at the first data set:
+</p>
+<div class="math">$$P(\theta_i | \text{data set 2}) = \frac{P(\text{data set 2}|\theta_i)P(\text{data set 1}|\theta_i)}{P(\text{data set 1})}$$</div>
+<p>
+i.e. we can view collecting data as the process of updating our prior to whatever the a posterior distribution was from the last round of data collection.</p>
+<p>The type of distribution we get for the a posterior distribution depends on two things:
+<em> The likelihood function, <span class="math">\(P(\text{data} | \theta_i)\)</span>
+</em> The prior <span class="math">\(P(\theta_i)\)</span></p>
+<p>The likelihood functions are often well studied distributions, such as the normal, poisson, or binomial distributions. The <em>conjugate prior</em> to a particularly likelihood function is a choice of parameterized prior such that the a posterior distribution is in the same family of distributions, but with a different set of parameters. This makes updating incredibly simple: instead of having to do a messy numerical integration every time we collect new data, we just need to know how to update the parameters. Since the "new prior" belongs to the same family, we can use the same technique for the next update.</p>
+<p>For the rating problem, the central limit theorem tells us our likelihood <span class="math">\(P(\theta_i | \bar{x}_i)\)</span> is a Gaussian. We will show that the Gaussian distribution is conjugate to itself, and use this to motivate the choice of a Gaussian prior.</p>
+<h2>Using a Gaussian Prior</h2>
+<p>We will start by using the Gaussian prior with mean <span class="math">\(\mu\)</span> and variance <span class="math">\(\tau^2\)</span>:
+</p>
+<div class="math">$$P(\theta_i) \propto \exp\left(-\frac{(\theta_i-\mu)^2}{2\tau^2}\right)$$</div>
+<p>This means that our a priori likelihood is
+</p>
+<div class="math">$$P(\theta_i | \bar{x}_i) \propto \exp\left(-\frac{(\bar{x}_i - \theta_i)^2}{2\epsilon_i^2}\right)\exp\left(-\frac{(\theta_i-\mu)^2}{2\tau^2}\right)$$</div>
+<p>
+We can use the fact that products of exponentials simply sum their arguments:
+</p>
+<div class="math">$$P(\theta_i | \bar{x}_i) \propto \exp\left(-\frac{1}{2}\left[\frac{(\bar{x}_i - \theta_i)^2}{\epsilon_i^2} + \frac{(\theta_i-\mu)^2}{\tau^2}\right]\right)$$</div>
+<p>
+Finally we can complete the square (and absorb the constant term into the proportionality) to get
+</p>
+<div class="math">$$P(\theta_i | \bar{x}_i) \propto \exp\left(-\frac{1}{2}\left(\frac{1}{\tau^2} + \frac{1}{\epsilon_i^2}\right)\left(\theta_i - \left[\frac{\tau^2 \bar{x}_i + \epsilon_i^2\mu}{\tau^2 + \epsilon_i^2}\right]\right)\right)$$</div>
+<p>
+We can create new variables, <span class="math">\(\hat{\theta}_i\)</span> and <span class="math">\(S^2\)</span>, to tidy up this formula to
+</p>
+<div class="math">$$P(\theta_i | \bar{x}_i) \propto \exp\left(-\frac{(\theta_i - \hat{\theta_i})^2}{2S_i^2}\right)$$</div>
+<p>
+where
+</p>
+<div class="math">$$\hat{\theta_i} = \frac{\tau^2 \bar{x}_i + \epsilon_i^2\mu}{\tau^2 + \epsilon_i^2} = \left(\frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\bar{x}_i + \left(\frac{\epsilon_i^2}{\tau^2 + \epsilon_i^2}\right)\mu$$</div>
+<p>
+and
+</p>
+<div class="math">$$\frac{1}{S_i^2} = \frac{1}{\tau^2} + \frac{1}{\epsilon_i^2}$$</div>
+<p>To recap: our prior distribution for <span class="math">\(\theta_i\)</span> was a normal distribution with mean <span class="math">\(\mu\)</span> and variance <span class="math">\(\tau^2\)</span>. This a posterior distribution is also normal, but with a mean of <span class="math">\(\hat{\theta}_i\)</span> and a variance of <span class="math">\(S_i^2\)</span>. Since this is the same distribution as the prior with updated parameters, this demonstrates that the Gaussian distribution is conjugate to itself.</p>
+<p>We can simplify the expression for <span class="math">\(\hat{\theta}_i\)</span>, the most likely value for <span class="math">\(\theta_i\)</span>:
+</p>
+<div class="math">$$\hat{\theta}_i = \left(\frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\bar{x}_i + \left(\frac{\epsilon_i^2}{\tau^2 + \epsilon_i^2}\right)\mu = \left(\frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\bar{x}_i + \left(1 - \frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\mu$$</div>
+<p>
+After introducing <span class="math">\(B_i = \tau^2/(\tau^2 + \epsilon_i^2)\)</span> this expression becomes
+</p>
+<div class="math">$$\hat{\theta}_i = B_i \bar{x}_i + (1-B_i)\mu$$</div>
+<p>
+as advertised.</p>
+<h3>Other uses</h3>
+<p>We have done more than just find the "best" estimate for <span class="math">\(\theta_i\)</span>. We have a distribution for <span class="math">\(\theta_i\)</span> as well! It is a Gaussian distribution with mean <span class="math">\(\hat{\theta}_i\)</span>, and variance <span class="math">\(S_i^2\)</span>. This means we</p>
+<h2>Can we use the prior just because of convenience?</h2>
+<h2>Summary</h2>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
             </section>
 
             <section class="post-info">
