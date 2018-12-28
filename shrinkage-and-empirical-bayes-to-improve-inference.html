@@ -209,6 +209,34 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <p><img src='images/kidney/histograms.png' alt='Histogram of cancer rates per county' style="width:80%; margin: 0 auto;"/></p>
 <h2>Case study 2: Shrinking continuous data with board game ratings</h2>
 <h2>Summary</h2>
+<p>We can do better than looking at an overall average rate or rating, especially when dealing with small sample sizes. We know that it is easier to move an average when there are only a small number of measurements; if we know what the overall distribution of measurements should look like we can correct the small samples. By allowing results to "shrink" (or "regress") to the mean, you make the results for your "best-of" and "worst-of" lists much more stable.</p>
+<p>The techniques in this article are most useful for analytics tasks, where you are being asked to generate reports or make insights based on what has already happened. If you are building a machine learning model on average rates, such as trying to predict the factors that influence the cancer rate of a county, you have a couple of different approaches:
+<em> Use the techniques in this article, and fit to the "shrunk" estimates
+</em> Use the actual measured averages, but introduce a weighting factor so that measurements averaged over fewer observations carry less weight.</p>
+<p>This is an important point that can hang up many beginning data scientists, as discussed in Cameron Pilon on his PyData talk <a href="https://www.youtube.com/watch?v=VWtsTIbFXxA&amp;t=91">"Mistakes I've Made"</a>.</p>
+<p>This article showed two different techniques for empirical Bayes, one for correcting <em>rates</em> and the other for correcting <em>regression (of averages)</em>.</p>
+<h4>Correcting rates</h4>
+<ol>
+<li>Model the distribution of rates in your data using the beta-distribution. Call these parameters <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span>.</li>
+<li>For each sample (e.g. county) with <span class="math">\(s\)</span> "successes" and <span class="math">\(f\)</span> "failures", shrink the rate using the following technique:
+<div class="math">$$\text{rate} = \frac{s + s_0}{(s + f) + (s_0 + f_0)}$$</div>
+</li>
+</ol>
+<h4>Correcting averages</h4>
+<ol>
+<li>Model the distribution of averages in your data using the normal distribution. Use the mean <span class="math">\(\mu\)</span> and variance <span class="math">\(\tau^2\)</span> of this distribution.</li>
+<li>For each sample (e.g. board game) with an average of <span class="math">\(N_i\)</span> reviews and variance in measurements, <span class="math">\(\sigma_i^2\)</span>, the central limit theorm tells us that our measurement of the mean will have a variance <span class="math">\(\sigma_i^2/N_i\)</span>.</li>
+<li>For each sample, define
+  <div class="math">$$B_i = \frac{\tau^2}{\tau^2 + (\sigma^2_i/N_i)}$$</div>
+  Note that when <span class="math">\(B_i\approx 1\)</span>, we have <span class="math">\(\sigma^2_i/N_i \ll \tau^2\)</span>, meaning that we are much more certain about this measurement than the overall variation in the population, so we expect our measurement to dominate. When <span class="math">\(B_i \approx 0\)</span>, we have <span class="math">\(\sigma^2_i/N_i \gg \tau^2\)</span>, so we expect fluctuations from this single sample to be much bigger than the population standard deviation (so shrinkage will dominate).</li>
+<li>The "shrunk" estimate for sample <span class="math">\(i\)</span> is
+  <div class="math">$$\text{rating} = B_i \bar{x}_i + (1 - B_i) \mu$$</div>
+</li>
+</ol>
+<p>where <span class="math">\(\bar{x}_i\)</span> is the (raw) measured rating over the <span class="math">\(N_i\)</span> measurements.</p>
+<h3>Other resources</h3>
+<p>This article hasn't focused on the mathematical derivations, if you are interested a follow up article is <a href="#todo">here</a>. Another nice resource on empirical Bayes is David Robinson's blog, <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">Variance Explained</a>.</p>
+<p>Finally, the data cleaning and notebooks for this project are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</p>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
         indent = "0em",
