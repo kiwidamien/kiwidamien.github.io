@@ -314,7 +314,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <p>For each game, we have to weigh how much of the rating comes from the observed rating for that game, and how much comes from the overall population. The following factor, <span class="math">\(B_i\)</span>, does this for us:
 </p>
 <div class="math">$$B_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}$$</div>
-<p>If we have a lot of ratings for a game, and the variance in the ratings for that game are low, we have <span class="math">\(\epslion_i^2 \ll \tau^2\)</span>, so <span class="math">\(B_i \approx 1\)</span>. When <span class="math">\(B_i\)</span> is close to 1, we expect most of the contribution to come from the ratings on the game.</p>
+<p>If we have a lot of ratings for a game, and the variance in the ratings for that game are low, we have <span class="math">\(\epsilon_i^2 \ll \tau^2\)</span>, so <span class="math">\(B_i \approx 1\)</span>. When <span class="math">\(B_i\)</span> is close to 1, we expect most of the contribution to come from the ratings on the game.</p>
 <p>On the other hand, if we have relatively little information on the game, <span class="math">\(\epsilon_i^2 \gg \tau^2\)</span>, so <span class="math">\(B_i \approx 0\)</span>. This is where we would expect the global average to be important.</p>
 <p>We will see in step 4 that this intuition holds. In our <a href="/derivations-and-conjugate-priors.html">derivation article</a> we will show where this formula comes from, but at the moment it is enough to gain an intuition of what <span class="math">\(B_i\)</span> close to its two extremes means.</p>
 <p>To calculate this factor in code is simple:</p>
