@@ -143,6 +143,7 @@
 <li>We will look at the ratings of boardgames given at boardgamegeek. This problem was inspired by the 538 article <a href="">""</a>. In this case, the ratings were not shrunk, so games with fewer reviews typically showed more variance. The data set for this problem is available <a href="https://github.com/rasmusgreve/BoardGameGeek/blob/master/DataMining/data2014-04-03_03-35-14.csv">here</a>.</li>
 </ul>
 <p>By using these two examples, we can show how to apply the empirical Bayes's technique of "shrinking" (or regressing) our observed values toward the mean when estimating a proportion (kidney cancer rates) as well as a continuous variable (board game ratings).</p>
+<p>Data and the notebooks are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</p>
 <h2>Case study 1: Shrinking proportions with kidney cancer data</h2>
 <p>Let's start by getting an overall view of the kidney cancer rates. Our first attempt might be to simply make a histogram of the kidney cancer rate.</p>
 <p><img src='images/kidney/beta_distribution_nofit.png' alt='Histogram of cancer rates per county' style="width:80%; margin: 0 auto;"/></p>
@@ -164,7 +165,6 @@
 s_0 = \mu\left(\frac{\mu(1-\mu)}{s^2} - 1\right)\\
 f_0 = (1-\mu)\left(\frac{\mu(1-\mu)}{s^2} - 1\right) = \frac{(1-\mu)}{\mu}s_0
 $$</div>
-<p>If we apply the method of moments to this data, we find <code>s0</code> and <code>f0</code> as negative numbers! This means we cannot have a beta distribution that simultaneously has the same mean and variance as the data.</p>
 <p>Instead of trying to match mean and variance, we can use the built-in <code>fit</code> method for finding the parameters:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">beta</span>
 <span class="n">s0</span><span class="p">,</span> <span class="n">f0</span><span class="p">,</span> <span class="o">*</span><span class="n">extra_params</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">incidence</span><span class="p">[</span><span class="s1">&#39;Rate_per_100k&#39;</span><span class="p">]</span><span class="o">/</span><span class="mf">1e5</span><span class="p">,</span> <span class="n">floc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">fscale</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
