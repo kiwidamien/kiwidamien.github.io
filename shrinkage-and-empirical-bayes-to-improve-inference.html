@@ -156,7 +156,7 @@
 </ul>
 <p>By using these two examples, we can show how to apply the empirical Bayes's technique of "shrinking" (or regressing) our observed values toward the mean when estimating a proportion (kidney cancer rates) as well as a continuous variable (board game ratings).</p>
 <p><strong>NOTES</strong>
-1. This notebook is mostly written to expose the reader to the idea of shrinkage, and be able to apply it quickly. For that reason, code is included but the derivations are not. The derivations of the formula are available in a <a href="#todo">more detailed article</a>.
+1. This notebook is mostly written to expose the reader to the idea of shrinkage, and be able to apply it quickly. For that reason, code is included but the derivations are not. The derivations of the formula are available in a <a href="/derivations-and-conjugate-priors.html">more detailed article</a>.
 2. Data and the notebooks are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</p>
 <h2>Case study 1: Shrinking proportions with kidney cancer data</h2>
 <p>Let's start by getting an overall view of the kidney cancer rates. Our first attempt might be to simply make a histogram of the kidney cancer rate.</p>
@@ -228,7 +228,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <p>After the previous discussion, might be wondering how confident we are in the extreme ends of the distribution. We would expect that the games with few reviews would have an easier time getting a very high or very low review score. Let's check this intuition by plotting review score against the number of reviews.</p>
 <p><img src='images/boardgames/rating_vs_popularity_raw.png' alt='Review ratings vs number of reviews' style="width:80%; margin: 0 auto;"/></p>
 <p>Once again we see the "triangle shape" indicating that the tails of the distribution are dominated by the data we are least confident in. Since we are modeling sample means (i.e. the average rating given to a board game by the users), the central limit theorem tells us that the sample means will be normally distributed around the true mean.</p>
-<p>We also note that there is some bias in the results: instead of the distribution just narrowing down as the game becomes more popular, there is a fairly distinct upward rise in average ratings as the game becomes more popular. We will address this in a more <a href="#todo">detailed article</a> on empirical Bayes with regression; in this article we will just take a naive approach.</p>
+<p>We also note that there is some bias in the results: instead of the distribution just narrowing down as the game becomes more popular, there is a fairly distinct upward rise in average ratings as the game becomes more popular. We will address this in a more <a href="/empirical-bayes-with-regression.html">detailed article</a> on empirical Bayes with regression; in this article we will just take a naive approach.</p>
 <p>Our distribution above suggests we won't go too far wrong by taking the distribution <em>actual</em> game scores to be normally distributed. Yes, the logic here isn't completely airtight -- we are using the distribution of <em>sample</em> means to infer the distribution of <em>actual</em> means -- but this is the "empirical" part of empirical Bayes!</p>
 <h3>Some notation</h3>
 <p>Before breaking down the methodology, we should introduce some notation. First we have some global parameters, which describe the distribution of game ratings:</p>
@@ -271,7 +271,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <td><code>'average_rating'</code></td>
 </tr>
 <tr>
-<td>$\sigma_i^2</td>
+<td><span class="math">\(\sigma_i^2\)</span></td>
 <td>The variance in the ratings of game <span class="math">\(i\)</span></td>
 <td><code>'rating_stddev'</code></td>
 </tr>
@@ -303,7 +303,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <p>The less lazy way of doing it would be to take a weighted average and a pooled variance, so that games with more reviews influenced the population mean more. The above method is a nice to get a quick-and-dirty estimate.</p>
 <h3>Step 2: Get the standard error</h3>
 <p>This uses the central limit theorem (CLT) to estimate the error we have in the estimate of the mean on a per game basis. The CLT tells us that the sample mean (i.e. our measurement ) will be drawn from a normal distribution around the true (unobserved) mean <span class="math">\(\theta_i\)</span> and variance <span class="math">\(\epsilon_i^2 = \sigma_i^2 / n_i\)</span>. In code:</p>
-<div class="highlight"><pre><span></span><span class="c1"># These are our epsilon_i</span>
+<div class="highlight"><pre><span></span><span class="c1"># These are our epsilon_i^2</span>
 <span class="n">games</span><span class="p">[</span><span class="s1">&#39;std_var&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">games</span><span class="p">[</span><span class="s1">&#39;rating_stddev&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">games</span><span class="p">[</span><span class="s1">&#39;users_rated&#39;</span><span class="p">]</span>
 </pre></div>
 
@@ -314,7 +314,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <div class="math">$$B_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}$$</div>
 <p>If we have a lot of ratings for a game, and the variance in the ratings for that game are low, we have <span class="math">\(\epslion_i^2 \ll \tau^2\)</span>, so <span class="math">\(B_i \approx 1\)</span>. When <span class="math">\(B_i\)</span> is close to 1, we expect most of the contribution to come from the ratings on the game.</p>
 <p>On the other hand, if we have relatively little information on the game, <span class="math">\(\epsilon_i^2 \gg \tau^2\)</span>, so <span class="math">\(B_i \approx 0\)</span>. This is where we would expect the global average to be important.</p>
-<p>We will see in step 4 that this intuition holds. In our <a href="#TODO">derivation article</a> we will show where this formula comes from, but at the moment it is enough to gain an intuition of what <span class="math">\(B_i\)</span> close to its two extremes means.</p>
+<p>We will see in step 4 that this intuition holds. In our <a href="/derivations-and-conjugate-priors.html">derivation article</a> we will show where this formula comes from, but at the moment it is enough to gain an intuition of what <span class="math">\(B_i\)</span> close to its two extremes means.</p>
 <p>To calculate this factor in code is simple:</p>
 <div class="highlight"><pre><span></span><span class="n">games</span><span class="p">[</span><span class="s1">&#39;interpolation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tau2</span> <span class="o">/</span> <span class="p">(</span><span class="n">tau2</span> <span class="o">+</span> <span class="n">games</span><span class="p">[</span><span class="s1">&#39;std_var&#39;</span><span class="p">])</span>
 </pre></div>
@@ -359,7 +359,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 </ol>
 <p>where <span class="math">\(\bar{x}_i\)</span> is the (raw) measured rating over the <span class="math">\(N_i\)</span> measurements.</p>
 <h3>Other resources</h3>
-<p>This article hasn't focused on the mathematical derivations, if you are interested a follow up article is <a href="#todo">here</a>. Another nice resource on empirical Bayes is David Robinson's blog, <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">Variance Explained</a>. A project on when using empirical Bayes it is useful (and when it isn't) in epidemiological studies is available <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2872278/">here</a>.</p>
+<p>This article hasn't focused on the mathematical derivations, if you are interested a follow up article is <a href="/derivations-and-conjugate-priors.html">here</a>. Another nice resource on empirical Bayes is David Robinson's blog, <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">Variance Explained</a>. A project on when using empirical Bayes it is useful (and when it isn't) in epidemiological studies is available <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2872278/">here</a>.</p>
 <p>Finally, the data cleaning and notebooks for this project are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</p>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
