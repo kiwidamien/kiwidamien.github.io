@@ -156,7 +156,7 @@ where</p>
 <li><span class="math">\(\bar{x}_i\)</span> is the observed average rating of item <span class="math">\(i\)</span>,</li>
 <li><span class="math">\(\sigma_i^2\)</span> is the observed variance of the ratings for item <span class="math">\(i\)</span>,</li>
 <li><span class="math">\(n_i\)</span> is the number of reviews of item <span class="math">\(i\)</span>,</li>
-<li><span class="math">\(\epsilon_i^2 = \sigma_i^2/n_i\)</span> is the standard error in $\bar{x}_i.</li>
+<li><span class="math">\(\epsilon_i^2 = \sigma_i^2/n_i\)</span> is the standard error in <span class="math">\(\bar{x}_i\)</span>.</li>
 </ul>
 <h3>Bayes's theorem and conjugate prior</h3>
 <p>We want to find the most likely value of <span class="math">\(\theta_i\)</span> given the data we have collected. i.e. we are looking to maximize <span class="math">\(P(\theta_i | \text{data})\)</span>. This is called the <em>a posteriori</em> distribution, as we are making our decision <em>after</em> looking at the data. Bayes's theorem allows us to calculate this provided we have two other pieces of information:
@@ -175,10 +175,10 @@ where <span class="math">\(\epsilon_i = \sigma_i/\sqrt{n_i}\)</span> is the stan
 <h4>What is a conjugate prior?</h4>
 <p>A useful way of motivating the idea of a conjugate prior is to think of data collection as a continuous process. When we first collect our data, we make up some prior <span class="math">\(P_0(\theta_i)\)</span>, and use Bayes's theorem to get
 </p>
-<div class="math">$$P(\theta_i | \text{data set 1}) = \frac{P(\text{data set 1}|\theta_i)P(\theta_i)}{P(\text{data set 1})}$$</div>
+<div class="math">$$P(\theta_i | \text{data set 1}) = \frac{P(\text{data set 1}|\theta_i)P_0(\theta_i)}{P(\text{data set 1})}$$</div>
 <p>The a posteriori distribution, <span class="math">\(P(\theta_i | \text{data set 1})\)</span>,  represents our confidence in the values of <span class="math">\(\theta_i\)</span> <em>after</em> looking at the data. If we have a new data set, it makes sense for <span class="math">\(P(\theta_i | \text{data set 1})\)</span> to act as the <em>new</em> prior, since we have more information than we did when looking at the first data set:
 </p>
-<div class="math">$$P(\theta_i | \text{data set 2}) = \frac{P(\text{data set 2}|\theta_i)P(\text{data set 1}|\theta_i)}{P(\text{data set 1})}$$</div>
+<div class="math">$$P(\theta_i | \text{data set 2}) = \frac{P(\text{data set 2}|\theta_i)P_1(\theta_i)}{P(\text{data set 1})}, \quad\quad\quad P_1(\theta_i) = P(\theta_i|\text{data set 1})$$</div>
 <p>
 i.e. we can view collecting data as the process of updating our prior to whatever the a posterior distribution was from the last round of data collection.</p>
 <p>The type of distribution we get for the a posterior distribution depends on two things:
@@ -202,7 +202,7 @@ Finally we can complete the square (and absorb the constant term into the propor
 </p>
 <div class="math">$$P(\theta_i | \bar{x}_i) \propto \exp\left(-\frac{1}{2}\left(\frac{1}{\tau^2} + \frac{1}{\epsilon_i^2}\right)\left(\theta_i - \left[\frac{\tau^2 \bar{x}_i + \epsilon_i^2\mu}{\tau^2 + \epsilon_i^2}\right]\right)\right)$$</div>
 <p>
-We can create new variables, <span class="math">\(\hat{\theta}_i\)</span> and <span class="math">\(S^2\)</span>, to tidy up this formula to
+We can create new variables, <span class="math">\(\hat{\theta}_i\)</span> and <span class="math">\(S_i^2\)</span>, to tidy up this formula to
 </p>
 <div class="math">$$P(\theta_i | \bar{x}_i) \propto \exp\left(-\frac{(\theta_i - \hat{\theta_i})^2}{2S_i^2}\right)$$</div>
 <p>
