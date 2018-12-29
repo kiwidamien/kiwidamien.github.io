@@ -143,7 +143,75 @@
                         </li>
                     </ol>
                 <h1>Derivations and Conjugate Priors (proportions)</h1>
-<p>Placeholder</p>
+<h2>The problem statement</h2>
+<p>We have some collection of binomial distributions, where each one has a probability of success <span class="math">\(p_i\)</span>. For example, individual baseball hitters have a probability <span class="math">\(p_i\)</span> of hitting the ball that depends on the particular batter <span class="math">\(i\)</span>. In the example investigated in this series, we looked at the kidney cancer rate on a per county basis. We are interested in using information about the population distribution of <span class="math">\(p_i\)</span> to help us get better estimates of <span class="math">\(p_i\)</span> than just the number of successes over number of failures for the experiment <span class="math">\(i\)</span>.</p>
+<p>Introducing some notation, let <span class="math">\(s_i\)</span> be the number of successes that experiment <span class="math">\(i\)</span> has had, and <span class="math">\(f_i\)</span> be the number of failures. In the baseball example, <span class="math">\(s_i\)</span> would be the number of "hits" player <span class="math">\(i\)</span> has had over his or her career, and <span class="math">\(f_i\)</span> would be the number of misses. In the kidney cancer example, <span class="math">\(s_i\)</span> would be the number of cases of kidney cancer found in county <span class="math">\(i\)</span>, and <span class="math">\(f_i\)</span> would be the number of healthy people. The maximum likelihood estimate for <span class="math">\(p_i\)</span> is
+</p>
+<div class="math">$$\hat{p}_{i} = \frac{s_i}{s_i + f_i} \,\quad\quad\quad(\text{MLE})$$</div>
+<p>
+We will show, under some reasonable assumptions, that a better estimate can be found with
+</p>
+<div class="math">$$\hat{p}_i = \frac{s_i + s_0}{s_i + f_i + (s_0 + f_0)}$$</div>
+<p>
+for appropriate choices of <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span>.</p>
+<h3>Bayes' theorem and conjugate priors</h3>
+<h3>What is a conjugate prior?</h3>
+<h3>Using the Beta distribution</h3>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
             </section>
 
             <section class="post-info">
