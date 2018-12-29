@@ -218,7 +218,7 @@ and
 <p>To recap: our prior distribution for <span class="math">\(\theta_i\)</span> was a normal distribution with mean <span class="math">\(\mu\)</span> and variance <span class="math">\(\tau^2\)</span>. This a posterior distribution is also normal, but with a mean of <span class="math">\(\hat{\theta}_i\)</span> and a variance of <span class="math">\(S_i^2\)</span>. Since this is the same distribution as the prior with updated parameters, this demonstrates that the Gaussian distribution is conjugate to itself.</p>
 <p>We can simplify the expression for <span class="math">\(\hat{\theta}_i\)</span>, the most likely value for <span class="math">\(\theta_i\)</span>:
 </p>
-<div class="math">$$\hat{\theta}_i = \left(\frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\bar{x}_i + \left(\frac{\epsilon_i^2}{\tau^2 + \epsilon_i^2}\right)\mu = \left(\frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\bar{x}_i + \left(1 - \frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\mu$$</div>
+<div class="math">$$\hat{\theta}_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}\,\bar{x}_i + \left(\frac{\epsilon_i^2}{\tau^2 + \epsilon_i^2}\right)\mu = \left(\frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\bar{x}_i + \left(1 - \frac{\tau^2}{\tau^2 + \epsilon_i^2}\right)\mu$$</div>
 <p>
 After introducing <span class="math">\(B_i = \tau^2/(\tau^2 + \epsilon_i^2)\)</span> this expression becomes
 </p>
@@ -230,17 +230,18 @@ as advertised.</p>
 With this, we could construct a 95% "credible interval", using the same techniques we would use to construct a confidence interval (the name change is to emphasize the difference in interpretation between the Bayesian and Frequentist approaches, the technique is the same). This gives us more than just the simple "point estimate".</p>
 <h2>Can we use the prior just because of convenience?</h2>
 <p>You might object that choosing a Gaussian prior just because it has a nice mathematical property (in this case, making the updated prior belong to the same distribution as the original prior) as being less than data-driven. The idea of choosing models with mathematically convenient  but unrealistic assumptions is a critique that Leo Breiman, professor of statistics at Berkeley, made about the culture of statisticians back in 2001 in his paper <a href="https://projecteuclid.org/download/pdf_1/euclid.ss/1009213726">"Statistical Modeling: The Two Cultures"</a>.</p>
-<p>If we are doing empirical Bayes, we use the distribution of <span class="math">\(\\bar{x}_i\)</span> (in our case, the ratings of boardgames) to infer the parameters of the prior distribution, <span class="math">\(\mu\)</span> and <span class="math">\(\tau^2\)</span>. When we are doing this, we should also check that the distribution looks somewhat normal! The motivation behind the empirical Bayes philosophy is that since priors are somewhat arbitrary, we should use the pooled data to determine them.</p>
+<p>If we are doing empirical Bayes, we use the distribution of <span class="math">\(\bar{x}_i\)</span> (in our case, the ratings of boardgames) to infer the parameters of the prior distribution, <span class="math">\(\mu\)</span> and <span class="math">\(\tau^2\)</span>. When we are doing this, we should also check that the distribution looks somewhat normal! The motivation behind the empirical Bayes philosophy is that since priors are somewhat arbitrary, we should use the pooled data to determine them.</p>
 <p>What would happen if the global distribution deviated significantly from normal? For example, the distribution of ratings could be bimodal, or skewed. In that case, we could move to either a mixture model, or just resort to numerical integration when calculating the a posteriori distribution. The conjugate prior trick is just a convenience to make updating the priors easier, but if another prior works better we can still use empirical Bayes -- we will just require a lot more computation instead of the simple lines of code that can perform the regression to the mean for us.</p>
-<h2>Summary</h2>
+<h2>Summary.</h2>
 <ul>
 <li>Empirical Bayes uses the global distribution of parameters to adjust raw averages.</li>
 <li>It is convenient to assume the prior distribution for ratings is a Gaussian with mean <span class="math">\(\mu\)</span> and variance <span class="math">\(\tau^2\)</span>. You should get <span class="math">\(\mu\)</span> and <span class="math">\(\tau^2\)</span> by matching the mean and variance of the average ratings. This assumption can be checked by plotting the average ratings and checking they follow a normal distribution.</li>
 <li>Under the conditions of the central limit theorem, we can "shrink" or "regress" the raw average <span class="math">\(\bar{x}_i\)</span> for item <span class="math">\(i\)</span> to
-<div class="math">$$\hat{theta}_i = B_i \bar{x}_i + (1-B_i)\mu, \quad\quad\quad B_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}, \quad\quad \epsilon_i^2 = \frac{\sigma_i^2}{n_i}$$</div>
+<div class="math">$$\hat{\theta}_i = B_i \bar{x}_i + (1-B_i)\mu, \quad\quad\quad B_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}, \quad\quad \epsilon_i^2 = \frac{\sigma_i^2}{n_i}$$</div>
 </li>
 <li>The standard error <span class="math">\(S_i\)</span> in this estimate <span class="math">\(\hat{\theta}_i\)</span> can be found from
-$$\frac{1}{S_i^2} = \frac{1}{\tau^2} + \frac{1}{\epsilon_i^2} = \frac{1}{\tau^2} + \frac{n_i}{\sigma_i^2}</li>
+<div class="math">$$\frac{1}{S_i^2} = \frac{1}{\tau^2} + \frac{1}{\epsilon_i^2} = \frac{1}{\tau^2} + \frac{n_i}{\sigma_i^2}$$</div>
+</li>
 </ul>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
