@@ -176,7 +176,7 @@ where <span class="math">\(\Gamma(x)\)</span> is the Gamma function. If <span cl
 For our purposes, we don't care too much about the factor out the front, as it simply normalizes the probability distribution. For our purposes, it is enough to know
 </p>
 <div class="math">$$P(\pi_i) \propto \pi_i^{s_0-1}(1-\pi_i)^{f_0 - 1}$$</div>
-<p>The <span class="math">\(\beta\)</span> distribution should look reasonably familiar. It looks like binomial distribution with probability <span class="math">\(\pi_i\)</span>, "successes" <span class="math">\(s_0 -1\)</span> and failure <span class="math">\(f_0-1\)</span>, but there are some important differences:</p>
+<p>The <span class="math">\(\beta\)</span> distribution should look reasonably familiar. It looks like binomial distribution with probability <span class="math">\(\pi_i\)</span>, <span class="math">\((s_0 - 1) "successes" and $(f_0-1)\)</span> "failures", but there are some important differences:</p>
 <table>
 <thead>
 <tr>
@@ -212,7 +212,7 @@ For our purposes, we don't care too much about the factor out the front, as it s
 <div class="math">$$E(\pi_i|s_i) = \frac{\tilde{s}}{\tilde{s} + \tilde{f}} = \frac{s_i + s_0}{(s_i + s_0) + (f_i + f_0)}$$</div>
 <p>
 This has a really nice intuitive way of thinking about it: we pretend there are <span class="math">\(s_0\)</span> "successes" and <span class="math">\(f_0\)</span> "failures" that we consider part of the population and add to experimental results. As the number of trials become large, the imaginary part of the population (<span class="math">\(s_0 + f_0\)</span>) becomes irrelevant, but for small populations where we don't trust the statistics, the imaginary population helps keep the value close to what we expect from our knowledge of the overall population.</p>
-<p>Technically, this is not the <em>maximum</em> of the a posteriori distribution. We could find that by maximimizing <span class="math">\(\ln P(\pi_i | s_i)\)</span>. The result is
+<p>Technically, this is not the <em>maximum</em> of the a posteriori distribution. We could find that by maximizing <span class="math">\(\ln P(\pi_i | s_i)\)</span>. The result is
 </p>
 <div class="math">$$\hat{p_i} = \frac{\tilde{s} - 1}{\tilde{s} + \tilde{f} - 2} = \frac{s_i + s_0 - 1}{(s_i + s_0) + (f_i + f_0) - 2}$$</div>
 <p>
