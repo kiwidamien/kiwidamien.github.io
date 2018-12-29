@@ -362,9 +362,8 @@ By comparison, the average from the data is 16.1 per 100k.</p>
   Note that when <span class="math">\(B_i\approx 1\)</span>, we have <span class="math">\(\sigma^2_i/N_i \ll \tau^2\)</span>, meaning that we are much more certain about this measurement than the overall variation in the population, so we expect our measurement to dominate. When <span class="math">\(B_i \approx 0\)</span>, we have <span class="math">\(\sigma^2_i/N_i \gg \tau^2\)</span>, so we expect fluctuations from this single sample to be much bigger than the population standard deviation (so shrinkage will dominate).</li>
 <li>The "shrunk" estimate for sample <span class="math">\(i\)</span> is
   <div class="math">$$\text{rating} = B_i \bar{x}_i + (1 - B_i) \mu$$</div>
-</li>
+  where <span class="math">\(\bar{x}_i\)</span> is the (raw) measured rating over the <span class="math">\(N_i\)</span> measurements.</li>
 </ol>
-<p>where <span class="math">\(\bar{x}_i\)</span> is the (raw) measured rating over the <span class="math">\(N_i\)</span> measurements.</p>
 <h3>Other resources</h3>
 <p>This article hasn't focused on the mathematical derivations, if you are interested a follow up article is <a href="/derivations-and-conjugate-priors.html">here</a>. Another nice resource on empirical Bayes is David Robinson's blog, <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">Variance Explained</a>. A project on when using empirical Bayes it is useful (and when it isn't) in epidemiological studies is available <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2872278/">here</a>.</p>
 <p>Finally, the data cleaning and notebooks for this project are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</p>
