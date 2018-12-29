@@ -144,19 +144,112 @@
                     </ol>
                 <h1>Derivations and Conjugate Priors (proportions)</h1>
 <h2>The problem statement</h2>
-<p>We have some collection of binomial distributions, where each one has a probability of success <span class="math">\(p_i\)</span>. For example, individual baseball hitters have a probability <span class="math">\(p_i\)</span> of hitting the ball that depends on the particular batter <span class="math">\(i\)</span>. In the example investigated in this series, we looked at the kidney cancer rate on a per county basis. We are interested in using information about the population distribution of <span class="math">\(p_i\)</span> to help us get better estimates of <span class="math">\(p_i\)</span> than just the number of successes over number of failures for the experiment <span class="math">\(i\)</span>.</p>
-<p>Introducing some notation, let <span class="math">\(s_i\)</span> be the number of successes that experiment <span class="math">\(i\)</span> has had, and <span class="math">\(f_i\)</span> be the number of failures. In the baseball example, <span class="math">\(s_i\)</span> would be the number of "hits" player <span class="math">\(i\)</span> has had over his or her career, and <span class="math">\(f_i\)</span> would be the number of misses. In the kidney cancer example, <span class="math">\(s_i\)</span> would be the number of cases of kidney cancer found in county <span class="math">\(i\)</span>, and <span class="math">\(f_i\)</span> would be the number of healthy people. The maximum likelihood estimate for <span class="math">\(p_i\)</span> is
+<p>We have some collection of binomial distributions, where each one is modeled as having a probability of success <span class="math">\(\pi_i\)</span>. For example, individual baseball hitters have a probability <span class="math">\(\pi_i\)</span> of hitting the ball that depends on the particular batter <span class="math">\(i\)</span>. In the example investigated in this series, we looked at the kidney cancer rate on a per county basis. We are interested in using information about the population distribution of <span class="math">\(p_i\)</span> to help us get better estimates of <span class="math">\(\pi_i\)</span> than just the number of successes over number of failures for the experiment <span class="math">\(i\)</span>.</p>
+<p>Introducing some notation, let <span class="math">\(s_i\)</span> be the number of successes that experiment <span class="math">\(i\)</span> has had, and <span class="math">\(f_i\)</span> be the number of failures. In the baseball example, <span class="math">\(s_i\)</span> would be the number of "hits" player <span class="math">\(i\)</span> has had over his or her career, and <span class="math">\(f_i\)</span> would be the number of misses. In the kidney cancer example, <span class="math">\(s_i\)</span> would be the number of cases of kidney cancer found in county <span class="math">\(i\)</span>, and <span class="math">\(f_i\)</span> would be the number of healthy people. The maximum likelihood estimate for <span class="math">\(\pi_i\)</span> is
 </p>
-<div class="math">$$\hat{p}_{i} = \frac{s_i}{s_i + f_i} \,\quad\quad\quad(\text{MLE})$$</div>
+<div class="math">$$\hat{p}_{i} = \frac{s_i}{s_i + f_i} \,\quad\quad\quad(\text{MLE estimate of }\pi_i)$$</div>
 <p>
 We will show, under some reasonable assumptions, that a better estimate can be found with
 </p>
-<div class="math">$$\hat{p}_i = \frac{s_i + s_0}{s_i + f_i + (s_0 + f_0)}$$</div>
+<div class="math">$$\hat{p}_i = \frac{s_i + s_0}{s_i + f_i + (s_0 + f_0)}, \quad\quad\quad(\text{Better estimate of } \pi_i)$$</div>
 <p>
 for appropriate choices of <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span>.</p>
 <h3>Bayes' theorem and conjugate priors</h3>
+<p>Our goal is to find the most likely value of <span class="math">\(\hat{p}_i\)</span> given the number of successes <span class="math">\(s_i\)</span> that we have seen, as well as our prior. That is, we are trying to maximize <span class="math">\(P(p_i | s_i)\)</span>. We are going to cheat a little, and assume <span class="math">\(N_i\)</span> is fixed.</p>
+<p>Using Bayes's theorem, we have
+</p>
+<div class="math">$$P(\pi_i | s_i) \propto \underbrace{P(s_i | \pi_i)}_{\text{likelihood}}\,\underbrace{P(\pi_i)}_{\text{prior}}$$</div>
+<p>The likelihood is just the binomial distribution: if we know <span class="math">\(p_i\)</span> and the total number of trials $N_i $, then
+</p>
+<div class="math">$$P(s_i | \pi_i) = {N_i \choose s_i} \pi_i^{s_i}(1-\pi_i)^{N_i - s_i}$$</div>
+<p>Now we have to decide on a prior. Following the discussion from the article on <a href="/derivations-and-conjugate-priors-average-ratings.html">deriving the average rating</a>, there is no single correct choice for the prior. We are going to start off with the beta-distribution, and show why it is a convenient distribution to use, and then finally come back to describe how to check if the beta distribution is appropriate.</p>
+<h4>The beta distribution</h4>
+<p>The beta distribution is described by two parameters, traditionally called <span class="math">\(\alpha\)</span> and <span class="math">\(\beta\)</span>. Because it is confusing to use the parameter <span class="math">\(\beta\)</span> while talking about the beta distribution, I will call these parameters <span class="math">\(s_0\)</span> an <span class="math">\(f_0\)</span> instead.</p>
+<p>The PDF for the beta distribution is defined on the interval [0,1] by
+</p>
+<div class="math">$$P(\pi_i) = \frac{\Gamma(s_0 + f_0)}{\Gamma(s_0)\Gamma(f_0)}\pi_i^{s_0-1}(1-\pi_i)^{f_0 - 1}$$</div>
+<p>
+where <span class="math">\(\Gamma(x)\)</span> is the Gamma function. If <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> are integers, we can write this in a slightly simpler form:
+</p>
+<div class="math">$$P(\pi_i) = \frac{(s_0 + f_0 - 1)!}{(s_0 - 1)!\,(f_0 - 1)!}\pi_i^{s_0-1}(1-\pi_i)^{f_0 - 1} = {{s_0 + f_0 - 1} \choose {s_0 - 1}}\pi_i^{s_0-1}(1-\pi_i)^{f_0 - 1}$$</div>
+<p>
+For our purposes, we don't care too much about the factor out the front, as it simply normalizes the probability distribution. For our purposes, it is enough to know
+</p>
+<div class="math">$$P(\pi_i) \propto \pi_i^{s_0-1}(1-\pi_i)^{f_0 - 1}$$</div>
+<p>The <span class="math">\(\beta\)</span> distribution should look reasonably familiar. It looks like binomial distribution with probability <span class="math">\(\pi_i\)</span>, "successes" <span class="math">\(s_0 -1\)</span> and failure <span class="math">\(f_0-1\)</span>, but there are some important differences:</p>
+<table>
+<thead>
+<tr>
+<th>Binomial</th>
+<th>Beta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="math">\(\pi_i\)</span>, <span class="math">\(N\)</span> is fixed, and we look for probability of <span class="math">\(s\)</span> successes</td>
+<td><span class="math">\(s_0, f_0\)</span> are fixed, look for probability of <span class="math">\(\pi_i\)</span></td>
+</tr>
+<tr>
+<td>Discrete outcomes</td>
+<td>Continuous outcomes</td>
+</tr>
+<tr>
+<td><span class="math">\(s_i \in \{0, 1, ..., N\}\)</span></td>
+<td><span class="math">\(\pi_i \in [0, 1]\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Once the parameters <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> are given, we can give the expected value and variance of the beta distribution:
+</p>
+<div class="math">$$E(\pi_i) = \frac{s_0}{s_0 + f_0}, \quad\quad\quad \text{Var}(\pi_i) = \frac{s_0 f_0}{(s_0 + f_0)^2(s_0 + f_0 + 1)} = \frac{E(\pi_i)(1-E(\pi_i))}{s_0 + f_0 + 1}$$</div>
+<h4>Back to Bayes theorem</h4>
+<p>Let's use the beta distribution for a prior on <span class="math">\(P(p_i)\)</span> and see where that gets us. Using the number of failures <span class="math">\(f_i = N_i - s_i\)</span>, we have
+</p>
+<div class="math">$$P(\pi_i | s_i) \propto P(s_i | \pi_i )P(\pi_i) \propto \left(\pi_i^{s_i}(1-\pi_i)^{f_i}\right)\left(\pi_i^{s_0 - 1}(1-\pi_i)^{f_0 - 1}) = \pi_i^{s_i + s_0 - 1}(1-\pi_i)^{f_i + f_0 - 1}$$</div>
+<p>Note this is the PDF for a beta distribution with parameters <span class="math">\(\tilde{s} = (s_i + s_0)\)</span> and <span class="math">\(\tilde{f} = (f_i + f_0)\)</span>. That is, the a posteriori distribution <span class="math">\(P(\pi_i | s_i)\)</span> is just a beta distribution with different parameters!</p>
+<p>The expected value for the a posteriori distribution is
+</p>
+<div class="math">$$E(\pi_i|s_i) = \frac{\tilde{s}}{\tilde{s} + \tilde{f}} = \frac{s_i + s_0}{(s_i + s_0) + (f_i + f_0)}$$</div>
+<p>
+This has a really nice intuitive way of thinking about it: we pretend there are <span class="math">\(s_0\)</span> "successes" and <span class="math">\(f_0\)</span> "failures" that we consider part of the population and add to experimental results. As the number of trials become large, the imaginary part of the population (<span class="math">\(s_0 + f_0\)</span>) becomes irrelevant, but for small populations where we don't trust the statistics, the imaginary population helps keep the value close to what we expect from our knowledge of the overall population.</p>
+<p>Technically, this is not the <em>maximum</em> of the a posteriori distribution. We could find that by maximimizing <span class="math">\(\ln P(\pi_i | s_i)\)</span>. The result is
+</p>
+<div class="math">$$\hat{p_i} = \frac{\tilde{s} - 1}{\tilde{s} + \tilde{f} - 2} = \frac{s_i + s_0 - 1}{(s_i + s_0) + (f_i + f_0) - 2}$$</div>
+<p>
+I generally prefer to use the expected value instead, because the interpretation is a little simpler. Note that as in the rating case, we also have the variance of this distribution, so we can assign credible intervals as well as having the "point" estimates.</p>
+<p>We will talk about how to find <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> after revisiting the idea of a conjugate prior.</p>
 <h3>What is a conjugate prior?</h3>
-<h3>Using the Beta distribution</h3>
+<p>We introduced the notion of a conjugate prior when deriving the result for <a href="/derivations-and-conjugate-priors-average-ratings.html">shrinking average ratings</a>. It was a little tricky there, as all the distributions were Gaussian!</p>
+<p>To recap, a  <em>prior</em> <em>conjugate to a particular likelihood</em> is a family of priors that have the property that when we calculate the a posteriori distribution using this prior, we get a member of the same family (but typically with different parameters). In this case, the likelihood function was the binomial distribution. If we used a beta distribution with parameters <span class="math">\((s_0, f_0)\)</span> as a prior, then the a posteriori distribution is also a beta distribution with parameters <span class="math">\((s_0 + s_i, f_0 + f_i)\)</span>. The reason this is a desirable property is that future experiments would start with our current a posteriori distribution as their prior! That is, a new experiment with <span class="math">\((S,F)\)</span> successes and failures would produce an a posteriori distribution with parameters <span class="math">\((s_0 + s_i + S, f_0 + s_i + F)\)</span>!</p>
+<p>That is, the beta distribution is a conjugate prior to the binomial distribution/binomial likelihood.</p>
+<h3>Finding the parameters <span class="math">\(s_0\)</span>, <span class="math">\(f_0\)</span> of the beta distribution</h3>
+<p>Ultimately, our goal is to make predictions that resemble reality, not to make things convenient for mathematicians. Again, we face the problem of having to justify the prior, which Bayesian statistics gives us no tool for doing: the prior is something you have to produce in order for Bayesian statistics to work with and update. The idea of abandoning empiricism and picking a prior based on mathematical convenience becomes seductively appealing....</p>
+<p>Instead of abandoning empiricism, we are going to embrace it. The philosophy of <strong>empirical</strong> Bayes is to allow the measured population values inform your choice of prior. We start by considering the distribution of all the different measured proportions <span class="math">\(p_i = s_i/f_i\)</span>, and choose <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> to best fit this distribution.</p>
+<p>One way of doing this is measuring the mean <span class="math">\(\Pi\)</span> and variance <span class="math">\(V\)</span> of the distribution of <span class="math">\(p_i\)</span>. We can invert our earlier formula for the mean  and variance of the beta distribution in terms of <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> to instead get <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> from the mean and variance. This is called the <em>method of moments</em>. The formula obtained this way are relatively simple.
+</p>
+<div class="math">$$s_0 = \Pi\left(\frac{\Pi(1-\Pi)}{V} - 1\right), \quad\quad\quad f_0 = (1-\Pi)\left(\frac{\Pi(1-\Pi)}{V} - 1\right)$$</div>
+<p>Another approach is take a numpy array <code>p</code> containing all the <span class="math">\(p_i\)</span> values, and use the built-in <code>beta.fit(p)</code>. This returns four values, the first two of which are the best fit (in the least mean squares sense) for <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span>.</p>
+<p>These are procedures for finding the best-fit values for <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span>. How can you tell if they are any good? Ultimately you will want to compare the generated beta distribution to the actual distribution of <span class="math">\(p_i\)</span>. In the kidney cancer example, we saw reasonable (but not great) agreement:
+<img src='images/kidney/beta_distribution_fit.png' alt='Histogram of cancer rates per county' style="width:80%; margin: 0 auto;"/></p>
+<p>We can see a small bump around <span class="math">\(p_i = 0.00023\)</span> which suggests we may actually have a mixture of beat distributions. It is up to you whether you think this prior is appropriate, or whether you should use a better one.</p>
+<p>Remember that empirical Bayes doesn't require use of the conjugate prior -- that just allows our results to be written in the nice, compact form. If we wanted to use a prior that was a mixture of different beta distributions (for example), we could do so, but determining the a posteriori distribution will now generally be a lot more involved.</p>
+<h2>Summary</h2>
+<p>The definition of the beta distribution, with the <span class="math">\(s_0 - 1\)</span> and <span class="math">\(f_0 - 1\)</span> in the powers, leads to a few inconveniences (ultimately these can be traced back to the weird definition of the Gamma function in mathematics).</p>
+<ul>
+<li>Empirical Bayes uses the global distribution of parameters to adjust raw averages.</li>
+<li>It is convenient to assume the prior distribution for proportions is given by a beta distribution with parameters <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> given by
+<div class="math">$$s_0 = \Pi\left(\frac{\Pi(1-\Pi)}{V} - 1\right), \quad\quad\quad f_0 = (1-\Pi)\left(\frac{\Pi(1-\Pi)}{V} - 1\right)$$</div>
+where <span class="math">\(\Pi\)</span> is the average proportion over all groups, and <span class="math">\(V\)</span> is a the variance over all groups. You can also use the built in <code>beta.fit</code> method to estimate the parameters <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> (it gives a slightly different estimate, and is not equivalent to the method above). The results for <span class="math">\(s_0\)</span> and <span class="math">\(f_0\)</span> are generally similar between methods.</li>
+<li>We can "shrink" or "regress" the raw proportions <span class="math">\({p}_i = s_i/(s_i + f_i)\)</span> for group <span class="math">\(i\)</span> to the expected value for <span class="math">\(\pi_i\)</span>:
+<div class="math">$$E(\pi_i) = \frac{s_i + s_0}{(s_i + s_0) + (f_i + f_0)}$$</div>
+This can be interpreted as having <span class="math">\(s_0\)</span> fake "successes" and <span class="math">\(f_0\)</span> fake "failures" that get added to every groups totals to represent the prior knowledge of the population.</li>
+<li>You can also "shrink" or "regress" the raw proportions <span class="math">\({p}_i = s_i/(s_i + f_i)\)</span> for group <span class="math">\(i\)</span> to the most likely valuefor <span class="math">\(\pi_i\)</span>:
+<div class="math">$$\hat{p}_i = \frac{s_i + (s_0 - 1)}{(s_i + s_0-1) + (f_i + f_0-1)}$$</div>
+This can be interpreted as having <span class="math">\((s_0 - 1)\)</span> fake "successes" and $(f_0 - 1) fake "failures" to represent the population. Usually I use the expected value formula, because it is a nuisance to keep track of all the "off by one" terms.</li>
+<li>The standard error <span class="math">\(S_i\)</span> in the estimates for <span class="math">\(\pi_i\)</span> are given by  <span class="math">\(\hat{\theta}_i\)</span> can be found from the formula for the variance in the beta distribution:
+<div class="math">$$S_i^2 = \frac{E(\pi_i)(1-E(\pi_i))}{s_0 + s_i + f_0 + f_i + 1}$$</div>
+</li>
+</ul>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
         indent = "0em",
