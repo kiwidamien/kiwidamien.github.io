@@ -205,7 +205,7 @@ For our purposes, we don't care too much about the factor out the front, as it s
 <h4>Back to Bayes theorem</h4>
 <p>Let's use the beta distribution for a prior on <span class="math">\(P(p_i)\)</span> and see where that gets us. Using the number of failures <span class="math">\(f_i = N_i - s_i\)</span>, we have
 </p>
-<div class="math">$$P(\pi_i | s_i) \propto P(s_i | \pi_i )P(\pi_i) \propto \left(\pi_i^{s_i}(1-\pi_i)^{f_i}\right)\left(\pi_i^{s_0 - 1}(1-\pi_i)^{f_0 - 1}) = \pi_i^{s_i + s_0 - 1}(1-\pi_i)^{f_i + f_0 - 1}$$</div>
+<div class="math">$$P(\pi_i | s_i) \propto P(s_i | \pi_i )P(\pi_i) \propto \left(\pi_i^{s_i}(1-\pi_i)^{f_i}\right)\left(\pi_i^{s_0 - 1}(1-\pi_i)^{f_0 - 1}\right) = \pi_i^{s_i + s_0 - 1}(1-\pi_i)^{f_i + f_0 - 1}$$</div>
 <p>Note this is the PDF for a beta distribution with parameters <span class="math">\(\tilde{s} = (s_i + s_0)\)</span> and <span class="math">\(\tilde{f} = (f_i + f_0)\)</span>. That is, the a posteriori distribution <span class="math">\(P(\pi_i | s_i)\)</span> is just a beta distribution with different parameters!</p>
 <p>The expected value for the a posteriori distribution is
 </p>
