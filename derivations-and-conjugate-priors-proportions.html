@@ -245,7 +245,7 @@ where <span class="math">\(\Pi\)</span> is the average proportion over all group
 This can be interpreted as having <span class="math">\(s_0\)</span> fake "successes" and <span class="math">\(f_0\)</span> fake "failures" that get added to every groups totals to represent the prior knowledge of the population.</li>
 <li>You can also "shrink" or "regress" the raw proportions <span class="math">\({p}_i = s_i/(s_i + f_i)\)</span> for group <span class="math">\(i\)</span> to the most likely valuefor <span class="math">\(\pi_i\)</span>:
 <div class="math">$$\hat{p}_i = \frac{s_i + (s_0 - 1)}{(s_i + s_0-1) + (f_i + f_0-1)}$$</div>
-This can be interpreted as having <span class="math">\((s_0 - 1)\)</span> fake "successes" and $(f_0 - 1) fake "failures" to represent the population. Usually I use the expected value formula, because it is a nuisance to keep track of all the "off by one" terms.</li>
+This can be interpreted as having <span class="math">\((s_0 - 1)\)</span> fake "successes" and <span class="math">\((f_0 - 1)\)</span> fake "failures" to represent the population. Usually I use the expected value formula, because it is a nuisance to keep track of all the "off by one" terms.</li>
 <li>The standard error <span class="math">\(S_i\)</span> in the estimates for <span class="math">\(\pi_i\)</span> are given by  <span class="math">\(\hat{\theta}_i\)</span> can be found from the formula for the variance in the beta distribution:
 <div class="math">$$S_i^2 = \frac{E(\pi_i)(1-E(\pi_i))}{s_0 + s_i + f_0 + f_i + 1}$$</div>
 </li>
