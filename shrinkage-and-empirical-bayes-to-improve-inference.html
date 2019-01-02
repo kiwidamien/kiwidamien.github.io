@@ -160,7 +160,7 @@
 <p>By using these two examples, we can show how to apply the empirical Bayes's technique of "shrinking" (or regressing) our observed values toward the mean when estimating a proportion (kidney cancer rates) as well as a continuous variable (board game ratings).</p>
 <p><strong>NOTES</strong></p>
 <ol>
-<li>This notebook is mostly written to expose the reader to the idea of shrinkage, and be able to apply it quickly. For that reason, code is included but the derivations are not. The derivations of the formula are available in a <a href="/derivations-and-conjugate-priors.html">more detailed article</a>.</li>
+<li>This notebook is mostly written to expose the reader to the idea of shrinkage, and be able to apply it quickly. For that reason, code is included but the derivations are not. The derivations of the formula are available in a <a href="/empirical_bayes_3_conjugate_priors.html">more detailed article</a>.</li>
 <li>Data and the notebooks are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</li>
 </ol>
 <h2>Case study 1: Shrinking proportions with kidney cancer data</h2>
@@ -319,7 +319,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
 <div class="math">$$B_i = \frac{\tau^2}{\tau^2 + \epsilon_i^2}$$</div>
 <p>If we have a lot of ratings for a game, and the variance in the ratings for that game are low, we have <span class="math">\(\epsilon_i^2 \ll \tau^2\)</span>, so <span class="math">\(B_i \approx 1\)</span>. When <span class="math">\(B_i\)</span> is close to 1, we expect most of the contribution to come from the ratings on the game.</p>
 <p>On the other hand, if we have relatively little information on the game, <span class="math">\(\epsilon_i^2 \gg \tau^2\)</span>, so <span class="math">\(B_i \approx 0\)</span>. This is where we would expect the global average to be important.</p>
-<p>We will see in step 4 that this intuition holds. In our <a href="/derivations-and-conjugate-priors.html">derivation article</a> we will show where this formula comes from, but at the moment it is enough to gain an intuition of what <span class="math">\(B_i\)</span> close to its two extremes means.</p>
+<p>We will see in step 4 that this intuition holds. In our <a href="/empirical_bayes_3_conjugate_priors.html">derivation article</a> we will show where this formula comes from, but at the moment it is enough to gain an intuition of what <span class="math">\(B_i\)</span> close to its two extremes means.</p>
 <p>To calculate this factor in code is simple:</p>
 <div class="highlight"><pre><span></span><span class="n">games</span><span class="p">[</span><span class="s1">&#39;interpolation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tau2</span> <span class="o">/</span> <span class="p">(</span><span class="n">tau2</span> <span class="o">+</span> <span class="n">games</span><span class="p">[</span><span class="s1">&#39;std_var&#39;</span><span class="p">])</span>
 </pre></div>
@@ -365,7 +365,7 @@ By comparison, the average from the data is 16.1 per 100k.</p>
   where <span class="math">\(\bar{x}_i\)</span> is the (raw) measured rating over the <span class="math">\(N_i\)</span> measurements.</li>
 </ol>
 <h3>Other resources</h3>
-<p>This article hasn't focused on the mathematical derivations, if you are interested a follow up article is <a href="/derivations-and-conjugate-priors.html">here</a>. Another nice resource on empirical Bayes is David Robinson's blog, <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">Variance Explained</a>. A project on when using empirical Bayes it is useful (and when it isn't) in epidemiological studies is available <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2872278/">here</a>.</p>
+<p>This article hasn't focused on the mathematical derivations, if you are interested a follow up article is <a href="/dempirical_bayes_3_conjugate_prior.html">here</a>. Another nice resource on empirical Bayes is David Robinson's blog, <a href="http://varianceexplained.org/r/empirical_bayes_baseball/">Variance Explained</a>. A project on when using empirical Bayes it is useful (and when it isn't) in epidemiological studies is available <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2872278/">here</a>.</p>
 <p>Finally, the data cleaning and notebooks for this project are available <a href="https://github.com/kiwidamien/StackedTurtles/tree/master/projects/empirical_bayes">here</a>.</p>
 <script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
     var align = "center",
