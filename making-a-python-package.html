@@ -40,7 +40,7 @@
 
     <link href="https://kiwidamien.github.io/making-a-python-package.html" rel="canonical" />
 
-        <meta name="description" content="This is the fourth in a series of blog posts where we go through the process of taking a collection of functions and turn them into a...">
+        <meta name="description" content="This is the first in a series of blog posts where we go through the process of taking a collection of functions and turning them into a...">
 
         <meta name="author" content="Damien Martin">
 
@@ -48,8 +48,6 @@
         <meta name="tags" content="engineering">
         <meta name="tags" content="package">
         <meta name="tags" content="best-practices">
-        <meta name="tags" content="unittest">
-        <meta name="tags" content="pytest">
 
         <meta property="og:locale" content="" />
     <meta property="og:site_name" content="Stacked Turtles" />
@@ -63,8 +61,8 @@
             <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
   <meta property="og:url" content="https://kiwidamien.github.io/making-a-python-package.html">
   <meta property="og:title" content="Making a Python Package">
-  <meta property="article:published_time" content="2019-01-02 22:30:00-08:00">
-            <meta property="og:description" content="This is the fourth in a series of blog posts where we go through the process of taking a collection of functions and turn them into a...">
+  <meta property="article:published_time" content="2019-01-01 20:00:00-08:00">
+            <meta property="og:description" content="This is the first in a series of blog posts where we go through the process of taking a collection of functions and turning them into a...">
 
             <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/cover_background/tool_background.svg">
 </head>
@@ -106,7 +104,7 @@
         <!-- TODO : Proper class for headline -->
         <span class="post-meta">
                 <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
-            | <time datetime="Wed 02 January 2019">Wed 02 January 2019</time>
+            | <time datetime="Tue 01 January 2019">Tue 01 January 2019</time>
         </span>
         <span class="post-meta">
           Filed under: <b><a href="https://kiwidamien.github.io/category/tools.html">Tools</a></b>
@@ -142,466 +140,174 @@
                           <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
                         </li>
             	        <li >
-                          <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
+                          <a href='https://kiwidamien.github.io/making-a-python-package-2.html'>Making a Python Package 2</a>
                         </li>
             	        <li >
-                          <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
+                          <a href='https://kiwidamien.github.io/making-a-python-package-3.html'>Making a Python Package 3</a>
                         </li>
             	        <li >
-                          <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
+                          <a href='https://kiwidamien.github.io/making-a-python-package-4.html'>Making a Python Package 4</a>
                         </li>
                     </ol>
-                <p>Note: To get the material for this blog post, visit the <a href="https://github.com/kiwidamien/Roman/tree/v0.4">v0.4 tag of Romans!</a> Github project. To get it locally, and assuming you cloned the previous version, run</p>
-<div class="highlight"><pre><span></span><span class="c1"># clear last set of changes</span>
-$ git reset --hard HEAD
-<span class="c1"># checkout this version</span>
-$ git checkout tags/v0.4
+                <p>Note: To get the material for this blog post, visit the <a href="https://github.com/kiwidamien/Roman/tree/v0.1">v0.1 tag of Romans!</a> Github project. To get it locally, run</p>
+<div class="highlight"><pre><span></span><span class="c1"># get the repo and put it in roman_package</span>
+$ git clone https://github.com/kiwidamien/roman.git roman_package
+$ <span class="nb">cd</span> roman_package
+<span class="c1"># now get the version of the repo corresponding to the steps in this article</span>
+$ git checkout tags/v0.1
 </pre></div>
 
 
-<h3>To install</h3>
-<p>To follow the steps in this tutorial, you will need to install <code>tox</code> and <code>pytest</code></p>
-<div class="highlight"><pre><span></span>pip install tox pytest
+<h1>Making a Python Package I: Making a Roman numerals module</h1>
+<p>You have written some Python code that you want to be used in other projects. Maybe it is a way of recursively grabbing information off SoundCloud, or scraping people's date of birth from their Wikipedia page, or calculating the change in scores when permuting a single feature to estimate its importance. Maybe you have written an ETL (extract-tranform-load) pipeline, and we want to be sure that everyone is using the same definition and process.</p>
+<p>To keep the example simple, we will try and convert some code that we have written that converts Roman numerals to integers (and vice-versa) into a package that we can
+<em> use anywhere on our system by typing <code>import roman</code>
+</em> allow our colleagues to install
+* allow anyone to install</p>
+<p>by turning our function into a <em>package</em>.</p>
+<p>If this is your first Python package, it may be the first time you are sharing code with the world at large. We will also go through some of the "best practices" you should follow, <em>particularly</em> when sharing your code with a wider audience.</p>
+<p>By the end of this article, you will have
+<em> Seen the functions we want to package
+</em> Made a Python module (i.e. something you can import from the current directory only)</p>
+<h2>The original code for <code>roman.py</code></h2>
+<p>During one of our projects, we wrote the following code in <code>roman.py</code> to work with Roman Numerals:</p>
+<div class="highlight"><pre><span></span><span class="c1"># roman.py</span>
+<span class="n">ROMAN_SYMBOLS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;CM&#39;</span><span class="p">,</span> <span class="mi">900</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;CD&#39;</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;XC&#39;</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;XL&#39;</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;IX&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;IV&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">roman_string_to_int</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a Roman numeral string to integer form</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ROMAN_SYMBOLS</span><span class="p">:</span>
+        <span class="k">while</span> <span class="n">numeral_string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">symbol</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">value</span>
+            <span class="n">numeral_string</span> <span class="o">=</span> <span class="n">numeral_string</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">symbol</span><span class="p">):]</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+<span class="k">def</span> <span class="nf">int_to_roman_string</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a positive integer into a Roman numeral</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ROMAN_SYMBOLS</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">number</span><span class="o">//</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">symbol</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="n">number</span> <span class="o">%</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">result</span>
 </pre></div>
 
 
-<h1>Making a Python Package IV: writing unit tests</h1>
-<p>There are many developers that would complain about us writing tests as step 4. They would claim the <em>first</em> thing we should do is write tests that tell us what the functions <em>should</em> do, and only then write code to satisfy the tests. This is called <em>Test Driven Development</em> (TDD). If you are writing your first Python package, or are coming from a field like Data Science which is heavy on the EDA, you probably wrote some code and realized you could reuse it, rather than starting with the idea of creating reusable code. For that reason, I have put tests after the initial code has been written.</p>
-<p>One important thing that we will come back to, however, is that we have to resist the temptation to write tests that duplicate the output of the code. Instead, we should start by asking ourselves "what <em>should</em> our code do in case X?" and write a test to match that.</p>
-<h2>Creating the directory structure</h2>
-<p>There are a few different places to put our tests, but I like having them outside my package directory. Our testing module, <code>pytest</code>, expects that
-<em> files containing tests start with the word <code>test</code>
-</em> functions containing tests start with the word <code>test</code></p>
-<p>Go ahead and create the following files:
-<em> <code>tests/test_roman.py</code>: to test the implementation of <code>roman/roman.py</code>
-</em> <code>tests/test_temperature.py</code>: to test the implementation of <code>roman/temperature.py</code>
-* <code>tests/__init__.py</code>: we leave this blank, but it is required to turn <code>tests</code> into a package (otherwise <code>pytest</code> doesn't process the files in the test directory).</p>
-<p>Our directory structure should now look like this:</p>
+<p>If we open Python or a jupyter notebook in this directory, we can import it without a problem:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">roman</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">roman</span><span class="o">.</span><span class="n">int_to_roman_string</span><span class="p">(</span><span class="mi">22</span><span class="p">)</span>
+<span class="s1">&#39;XXII&#39;</span>
+</pre></div>
+
+
+<p>If we had a different project somewhere else, Python would not be able to find <code>roman.py</code>! You don't want to copy and paste this file to each directory it is going to be used, as over time you are likely to have several different versions of the file. After all, there could be bugs in the function that we have written!</p>
+<p>We want to be able to install our "roman" functions so they can be accessed from anywhere. With this in mind, we create the following directory structure on our computer (it doesn't matter where):</p>
+<div class="highlight"><pre><span></span>roman_project
++-- roman
+    +-- roman.py
++-- README.md
+</pre></div>
+
+
+<p>Here <code>README.md</code> contains any information you want to describe the <code>roman.py</code> package. Ultimately you should be putting your project on Github, so it is accessible to the rest of the world (or at least your colleagues if you use private repos).</p>
+<h2>Packages and <code>__init__.py</code></h2>
+<p>A <em>module</em> is a single <code>*.py</code> file that contains some code we would like to import.</p>
+<p>A <em>package</em> is a collection of modules in a directory. The way that Python tells that we have a package is if the directory contains a <code>__init__.py</code> file. Even if that file is empty, it tells Python "this directory contains a collection of modules that are meant to be imported". To create the empty file, run </p>
+<div class="highlight"><pre><span></span>touch roman/__init__.py
+</pre></div>
+
+
+<p>from the <code>roman_project</code> directory. Your directory structure should look like this:</p>
+<div class="highlight"><pre><span></span>roman_project
++-- roman
+    +-- __init__.py
+    +-- roman.py
++-- README.md
+</pre></div>
+
+
+<h2>Importing our module</h2>
+<p>In the <code>roman_project</code> directory, we can try importing our file:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Must lauch python from &quot;roman_project&quot;!</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">roman</span>
+<span class="c1"># Success! Now try running one of the commands.....</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">roman</span><span class="o">.</span><span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+<span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+  <span class="n">File</span> <span class="s2">&quot;&lt;stdin&gt;&quot;</span><span class="p">,</span> <span class="n">line</span> <span class="mi">1</span><span class="p">,</span> <span class="ow">in</span> <span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;</span>
+<span class="ne">AttributeError</span><span class="p">:</span> <span class="n">module</span> <span class="s1">&#39;roman&#39;</span> <span class="n">has</span> <span class="n">no</span> <span class="n">attribute</span> <span class="s1">&#39;roman_string_to_int&#39;</span>
+</pre></div>
+
+
+<p>It turns out we need to tell Python which file to look in. The following does work:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Need to import from roman/roman.py? Use roman.roman</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">roman.roman</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">roman</span><span class="o">.</span><span class="n">roman</span><span class="o">.</span><span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+<span class="mi">5</span>
+</pre></div>
+
+
+<h2>Putting something useful in <code>roman/__init__.py</code></h2>
+<p>Just typing <code>import roman</code> at the prompt goes to the <code>roman</code> directory, and opens <code>__init__.py</code> (which is blank). Typing <code>import roman.roman</code> imports <code>roman/roman.py</code>. We don't really want to call <code>roman.roman</code> when we do imports. The way around this is to import our files in <code>__init__.py</code> itself. Change <code>__init__.py</code> to contain the following:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.roman</span> <span class="kn">import</span> <span class="n">roman_string_to_int</span><span class="p">,</span> <span class="n">int_to_roman_string</span>  <span class="c1"># Note .XXXXXX means &quot;import XXXXXX.py from current directory&quot;</span>
+
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.1.0&#39;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Damien Martin&#39;</span>
+</pre></div>
+
+
+<p>This imports our functions into <code>__init__.py</code> (which is read when we call <code>import roman</code>). The <code>__author__</code> and <code>__version__</code> are used in the help docstring of the module, and when checking the version of the package.</p>
+<h2>Trying again</h2>
+<p>Go back to the <code>roman_package</code> directory, and start the Python interpreter. Now run the following:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">roman</span>
+<span class="c1"># now this works!</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">roman</span><span class="o">.</span><span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
+<span class="mi">5</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">help</span><span class="p">(</span><span class="n">roman</span><span class="p">)</span> 
+</pre></div>
+
+
+<p>You should see a help screen, with the author and version number set the way they were set in <code>roman/__init__.py</code></p>
+<h2>A package with multiple files</h2>
+<p>In order to demonstrate how multiple files work, the version of this project on Github also has <code>roman/temperature.py</code>. The temperature module contains functions that convert the temperature between Kelvin, Fahrenheit, and Celsius. While it doesn't really have anything to do with Roman numerals, it is a relatively easy example, and helps us understand how to deal with multiple modules in a package.</p>
+<p>This article ends with the directory structure</p>
 <div class="highlight"><pre><span></span>roman_project
 +-- roman
     +-- __init__.py
     +-- roman.py
     +-- temperature.py
-+-- README.mdi
-+-- setup.py
-+-- tests
-    +-- __init__.py
-    +-- test_roman.py
-    +-- test_temperature.py
++-- README.md
 </pre></div>
 
 
-<h2>Creating our first test</h2>
-<p>We will use the <a href="https://semaphoreci.com/community/tutorials/testing-python-applications-with-pytest">pytest</a> module to write our unit tests. The simplest tests are equality assertions, where we check that a function returns the value we expect. For example, we would want <code>roman.roman_string_to_int('V')</code> to return <code>5</code>. Put the following in <code>test/test_roman.py</code></p>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pytest</span>
-<span class="kn">from</span> <span class="nn">roman.roman</span> <span class="kn">import</span> <span class="n">roman_string_to_int</span><span class="p">,</span> <span class="n">int_to_roman_string</span>
+<p>and the file <code>roman/__init__.py</code> as </p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.roman</span> <span class="kn">import</span> <span class="n">int_to_roman_string</span><span class="p">,</span> <span class="n">roman_string_to_int</span>
+<span class="kn">from</span> <span class="nn">.temperature</span> <span class="kn">import</span> <span class="n">convert</span><span class="p">,</span> <span class="n">convert_all</span>
 
-<span class="k">def</span> <span class="nf">test_V_gets_converted_to_5</span><span class="p">():</span>
-    <span class="k">assert</span> <span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s1">&#39;0.1.0&#39;</span>
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Damien Martin&#39;</span>
 </pre></div>
 
 
-<p>At the top level directory, run </p>
-<div class="highlight"><pre><span></span>$ pytest
-</pre></div>
-
-
-<p>and you should see output similar to the following</p>
-<div class="highlight"><pre><span></span><span class="o">========================================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">=========================================================</span>
-platform darwin -- Python <span class="m">3</span>.6.5, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
-rootdir: &lt;file location of package&gt;/roman_package, inifile:
-collected <span class="m">1</span> item                                                                                                                                                                                 
-
-tests/test_roman.py .                                                                                                          <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
-
-<span class="o">======================================================</span> <span class="m">1</span> passed in <span class="m">0</span>.02 <span class="nv">seconds</span> <span class="o">======================================================</span>
-</pre></div>
-
-
-<p>This tells us that our test passed!</p>
-<p>Let's change the test so that it fails. We will change the function to</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_V_gets_converted_to_6</span><span class="p">():</span>   <span class="c1"># this is wrong and should fail</span>
-    <span class="k">assert</span> <span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">6</span>
-</pre></div>
-
-
-<p>Now the output is</p>
-<div class="highlight"><pre><span></span><span class="o">========================================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">=========================================================</span>
-platform darwin -- Python <span class="m">3</span>.6.5, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
-rootdir: &lt;location of file on drive&gt;/roman_package, inifile:
-collected <span class="m">1</span> item                                                                                                                                                                                 
-
-tests/test_roman.py F                                                                                                          <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
-
-<span class="o">==============================================================</span> <span class="nv">FAILURES</span> <span class="o">==============================================================</span>
-_____________________________________________________ test_V_gets_converted_to_6 _____________________________________________________
-
-    def test_V_gets_converted_to_6<span class="o">()</span>:   <span class="c1"># this is wrong and should fail</span>
-&gt;       assert roman_string_to_int<span class="o">(</span><span class="s1">&#39;V&#39;</span><span class="o">)</span> <span class="o">==</span> <span class="m">6</span>
-E       AssertionError: assert <span class="nv">5</span> <span class="o">==</span> <span class="m">6</span>
-E        +  where <span class="nv">5</span> <span class="o">=</span> roman_string_to_int<span class="o">(</span><span class="s1">&#39;V&#39;</span><span class="o">)</span>
-
-tests/test_roman.py:5: <span class="nv">AssertionError</span>
-<span class="o">======================================================</span> <span class="m">1</span> failed in <span class="m">0</span>.04 <span class="nv">seconds</span> <span class="o">======================================================</span>
-</pre></div>
-
-
-<p>Note what the failure is telling us in some detail:
-<em> The name of the function that failed (<code>test_V_gets_converted_to_6</code>)
-</em> The code of the failing function
-<em> That <code>roman_string_to_int('V')</code> actually evaluated to 5
-</em> That <code>5 == 6</code> is not a true statment.</p>
-<p>In this case, it is easy to see that our test is incorrect, because we deliberately made the test wrong to see what information we get. One of the key pieces of information is the name of the failing test. When naming test functions, it should be very clear exactly what is being tested. We should write names as questions: <code>test_if_V_is_converted_to_6</code> is a bad name, <code>test_V_gets_converted_to_6</code> is a good name. By reading the name of the test, you should know <em>exactly</em> what <em>should</em> happen as a result of the test. </p>
-<p>For testing, you are encouraged to write long, verbose names. The usual "PEP 8" standards that claim you should have 79 characters per line are not applied to unit tests.</p>
-<h2>Our second test: an assertion test</h2>
-<p>What <em>should</em> <code>roman_string_to_int('Q')</code> return? Since 'Q' isn't a Roman numeral, our function should throw an error. Right now, it actually returns 0 -- we made the assumption when writing the function that we had a valid Roman numeral. Here is how we check for errors in <code>pytest</code>:</p>
-<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_char_not_in_MDCLXVI_raises_ValueError</span><span class="p">():</span>
-    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;Q should raise value error, not in MDCLXVI&quot;</span><span class="p">):</span>
-        <span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;Q&#39;</span><span class="p">)</span>
-</pre></div>
-
-
-<p>Let's check it when running pytest (note that we have changed our other test back to <code>test_V_gets_converted_to_5</code>):</p>
-<div class="highlight"><pre><span></span>$ <span class="nv">pytest</span>
-<span class="o">========================================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">=========================================================</span>
-platform darwin -- Python <span class="m">3</span>.6.5, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
-rootdir: /Users/damien/metis/roman_package, inifile:
-collected <span class="m">2</span> items                                                                                                                                                                                
-
-tests/test_roman.py .F                                                                                                         <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
-
-<span class="o">==============================================================</span> <span class="nv">FAILURES</span> <span class="o">==============================================================</span>
-_____________________________________________ test_char_not_in_MDCLXVI_raises_ValueError _____________________________________________
-
-    def test_char_not_in_MDCLXVI_raises_ValueError<span class="o">()</span>:
-        with pytest.raises<span class="o">(</span>ValueError, <span class="nv">message</span><span class="o">=</span><span class="s2">&quot;Q should raise value error, not in MDCLXVI&quot;</span><span class="o">)</span>:
-&gt;           roman_string_to_int<span class="o">(</span><span class="s1">&#39;Q&#39;</span><span class="o">)</span>
-E           Failed: Q should raise value error, not in MDCLXVI
-
-tests/test_roman.py:9: <span class="nv">Failed</span>
-<span class="o">=================================================</span> <span class="m">1</span> failed, <span class="m">1</span> passed in <span class="m">0</span>.05 <span class="nv">seconds</span> <span class="o">=================================================</span>
-</pre></div>
-
-
-<p>We see the first test passed and the second one failed (hence <code>.F</code> after <code>tests/test_roman.py</code>).</p>
-<p>These are the two most common tests that we will use.</p>
-<h2>Writing tests</h2>
-<p>Notice when we wrote the test for <code>roman_string_to_int('Q')</code>, we <strong>didn't</strong> look at what the code currently did (return 0) and declare that correct. We decided what the code should do (raise an error) and then wrote a test to see if our implementation did what we expected. In this case, it does not! This tells us we should probably go back and change <code>roman/roman.py</code> to raise an error when an illegal string is passed in.</p>
-<p>It won't always be clear what the "right" behavior should be. For example, what should <code>roman_string_to_int('')</code> be? Here are two possibilities:
-<em> The empty string contains nothing, so it should represent 0, or
-</em> The Roman's had no concept or representation of 0, so <code>''</code> should raise a ValueError.</p>
-<p>I could defend either of these positions, and when writing the function I didn't take a particular stand one way or the other. If this package is mostly used to label copyright dates, the case of zero coming up doesn't seem particularly likely, so we just have to make a decision. I won't tell you what decision I made, but I will tell you the name of the test I wrote: <code>test_empty_string_gives_zero</code>. Even though there isn't a "right" answer, someone reading my test code should be able to determine what I decided.</p>
-<p>Let's look at another example. What should <code>roman_string_to_int('iii')</code> be? There are at least two reasonable answers here:
-<em> Roman numerals should be considered case insensitive, so 'iii' should resolve to 3 (like it does in the Preface of books)
-</em> Roman numerals were always used by the Romans in upper case, so 'i' (and other lower case letters) should be considered illegal.</p>
-<p>Which would you decide to use?</p>
-<p>Then there is the question of whether 'LLL' is legal. On the one hand, it is unambiguous: 'L' represents 50, so 'LLL' should be 150. On the other hand, we "should" take 'LLL' and reduce it to 'CL' as the "correct" or "usual" representation of 150. So if a user passes in a string like "LLL" or "IIIIIIIIII" do we evaluate it, or raise an error? What about "MMMMM"? The usual pattern is when we have 5 repeating powers of 10, we replace it with the next highest symbol (e.g. <code>IIIII-&gt;V, XXXXX-&gt;L, CCCCC-&gt;D</code>). Since there is nothing higher than <code>M</code>, do we declare Roman numerals incapable of representing numbers greater than 4999? Or do we accept that we can have as many <code>M</code>s as we want?</p>
-<p>Let me list all of my tests in <code>tests/test_roman.py</code>. I claim you should be able to answer these questions after reading the name of the tests.</p>
-<table>
-<thead>
-<tr>
-<th>Test function name</th>
-<th>Result (Pass/Fail)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>test_empty_string_gives_zero()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_char_not_in_MDCLXVI_raises_ValueError()</code></td>
-<td>Fail</td>
-</tr>
-<tr>
-<td><code>test_error_on_lower_case()</code></td>
-<td>Fail</td>
-</tr>
-<tr>
-<td><code>test_III_is_converted_to_3()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_IV_is_romaned_to_four()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_LLL_throws_ValueError()</code></td>
-<td>Fail</td>
-</tr>
-<tr>
-<td><code>test_CCC_gives_300()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_CI_allows_and_gives_101()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_IC_throws_ValueError()</code></td>
-<td>Fail</td>
-</tr>
-<tr>
-<td><code>test_5_gives_V()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_10_gives_X()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_50_gives_L()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_100_gives_C()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_500_gives_D()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_1000_gives_M()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_6000_is_MMMMMM()</code></td>
-<td>Pass</td>
-</tr>
-<tr>
-<td><code>test_2018_is_MMXVIII()</code></td>
-<td>Pass</td>
-</tr>
-</tbody>
-</table>
-<p>You can probably think of other tests (e.g. trying to convert a fraction, or a negative number). The important thing here is that I didn't pick tests that would pass, I picked cases and determined what I wanted the behavior to be (or at least, made a choice about what it should be). It is now my job to rewrite the functions to make the tests pass.</p>
-<p><strong>Note:</strong> If you are using the <code>v0.4</code> branch off github, you can see that I have also written unit tests for the temperature functions. I won't be covering them in these articles, but they are worth looking over.</p>
-<h2>How testing helps</h2>
-<p>Our original version of <code>roman/roman.py</code> was this:</p>
-<div class="highlight"><pre><span></span><span class="c1"># We don&#39;t want these exposed to the end user,</span>
-<span class="c1"># so lead with an underscore instead</span>
-<span class="n">_ROMAN_SYMBOLS</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;CM&#39;</span><span class="p">,</span> <span class="mi">900</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;CD&#39;</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;XC&#39;</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;XL&#39;</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;IX&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;IV&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="p">]</span>
-
-<span class="k">def</span> <span class="nf">roman_string_to_int</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts a numeral string representing a roman numeral to an integer.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        numeral_string: represents a valid roman numeral. Must consist only of</span>
-<span class="sd">                        M, D, C, L, X, V, and I.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An integer.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; roman_string_to_int(&#39;V&#39;)</span>
-<span class="sd">        5</span>
-<span class="sd">        &gt;&gt;&gt; roman_string_to_int(&#39;MMXIX&#39;)</span>
-<span class="sd">        2019</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_ROMAN_SYMBOLS</span><span class="p">:</span>
-        <span class="k">while</span> <span class="n">numeral_string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">symbol</span><span class="p">):</span>
-            <span class="n">total</span> <span class="o">+=</span> <span class="n">value</span>
-            <span class="n">numeral_string</span> <span class="o">=</span> <span class="n">numeral_string</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">symbol</span><span class="p">):]</span>
-    <span class="k">return</span> <span class="n">total</span>
-
-<span class="k">def</span> <span class="nf">int_to_roman_string</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts a positive integer into a Roman numeral.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        number: a positive integer to be converted into a roman numeral</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The string representation of number.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; int_to_roman_string(5)</span>
-<span class="sd">        &#39;V&#39;</span>
-<span class="sd">        &gt;&gt;&gt; int_to_roman_string(2019)</span>
-<span class="sd">        &#39;MMXIX&#39;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_ROMAN_SYMBOLS</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">number</span><span class="o">//</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">symbol</span>
-        <span class="n">number</span> <span class="o">=</span> <span class="n">number</span> <span class="o">%</span> <span class="n">value</span>
-    <span class="k">return</span> <span class="n">result</span>
-</pre></div>
-
-
-<p>After rewriting it to make the tests work, I have the following:</p>
-<div class="highlight"><pre><span></span><span class="c1"># We don&#39;t want these exposed to the end user,</span>
-<span class="c1"># so lead with an underscore instead</span>
-<span class="n">_ROMAN_SYMBOLS</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s1">&#39;M&#39;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;CM&#39;</span><span class="p">,</span> <span class="mi">900</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="mi">500</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;CD&#39;</span><span class="p">,</span> <span class="mi">400</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;XC&#39;</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;L&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;XL&#39;</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;IX&#39;</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;IV&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
-    <span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="p">]</span>
-
-<span class="n">_ROMAN_POWERS_TEN</span> <span class="o">=</span> <span class="s1">&#39;MCXI&#39;</span>
-<span class="n">_ROMAN_MID_POWERS</span> <span class="o">=</span> <span class="s1">&#39;DLV&#39;</span>
-<span class="n">_ROMAN_ALL_SYMBOLS</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">p</span> <span class="o">+</span> <span class="n">m</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_ROMAN_POWERS_TEN</span><span class="p">,</span>
-                                                    <span class="n">_ROMAN_MID_POWERS</span><span class="p">)])</span> <span class="o">+</span> <span class="s1">&#39;I&#39;</span>
-
-
-<span class="k">def</span> <span class="nf">_contains_replacable</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Here are some simplifible rules. We will use I for powers of 10, and V for</span>
-<span class="sd">    non-powers of 10:</span>
-<span class="sd">      IIIII-&gt;V (5 powers of 10, except M, can be replaced with next non-power)</span>
-<span class="sd">      IIII-&gt;IV (4 powers of 10, except M, can be replaced)</span>
-<span class="sd">      VV-&gt;X (2 non-powers of 10 can be replaced with next highest power of 10)</span>
-<span class="sd">      VIV-&gt;IX (nonpower, power, nonpower is replacable)</span>
-<span class="sd">    Note all &quot;replaceable&quot; strings are in the same power (e.g. I,V/X,L/C,D)</span>
-
-<span class="sd">    Raises a ValueError on finding a reducible substring.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">levels</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">_ROMAN_MID_POWERS</span><span class="p">,</span> <span class="n">_ROMAN_POWERS_TEN</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
-    <span class="k">for</span> <span class="n">non_power</span><span class="p">,</span> <span class="n">power_10</span> <span class="ow">in</span> <span class="n">levels</span><span class="p">:</span>
-        <span class="n">reducibles</span> <span class="o">=</span> <span class="p">[</span><span class="n">power_10</span><span class="o">*</span><span class="mi">5</span><span class="p">,</span> <span class="n">power_10</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="n">non_power</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
-                      <span class="n">non_power</span><span class="o">+</span><span class="n">power_10</span><span class="o">+</span><span class="n">non_power</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">reducible</span> <span class="ow">in</span> <span class="n">reducibles</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">reducible</span> <span class="ow">in</span> <span class="n">numeral_string</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;{numeral_string} is not a correctly</span>
-<span class="s2">                                 formated roman numeral (it contains</span>
-<span class="s2">                                 {reducible} as a substring, which is</span>
-<span class="s2">                                 reducible)&quot;&quot;&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_check_all_characters_legal</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Raises a ValueError if numeral_string contains a character not in MDCLXVI</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">illegal_chars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">_ROMAN_POWERS_TEN</span> <span class="o">+</span>
-                                              <span class="n">_ROMAN_MID_POWERS</span><span class="p">)</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">illegal_chars</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;{numeral_string} contains {illegal_chars}, which</span>
-<span class="s2">                         are not allowed in Roman numerals&quot;&quot;&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_check_for_illegal_combos</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Raises a ValueError if numeral_string contains an illegal combination.</span>
-<span class="sd">    An illegal combination is any string where:</span>
-<span class="sd">        - A digit with a smaller value appears before a larger value, with the</span>
-<span class="sd">        exceptions of CM, CD, XC, XL, IX, IV (e.g. IC is illegal)</span>
-<span class="sd">        - Two or more smaller values appear immediately before a larger value</span>
-<span class="sd">        (e.g. CM is legal, but CCM is not)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">illegal_substrings</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CCM&#39;</span><span class="p">,</span> <span class="s1">&#39;CCD&#39;</span><span class="p">,</span> <span class="s1">&#39;XXC&#39;</span><span class="p">,</span> <span class="s1">&#39;XXL&#39;</span><span class="p">,</span> <span class="s1">&#39;IIX&#39;</span><span class="p">,</span> <span class="s1">&#39;IIV&#39;</span><span class="p">]</span>
-    <span class="n">exception_substrings</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;CM&#39;</span><span class="p">,</span> <span class="s1">&#39;CD&#39;</span><span class="p">,</span> <span class="s1">&#39;XC&#39;</span><span class="p">,</span> <span class="s1">&#39;XL&#39;</span><span class="p">,</span> <span class="s1">&#39;IX&#39;</span><span class="p">,</span> <span class="s1">&#39;IV&#39;</span><span class="p">]</span>
-
-    <span class="k">for</span> <span class="n">illegal_substring</span> <span class="ow">in</span> <span class="n">illegal_substrings</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">illegal_substring</span> <span class="ow">in</span> <span class="n">numeral_string</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;{numeral_string} is not a valid Roman numeral,</span>
-<span class="s2">                             it contains the illegal substring</span>
-<span class="s2">                             {illegal_substring}&quot;&quot;&quot;</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">exception_substring</span> <span class="ow">in</span> <span class="n">exception_substrings</span><span class="p">:</span>
-        <span class="n">numeral_string</span> <span class="o">=</span> <span class="n">numeral_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">exception_substring</span><span class="p">,</span>
-                                                <span class="n">exception_substring</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-    <span class="k">for</span> <span class="n">current_char</span><span class="p">,</span> <span class="n">next_char</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">,</span> <span class="n">numeral_string</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-        <span class="n">curr_index</span> <span class="o">=</span> <span class="n">_ROMAN_ALL_SYMBOLS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">current_char</span><span class="p">)</span>
-        <span class="n">next_index</span> <span class="o">=</span> <span class="n">_ROMAN_ALL_SYMBOLS</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">next_char</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">curr_index</span> <span class="o">&gt;</span> <span class="n">next_index</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;String contains an illegal combination of</span>
-<span class="s2">                             characters&quot;&quot;&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_validate_string</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Raises an error if string is not valid. Interal use only.&quot;&quot;&quot;</span>
-    <span class="n">_check_all_characters_legal</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">)</span>
-    <span class="n">_contains_replacable</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">)</span>
-    <span class="n">_check_for_illegal_combos</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">is_valid_roman_numeral</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Determines if numeral_string is a valid Roman numeral or not&quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">_validate_string</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">True</span>
-    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">False</span>
-
-
-<span class="k">def</span> <span class="nf">roman_string_to_int</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts a numeral string representing a roman numeral to an integer.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        numeral_string: represents a valid roman numeral. Must consist only of</span>
-<span class="sd">                        M, D, C, L, X, V, and I.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        An integer.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; roman_string_to_int(&#39;V&#39;)</span>
-<span class="sd">        5</span>
-<span class="sd">        &gt;&gt;&gt; roman_string_to_int(&#39;MMXIX&#39;)</span>
-<span class="sd">        2019</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: if passed symbols other than MDCLXVI, or passed illegal</span>
-<span class="sd">                    combinations (e.g. IC), or passed reducible combinations</span>
-<span class="sd">                    (e.g. LLL)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_validate_string</span><span class="p">(</span><span class="n">numeral_string</span><span class="p">)</span>
-    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_ROMAN_SYMBOLS</span><span class="p">:</span>
-        <span class="k">while</span> <span class="n">numeral_string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">symbol</span><span class="p">):</span>
-            <span class="n">total</span> <span class="o">+=</span> <span class="n">value</span>
-            <span class="n">numeral_string</span> <span class="o">=</span> <span class="n">numeral_string</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">symbol</span><span class="p">):]</span>
-    <span class="k">return</span> <span class="n">total</span>
-
-
-<span class="k">def</span> <span class="nf">int_to_roman_string</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts a positive integer into a Roman numeral.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        number: a positive integer to be converted into a roman numeral.</span>
-<span class="sd">                Will use integer part if passed a float.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The string representation of number.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; int_to_roman_string(5)</span>
-<span class="sd">        &#39;V&#39;</span>
-<span class="sd">        &gt;&gt;&gt; int_to_roman_string(2019)</span>
-<span class="sd">        &#39;MMXIX&#39;</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: if passed a negative number</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">number</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;{number} is negative, cannot convert to Roman</span>
-<span class="s2">                         numeral&quot;&quot;&quot;</span><span class="p">)</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="k">for</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_ROMAN_SYMBOLS</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">+=</span> <span class="p">(</span><span class="n">number</span><span class="o">//</span><span class="n">value</span><span class="p">)</span> <span class="o">*</span> <span class="n">symbol</span>
-        <span class="n">number</span> <span class="o">=</span> <span class="n">number</span> <span class="o">%</span> <span class="n">value</span>
-    <span class="k">return</span> <span class="n">result</span>
-</pre></div>
-
-
-<p>It is a lot longer, but notice that
-<em> the docstrings have been updated
-</em> there are meaningful error messages
-* we have a new user level function <code>is_valid_roman_numeral</code></p>
-<p>Looking at this code, it is clear that we could use <code>_ROMAN_MID_POWERS</code> and <code>ROMAN_POWERS_TEN</code> to generate <code>_ROMAN_SYMBOLS</code>, or even do away with the table altogether. With the tests in place, we are free to try and rearrange this code. When we are done, we just rerun the tests and check our changes didn't break anything.</p>
-<h2>Tooling: <code>tox</code></h2>
+<p>The downside to all of this work is that we can still only import our python module from <code>roman_project</code>! We will correct that in article 3 of this series, but first we need to tidy up our docstrings!</p>
+<h2>Summary and next steps</h2>
+<p>So far we have made a local package, which is only importable from the current directory. To do this:
+<em> We placed all the Python modules (<code>*.py</code> files) into the subdirectory <code>roman</code>
+</em> Added <code>__init__.py</code> to the subdirectory <code>roman</code> (to make it a package)
+<em> In <code>__init__.py</code>, imported the files we want access to
+</em> In <code>__init__.py</code>, added some metadata (namely the <code>__author__</code> and <code>__version__</code>)</p>
+<p>In the next article in this series, we look at writing good docstrings on our functions. </p>
             </section>
 
             <section class="post-info">
@@ -619,7 +325,7 @@ tests/test_roman.py:9: <span class="nv">Failed</span>
                 </div>
 
                 <aside class="post-tags">
-<a href="https://kiwidamien.github.io/tag/python.html">python</a><a href="https://kiwidamien.github.io/tag/engineering.html">engineering</a><a href="https://kiwidamien.github.io/tag/package.html">package</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best-practices</a><a href="https://kiwidamien.github.io/tag/unittest.html">unittest</a><a href="https://kiwidamien.github.io/tag/pytest.html">pytest</a>                </aside>
+<a href="https://kiwidamien.github.io/tag/python.html">python</a><a href="https://kiwidamien.github.io/tag/engineering.html">engineering</a><a href="https://kiwidamien.github.io/tag/package.html">package</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best-practices</a>                </aside>
 
                 <div class="clear"></div>
 
@@ -640,18 +346,18 @@ tests/test_roman.py:9: <span class="nv">Failed</span>
 
 
                 <aside class="post-nav">
-                    <a class="post-nav-next" href="https://kiwidamien.github.io/making-a-python-package.html">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/making-a-python-package-3.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-left"></i>
-                                <h2 class="post-nav-title">Making a Python Package</h2>
+                                <h2 class="post-nav-title">Making a Python Package 3</h2>
                             <p class="post-nav-excerpt">This is the third in a series of blog posts where we go through the process of taking...</p>
                         </section>
                     </a>
-                    <a class="post-nav-prev" href="https://kiwidamien.github.io/derivations-and-conjugate-priors-proportions.html">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/making-a-python-package-2.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-right"></i>
-                                <h2 class="post-nav-title">Derivations and Conjugate Priors (proportions)</h2>
-                            <p class="post-nav-excerpt">This article contains derivations when applying the shrinkage methods of empirical...</p>
+                                <h2 class="post-nav-title">Making a Python Package 2</h2>
+                            <p class="post-nav-excerpt">This is the second in a series of blog posts where we go through the process of taking...</p>
                         </section>
                     </a>
                     <div class="clear"></div>
