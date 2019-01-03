@@ -40,7 +40,7 @@
 
     <link href="https://kiwidamien.github.io/making-a-python-package.html" rel="canonical" />
 
-        <meta name="description" content="The highest and lowest rated books, films, and music are those that have very few ratings. This is because for small samples, it is...">
+        <meta name="description" content="This is the fourth in a series of blog posts where we go through the process of taking a collection of functions and turn them into a...">
 
         <meta name="author" content="Damien Martin">
 
@@ -48,6 +48,8 @@
         <meta name="tags" content="engineering">
         <meta name="tags" content="package">
         <meta name="tags" content="best-practices">
+        <meta name="tags" content="unittest">
+        <meta name="tags" content="pytest">
 
         <meta property="og:locale" content="" />
     <meta property="og:site_name" content="Stacked Turtles" />
@@ -61,8 +63,8 @@
             <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
   <meta property="og:url" content="https://kiwidamien.github.io/making-a-python-package.html">
   <meta property="og:title" content="Making a Python Package">
-  <meta property="article:published_time" content="2018-01-01 20:00:00-08:00">
-            <meta property="og:description" content="The highest and lowest rated books, films, and music are those that have very few ratings. This is because for small samples, it is...">
+  <meta property="article:published_time" content="2019-01-02 22:30:00-08:00">
+            <meta property="og:description" content="This is the fourth in a series of blog posts where we go through the process of taking a collection of functions and turn them into a...">
 
             <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/cover_background/tool_background.svg">
 </head>
@@ -104,7 +106,7 @@
         <!-- TODO : Proper class for headline -->
         <span class="post-meta">
                 <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
-            | <time datetime="Mon 01 January 2018">Mon 01 January 2018</time>
+            | <time datetime="Wed 02 January 2019">Wed 02 January 2019</time>
         </span>
         <span class="post-meta">
           Filed under: <b><a href="https://kiwidamien.github.io/category/tools.html">Tools</a></b>
@@ -139,8 +141,64 @@
             	        <li class="active">
                           <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
                         </li>
+            	        <li >
+                          <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
+                        </li>
+            	        <li >
+                          <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
+                        </li>
+            	        <li >
+                          <a href='https://kiwidamien.github.io/making-a-python-package.html'>Making a Python Package</a>
+                        </li>
                     </ol>
-                <h1>Making a Python Package</h1>
+                <p>Note: To get the material for this blog post, visit the <a href="https://github.com/kiwidamien/Roman/tree/v0.4">v0.4 tag of Romans!</a> Github project. To get it locally, and assuming you cloned the previous version, run</p>
+<div class="highlight"><pre><span></span><span class="c1"># clear last set of changes</span>
+$ git reset --hard HEAD
+<span class="c1"># checkout this version</span>
+$ git checkout tags/v0.4
+</pre></div>
+
+
+<h3>To install</h3>
+<p>To follow the steps in this tutorial, you will need to install <code>tox</code> and <code>pytest</code></p>
+<div class="highlight"><pre><span></span>pip install tox pytest
+</pre></div>
+
+
+<h1>Making a Python Package IV: writing unit tests</h1>
+<p>There are many developers that would complain about us writing tests as step 4. They would claim the <em>first</em> thing we should do is write tests that tell us what the functions <em>should</em> do, and only then write code to satisfy the tests. This is called <em>Test Driven Development</em> (TDD). If you are writing your first Python package, or are coming from a field like Data Science which is heavy on the EDA, you probably wrote some code and realized you could reuse it, rather than starting with the idea of creating reusable code. For that reason, I have put tests after the initial code has been written.</p>
+<p>One important thing that we will come back to, however, is that we have to resist the temptation to write tests that duplicate the output of the code. Instead, we should start by asking ourselves "what <em>should</em> our code do in case X?" and write a test to match that.</p>
+<h2>Creating the directory structure</h2>
+<p>There are a few different places to put our tests, but I like having them outside my package directory. Our testing module, <code>pytest</code>, expects that
+<em> files containing tests start with the word <code>test</code>
+</em> functions containing tests start with the word <code>test</code></p>
+<p>Go ahead and create the following files:
+<em> <code>tests/test_roman.py</code>: to test the implementation of <code>roman/roman.py</code>
+</em> <code>tests/test_temperature.py</code>: to test the implementation of <code>roman/temperature.py</code>
+* <code>tests/__init__.py</code>: we leave this blank, but it is required to turn <code>tests</code> into a package (otherwise <code>pytest</code> doesn't process the files in the test directory).</p>
+<p>Our directory structure should now look like this:</p>
+<div class="highlight"><pre><span></span>roman_project
++-- roman
+    +-- __init__.py
+    +-- roman.py
+    +-- temperature.py
++-- README.mdi
++-- setup.py
++-- tests
+    +-- __init__.py
+    +-- test_roman.py
+    +-- test_temperature.py
+</pre></div>
+
+
+<h2>Creating our first tests</h2>
+<p>We will use the <a href="https://semaphoreci.com/community/tutorials/testing-python-applications-with-pytest">pytest</a> module to write our unit tests. The simplest tests are equality assertions, where we check that a function returns the value we expect. For example, we would want <code>roman.roman_string_to_int('V')</code> to return <code>5</code>. Put the following in <code>test/test_roman.py</code></p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pytest</span>
+<span class="kn">from</span> <span class="nn">roman.roman</span> <span class="kn">import</span> <span class="n">roman_string_to_int</span><span class="p">,</span> <span class="n">int_to_roman_string</span>
+
+<span class="k">def</span> <span class="nf">test_V_gets_converted_to_5</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">roman_string_to_int</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">5</span>
+</pre></div>
             </section>
 
             <section class="post-info">
@@ -158,7 +216,7 @@
                 </div>
 
                 <aside class="post-tags">
-<a href="https://kiwidamien.github.io/tag/python.html">python</a><a href="https://kiwidamien.github.io/tag/engineering.html">engineering</a><a href="https://kiwidamien.github.io/tag/package.html">package</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best-practices</a>                </aside>
+<a href="https://kiwidamien.github.io/tag/python.html">python</a><a href="https://kiwidamien.github.io/tag/engineering.html">engineering</a><a href="https://kiwidamien.github.io/tag/package.html">package</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best-practices</a><a href="https://kiwidamien.github.io/tag/unittest.html">unittest</a><a href="https://kiwidamien.github.io/tag/pytest.html">pytest</a>                </aside>
 
                 <div class="clear"></div>
 
@@ -179,18 +237,18 @@
 
 
                 <aside class="post-nav">
-                    <a class="post-nav-next" href="https://kiwidamien.github.io/big-commits-in-github.html">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/making-a-python-package.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-left"></i>
-                                <h2 class="post-nav-title">Big commits in GitHub</h2>
-                            <p class="post-nav-excerpt">What do you do when you have committed a large file to GitHub?</p>
+                                <h2 class="post-nav-title">Making a Python Package</h2>
+                            <p class="post-nav-excerpt">This is the third in a series of blog posts where we go through the process of taking...</p>
                         </section>
                     </a>
-                    <a class="post-nav-prev" href="https://kiwidamien.github.io/using-folium-what-is-the-furthest-you-can-get-from-starbucks-in-seattle.html">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/derivations-and-conjugate-priors-proportions.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-right"></i>
-                                <h2 class="post-nav-title">Using Folium: What is the furthest you can get from Starbucks in Seattle?</h2>
-                            <p class="post-nav-excerpt">It seems that Starbucks is ubiquitous in Seattle. Where in Seattle is furthest from a...</p>
+                                <h2 class="post-nav-title">Derivations and Conjugate Priors (proportions)</h2>
+                            <p class="post-nav-excerpt">This article contains derivations when applying the shrinkage methods of empirical...</p>
                         </section>
                     </a>
                     <div class="clear"></div>
