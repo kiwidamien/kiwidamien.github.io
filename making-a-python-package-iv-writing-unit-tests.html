@@ -211,15 +211,15 @@ $ git checkout tags/v0.4
 
 
 <p>and you should see output similar to the following</p>
-<div class="highlight"><pre><span></span><span class="o">==============================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">===============================================</span>
+<div class="highlight"><pre><span></span><span class="o">==========================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">===========================================</span>
 platform darwin -- Python <span class="m">3</span>.6.5, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
 rootdir: &lt;file location of package&gt;/roman_package, inifile:
 collected <span class="m">1</span> item
 
 
-tests/test_roman.py .                                                                                      <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
+tests/test_roman.py .                                                                              <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
 
-<span class="o">============================================</span> <span class="m">1</span> passed in <span class="m">0</span>.02 <span class="nv">seconds</span> <span class="o">============================================</span>
+<span class="o">========================================</span> <span class="m">1</span> passed in <span class="m">0</span>.02 <span class="nv">seconds</span> <span class="o">========================================</span>
 </pre></div>
 
 
@@ -231,16 +231,16 @@ tests/test_roman.py .                                                           
 
 
 <p>Now the output is</p>
-<div class="highlight"><pre><span></span><span class="o">==============================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">===============================================</span>
+<div class="highlight"><pre><span></span><span class="o">==========================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">===========================================</span>
 platform darwin -- Python <span class="m">3</span>.6.5, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
 rootdir: &lt;location of file on drive&gt;/roman_package, inifile:
 collected <span class="m">1</span> item
 
 
-tests/test_roman.py F                                                                                      <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
+tests/test_roman.py F                                                                              <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
 
-<span class="o">====================================================</span> <span class="nv">FAILURES</span> <span class="o">====================================================</span>
-___________________________________________ test_V_gets_converted_to_6 ___________________________________________
+<span class="o">================================================</span> <span class="nv">FAILURES</span> <span class="o">================================================</span>
+_______________________________________ test_V_gets_converted_to_6 _______________________________________
 
     def test_V_gets_converted_to_6<span class="o">()</span>:   <span class="c1"># this is wrong and should fail</span>
 &gt;       assert roman_string_to_int<span class="o">(</span><span class="s1">&#39;V&#39;</span><span class="o">)</span> <span class="o">==</span> <span class="m">6</span>
@@ -248,7 +248,7 @@ E       AssertionError: assert <span class="nv">5</span> <span class="o">==</spa
 E        +  where <span class="nv">5</span> <span class="o">=</span> roman_string_to_int<span class="o">(</span><span class="s1">&#39;V&#39;</span><span class="o">)</span>
 
 tests/test_roman.py:5: <span class="nv">AssertionError</span>
-<span class="o">============================================</span> <span class="m">1</span> failed in <span class="m">0</span>.04 <span class="nv">seconds</span> <span class="o">============================================</span>
+<span class="o">========================================</span> <span class="m">1</span> failed in <span class="m">0</span>.04 <span class="nv">seconds</span> <span class="o">========================================</span>
 </pre></div>
 
 
@@ -271,16 +271,16 @@ tests/test_roman.py:5: <span class="nv">AssertionError</span>
 
 <p>Let's check it when running pytest (note that we have changed our other test back to <code>test_V_gets_converted_to_5</code>):</p>
 <div class="highlight"><pre><span></span>$ <span class="nv">pytest</span>
-<span class="o">==============================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">===============================================</span>
+<span class="o">==========================================</span> <span class="nb">test</span> session <span class="nv">starts</span> <span class="o">===========================================</span>
 platform darwin -- Python <span class="m">3</span>.6.5, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
 rootdir: /Users/damien/metis/roman_package, inifile:
 collected <span class="m">2</span> items
 
 
-tests/test_roman.py .F                                                                                      <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
+tests/test_roman.py .F                                                                              <span class="o">[</span><span class="m">100</span>%<span class="o">]</span>
 
-<span class="o">====================================================</span> <span class="nv">FAILURES</span> <span class="o">====================================================</span>
-___________________________________ test_char_not_in_MDCLXVI_raises_ValueError ___________________________________
+<span class="o">================================================</span> <span class="nv">FAILURES</span> <span class="o">================================================</span>
+_______________________________ test_char_not_in_MDCLXVI_raises_ValueError _______________________________
 
     def test_char_not_in_MDCLXVI_raises_ValueError<span class="o">()</span>:
         with pytest.raises<span class="o">(</span>ValueError, <span class="nv">message</span><span class="o">=</span><span class="s2">&quot;Q should raise value error, not in MDCLXVI&quot;</span><span class="o">)</span>:
@@ -288,7 +288,7 @@ ___________________________________ test_char_not_in_MDCLXVI_raises_ValueError _
 E           Failed: Q should raise value error, not in MDCLXVI
 
 tests/test_roman.py:9: <span class="nv">Failed</span>
-<span class="o">=======================================</span> <span class="m">1</span> failed, <span class="m">1</span> passed in <span class="m">0</span>.05 <span class="nv">seconds</span> <span class="o">=======================================</span>
+<span class="o">===================================</span> <span class="m">1</span> failed, <span class="m">1</span> passed in <span class="m">0</span>.05 <span class="nv">seconds</span> <span class="o">===================================</span>
 </pre></div>
 
 
@@ -324,11 +324,11 @@ tests/test_roman.py:9: <span class="nv">Failed</span>
 </tr>
 <tr>
 <td><code>test_char_not_in_MDCLXVI_raises_ValueError()</code></td>
-<td>Fail</td>
+<td><strong>Fail</strong></td>
 </tr>
 <tr>
 <td><code>test_error_on_lower_case()</code></td>
-<td>Fail</td>
+<td><strong>Fail</strong></td>
 </tr>
 <tr>
 <td><code>test_III_is_converted_to_3()</code></td>
@@ -340,7 +340,7 @@ tests/test_roman.py:9: <span class="nv">Failed</span>
 </tr>
 <tr>
 <td><code>test_LLL_throws_ValueError()</code></td>
-<td>Fail</td>
+<td><strong>Fail</strong></td>
 </tr>
 <tr>
 <td><code>test_CCC_gives_300()</code></td>
@@ -352,7 +352,7 @@ tests/test_roman.py:9: <span class="nv">Failed</span>
 </tr>
 <tr>
 <td><code>test_IC_throws_ValueError()</code></td>
-<td>Fail</td>
+<td><strong>Fail</strong></td>
 </tr>
 <tr>
 <td><code>test_5_gives_V()</code></td>
@@ -632,8 +632,7 @@ tests/test_roman.py:9: <span class="nv">Failed</span>
 <li>We emphasized you should write tests with <em>expected</em> behavior in mind, not current behavior</li>
 <li>Writing tests allows us to rearrange/refactor our code with confidence, because we can check on particular examples that it did the same thing before and after the changes.</li>
 </ul>
-<p>Next, we will introduce the <code>tox</code> package as a way of simplifying the testing process.
-* We introduced <code>pytest</code>, which ran all files <code>test_</code> that it could find</p>
+<p>Next, we will introduce the <code>tox</code> package as a way of simplifying the testing process.</p>
             </section>
 
             <section class="post-info">
