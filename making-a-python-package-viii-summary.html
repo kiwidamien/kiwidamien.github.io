@@ -200,6 +200,7 @@ $ git checkout master
 <li>The <code>test/__init__.py</code> can be blank (and probably should be).</li>
 <li>The <code>roman/__init__.py</code> should probably import other modules in the directory. There is a lot of information about how <code>__init__.py</code> works in the <a href="making-a-python-package.html">first article</a> of this series.</li>
 <li>The <code>roman/data/</code> directory is optional -- not all projects will need external data.</li>
+<li>If your project <em>does</em> use external data sets, you should use <code>pkg_resources</code> to access them. A short introduction on how to do this is given in the <a href="/making-a-python-package-vi-including-data-files.html">sixth article</a> of this series.</li>
 </ol>
 <h2>Writing unit tests</h2>
 <ol>
