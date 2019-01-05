@@ -171,13 +171,133 @@ $ git checkout tags/v0.5
 
 
 <h3>To install</h3>
-<p>To follow the steps in this tutorial, you will need to install `twine``</p>
-<div class="highlight"><pre><span></span>pip install twine
+<p>To follow the steps in this tutorial, you will need to install `pkg_resources``</p>
+<div class="highlight"><pre><span></span>pip install pkg_resources
 </pre></div>
 
 
 <h1>Making a Python Package VI: deploying</h1>
-<p>PLACEHOLDER</p>
+<p>This article is optional, and won't apply to many packages. If we were making a sensible version of our Roman numeral converter, there wouldn't be additional data to include. In this article we are <em>artificially</em> including data to show the overall process. If you don't have data to include, you can skip this step and go straight to <a href="">deployment</a>.</p>
+<h2>Adding data file</h2>
+<p>We will be adding a CSV that contains information on the different roman emperors. We will need to create a directory inside the <code>roman/</code> package to store our data. Run the following commands in the top-level directory:</p>
+<div class="highlight"><pre><span></span><span class="c1"># make the directory to store the data</span>
+$ mkdir roman/data/
+<span class="c1"># download the data</span>
+$ curl https://raw.githubusercontent.com/kiwidamien/roman/master/roman/data/emperors.csv &gt; roman/data/emperors.csv
+</pre></div>
+
+
+<p>Once you have done this, your directory structure should be</p>
+<div class="highlight"><pre><span></span>roman_package
++-- roman
+    +-- __init__.py
+    +-- roman.py
+    +-- temperature.py
+    +-- data
+        +-- emperors.csv
++-- tests
+    +-- __init__.py
+    +-- test_roman.py
+    +-- test_temperature.py
++-- setup.py
++-- tox.ini
++-- README.md
+</pre></div>
+
+
+<h2>Adding a file to access <code>roman/data/emperors.csv</code></h2>
+<p>Let's write a couple of functions that use the CSV we downloaded. Copy the following into <code>roman/emperors.py</code></p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pkg_resources</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+
+<span class="k">def</span> <span class="nf">load_emperors</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return a dataframe about the 68 different Roman Emperors.</span>
+
+<span class="sd">    Contains the following fields:</span>
+<span class="sd">        index          68 non-null int64</span>
+<span class="sd">        name           68 non-null object</span>
+<span class="sd">        name.full      68 non-null object</span>
+<span class="sd">    ... (docstring truncated) ...</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># This is a stream-like object. If you want the actual info, call</span>
+    <span class="c1"># stream.read()</span>
+    <span class="n">stream</span> <span class="o">=</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">resource_stream</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;data/emperors.csv&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">causes_of_death</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Return a count of the ways Roman Emperors died.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">load_emperors</span><span class="p">()[</span><span class="s1">&#39;killer&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+</pre></div>
+
+
+<p>If we were not using a package, the <code>load_emperors()</code> function would be simplified:</p>
+<div class="highlight"><pre><span></span>def load_emperors<span class="o">()</span>:
+    <span class="k">return</span> pd.read_csv<span class="o">(</span><span class="s1">&#39;data/emperors.csv&#39;</span>, <span class="nv">encoding</span><span class="o">=</span><span class="s1">&#39;latin-1&#39;</span><span class="o">)</span>
+</pre></div>
+
+
+<p>When we load a package, our files get moved in a system dependent ways. The purpose of the <code>pkg_resources</code> module is to give one way of determining where the files have been installed. Here the <code>__name__</code> variable stores the module name (<code>roman</code>), and then asks where it installed the <code>data/emperors.csv</code> file.</p>
+<p>We can check that our function works by loading the python interpreter in our top-level directory.</p>
+<div class="highlight"><pre><span></span><span class="c1"># note that we need to import roman.emperors, because we didn&#39;t change __init__.py</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">roman.emperor</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">roman</span><span class="o">.</span><span class="n">emperor</span><span class="o">.</span><span class="n">causes_of_death</span><span class="p">()</span>
+<span class="n">Other</span> <span class="n">Emperor</span>       <span class="mi">18</span>
+<span class="n">Disease</span>             <span class="mi">16</span>
+<span class="n">Praetorian</span> <span class="n">Guard</span>     <span class="mi">7</span>
+<span class="n">Opposing</span> <span class="n">Army</span>        <span class="mi">6</span>
+<span class="n">Own</span> <span class="n">Army</span>             <span class="mi">5</span>
+<span class="n">Unknown</span>              <span class="mi">5</span>
+<span class="n">Senate</span>               <span class="mi">3</span>
+<span class="n">Wife</span>                 <span class="mi">2</span>
+<span class="n">Heart</span> <span class="n">Failure</span>        <span class="mi">1</span>
+<span class="n">Usurper</span>              <span class="mi">1</span>
+<span class="n">Lightning</span>            <span class="mi">1</span>
+<span class="n">Court</span> <span class="n">Officials</span>      <span class="mi">1</span>
+<span class="n">Fire</span>                 <span class="mi">1</span>
+<span class="n">Aneurism</span>             <span class="mi">1</span>
+<span class="n">Name</span><span class="p">:</span> <span class="n">killer</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">int64</span>
+</pre></div>
+
+
+<p>While this works from the top-level directory, we need to make some changes to <code>setup.py</code> so that the CSV file will be included when we install the roman package.</p>
+<h2>Modifying <code>setup.py</code> to include CSV in installation</h2>
+<p>We need to make two changes to <code>setup.py</code> to make it distribute the CSV as well. The two fields we need to add are <code>include_package_data</code> (set to <code>True</code>) and <code>package_data</code>. The format of <code>package_data</code> is a dictionary, where the keys are the package names, and the values are lists of locations of files we would want to include. A black string <code>''</code> for the key will match all packages we are typing to install.</p>
+<p>Our updated <code>setup.py</code> now takes the following form: </p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">setuptools</span>
+
+<span class="n">setuptools</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;roman&quot;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s2">&quot;0.1.0&quot;</span><span class="p">,</span>
+    <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://github.com/kiwidamien/roman&quot;</span><span class="p">,</span>
+    <span class="n">author</span><span class="o">=</span><span class="s2">&quot;Damien Martin&quot;</span><span class="p">,</span>
+    <span class="n">author_email</span><span class="o">=</span><span class="s2">&quot;damien.j.martin@gmail.com&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Allows conversion of Roman numerals to ints (and vice versa)&quot;</span><span class="p">,</span>
+    <span class="n">long_description</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;DESCRIPTION.rst&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
+    <span class="n">packages</span><span class="o">=</span><span class="n">setuptools</span><span class="o">.</span><span class="n">find_packages</span><span class="p">(),</span>
+    <span class="n">install_requires</span><span class="o">=</span><span class="p">[],</span>
+    <span class="n">classifiers</span><span class="o">=</span><span class="p">[</span>
+        <span class="s1">&#39;Programming Language :: Python&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Programming Language :: Python :: 3&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Programming Language :: Python :: 3.6&#39;</span><span class="p">,</span>
+    <span class="p">],</span>
+    <span class="n">include_package_data</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+    <span class="n">package_data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;data/*.csv&#39;</span><span class="p">]},</span>
+<span class="p">)</span>
+</pre></div>
+
+
+<h2>Summary and next steps</h2>
+<p>It isn't hard to include extra files as part of your package, but it can be difficult to find information on how to change <code>setup.py</code> <strong>and</strong> find out how to access the files from the package. The basic steps are</p>
+<ul>
+<li>Place the files that you want to include in the package directory (in our case, the data has to reside in the <code>roman/</code> directory).</li>
+<li>Add the field <code>include_package_data=True</code> in <code>setup.py</code>.</li>
+<li>Add the field <code>package_data={'': [...patterns for files you want to include, relative to package dir...]}</code> in <code>setup.py</code>.</li>
+<li>Use the <code>pkg_resources</code> module inside your package to access the packaged files, to make sure that your techniques are portable across different platforms.</li>
+</ul>
+<p>In the next article, we will see how to deploy our package so that it can be installed via <code>pip</code>.</p>
             </section>
 
             <section class="post-info">
@@ -223,11 +343,11 @@ $ git checkout tags/v0.5
                             <p class="post-nav-excerpt">This is the eighth in a series of blog posts where we go through the process of taking...</p>
                         </section>
                     </a>
-                    <a class="post-nav-prev" href="https://kiwidamien.github.io/making-a-python-package-vii-deploying.html">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/making-a-python-package-v-testing-with-tox.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-right"></i>
-                                <h2 class="post-nav-title">Making a Python Package VII - deploying</h2>
-                            <p class="post-nav-excerpt">This is the seventh in a series of blog posts where we go through the process of...</p>
+                                <h2 class="post-nav-title">Making a Python Package V - Testing with Tox</h2>
+                            <p class="post-nav-excerpt">This is the fifth in a series of blog posts where we go through the process of taking...</p>
                         </section>
                     </a>
                     <div class="clear"></div>
