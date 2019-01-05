@@ -197,9 +197,9 @@ $ git checkout master
 
 <p><strong>Notes:</strong></p>
 <ol>
-<li>The <code>test/__init__.py</code> can be blank (and probably should be)</li>
-<li>The <code>roman/__init__.py</code> should probably import other modules in the directory.</li>
-<li>The <code>roman/data/</code> directory is optional -- not all projects will need external data</li>
+<li>The <code>test/__init__.py</code> can be blank (and probably should be).</li>
+<li>The <code>roman/__init__.py</code> should probably import other modules in the directory. There is a lot of information about how <code>__init__.py</code> works in the <a href="making-a-python-package.html">first article</a> of this series.</li>
+<li>The <code>roman/data/</code> directory is optional -- not all projects will need external data.</li>
 </ol>
 <h2>Writing unit tests</h2>
 <ol>
@@ -289,6 +289,10 @@ $ twine upload --repository-url https://test.pypi.org/legacy/ dist/*
 </pre></div>
 
 
+<p><strong>Note:</strong></p>
+<ol>
+<li>This will fail if you try it, because I have already used the name <code>roman</code>. Find a name that is unique on TestPyPI for your package.</li>
+</ol>
 <h3>Deploy via pip to PyPI</h3>
 <p>This is very similar to deploying on TestPyPI. You will need to create an account on PyPI to deploy your package (you cannot just use the TestPyPI account). You should also make sure that you have run <code>tox</code> and ensured you have no linter errors or failing unit tests.</p>
 <p>The commands to deploy are</p>
@@ -306,6 +310,10 @@ $ twine upload roman
 
 
 <p>Congratulations! You have now installed a package on the Python Package Index, and made it available to the world.</p>
+<p><strong>Note</strong></p>
+<ol>
+<li>This will work for at most one user. The name of your package has to be unique on PyPI.</li>
+</ol>
             </section>
 
             <section class="post-info">
