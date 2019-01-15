@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Save the environment with conda (and how to let others run your programs)</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html" rel="canonical" />
+
+        <meta name="description" content="Environments allow you to distribute software to other users, where you don't know what packages they have installed. This is a better...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="python">
+        <meta name="tags" content="engineering">
+        <meta name="tags" content="package">
+        <meta name="tags" content="best-practices">
+        <meta name="tags" content="environment">
+        <meta name="tags" content="conda">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html">
+  <meta property="og:title" content="Save the environment with conda (and how to let others run your programs)">
+  <meta property="article:published_time" content="2019-01-15 10:30:00-08:00">
+            <meta property="og:description" content="Environments allow you to distribute software to other users, where you don't know what packages they have installed. This is a better...">
+
+            <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/cover_background/tool_background.svg">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Save the environment with conda (and how to let others run your programs)</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Tue 15 January 2019">Tue 15 January 2019</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/tools.html">Tools</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover"
+      style="background-image: url('assets/images/cover_background/tool_background.svg'); background-repeat: repeat; background-size: 100px 100px; background-color: rgb(240,180,82);">
+      <div class="logoimg">
+        <img src='https://kiwidamien.github.io/assets/images/icon/turtle.svg'/>
+      </div>
+      <div class="logoimg">
+        <img src='assets/images/icon/tool_icon.png'/>
+      </div>
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <h2>Save the environment with conda (and how to let others run your programs)</h2>
+<p>If you have been developing in Python, you may have tried to distribute your program to friends and colleagues. It can be mildly annoying when they try to run your program and it fails because they don't have <code>obscurePackage42</code> installed. If you are nearby, then it is easy for you to call <code>pip install</code> a few times and get them started with your program. If you are trying to distribute a program to end users (or even some non-technical executives) then you really want something that is going to work "out of the box".</p>
+<h2>The old way (and its drawbacks)</h2>
+<p>One way of doing this was to write a <code>requirements.txt</code> file. The format of this file was pretty simple:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Installs </span>
+<span class="c1"># A version of numpy no older than 1.14.0</span>
+<span class="c1"># Exactly the version 0.23.4 of Pandas</span>
+numpy&gt;<span class="o">=</span><span class="m">1</span>.14.0
+<span class="nv">pandas</span><span class="o">==</span><span class="m">0</span>.23.4
+</pre></div>
+
+
+<p>A single command, <code>pip install -r requirements.txt</code> and everything would be written to the main Python repository. </p>
+<p>While simple to use, there are a couple of different problems with this approach:
+<em> <strong>Version conflicts:</strong> What if one application required version <code>0.23.4</code> of Pandas, but a different application required <code>0.19.0</code> (because it used a now deprecated feature)? We would have to reinstall from <code>requirements.txt</code> when switching between these applications.
+</em> <strong>Tracking dependencies:</strong> It can be difficult to keep track of which packages your application is actually using. You don't want to include all installed packages on your machine, as only a few are relevant to your application.</p>
+<p>Environments were designed to address both of these issues.</p>
+<h2>Environments</h2>
+<p>An <em>environment</em> is a way of starting with a new Python installation, that doesn't look at your already installed packages. In this way, it simulates having a fresh install of Python. If two applications require different versions of Python, you can simply create different environments for them. If you start from a fresh environment and install as you go, you are able to generate a list of all packages installed in the environment so that others can easily duplicate it.</p>
+<p>There are many different environments and dependency managers in the Python ecosystem. The most common ones in use are <code>virtualenv</code> and <code>conda</code> (but there are others such as <code>poetry</code>, <code>pyenv/pipenv</code>, <code>hatch</code> and probably many more I haven't heard of). This article is about using <code>conda</code> to manage environments, although all of these tools share the same broad goals. Some of the differences between these tools are touched on in the <strong>Alternatives</strong> section.</p>
+<h3>Using conda environments</h3>
+<p>Need activate/deactivate/create/delete/export</p>
+<h4>Create a new (empty) conda environment</h4>
+<p>The following creates a new environment, <code>myenv</code>, with only python 3.6 installed.</p>
+<div class="highlight"><pre><span></span>conda create --name myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6
+</pre></div>
+
+
+<h4>Create a new conda environment with some packages</h4>
+<div class="highlight"><pre><span></span>conda create --name myenv pandas numpy statsmodels
+</pre></div>
+
+
+<h4>Get a list of all installed environments</h4>
+<div class="highlight"><pre><span></span>conda env list
+</pre></div>
+
+
+<h4>Create the environment file</h4>
+<div class="highlight"><pre><span></span>conda env <span class="nb">export</span> &gt; environment.yaml
+</pre></div>
+
+
+<h3>Summary</h3>
+<h3>Alternatives</h3>
+<ul>
+<li>The original virtualenv. As the Jake VanderPlas article <a href="https://jakevdp.github.io/blog/2016/08/25/conda-myths-and-misconceptions/">"Conda: Myths and Misconceptions"</a> points out, these are mostly interchangle if you are only installing python packages into your environment. In slightly more detail</li>
+<li><code>virtualenv/pip</code> installs python packages into <em>any</em> environment, while</li>
+<li><code>conda</code> installs <em>any</em> packages into <em>conda</em> environments.</li>
+</ul>
+<p>If you are solely installing Python packages, there is not much difference between the two.
+<em> <a href="https://pipenv.readthedocs.io/en/latest/"><code>pyenv/pipenv</code></a> by Kenneth Reitz. The main goal of this project was to automate/simplify environment creation, but is not as mature as either <code>virtualenv</code> or <code>conda</code> solutions.
+</em> <a href="https://poetry.eustace.io/"><code>poetry</code></a> by Sébastien Eustace, which aims to be a packaging and deployment tool.</p>
+<p>With the exception of <code>virtualenv</code>, none of these solutions are as mature as <code>conda</code>. This is a piece of the Python that will hopefully improve and simplify, but for now, Randall Munroe's XKCD comic puts it well.</p>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Save the environment with conda (and how to let others run your programs)&amp;url=https://kiwidamien.github.io/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/python.html">python</a><a href="https://kiwidamien.github.io/tag/engineering.html">engineering</a><a href="https://kiwidamien.github.io/tag/package.html">package</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best-practices</a><a href="https://kiwidamien.github.io/tag/environment.html">environment</a><a href="https://kiwidamien.github.io/tag/conda.html">conda</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/making-a-python-package-viii-summary.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Making a Python Package VIII - summary</h2>
+                            <p class="post-nav-excerpt">This is the eighth in a series of blog posts where we go through the process of taking...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+</html>
