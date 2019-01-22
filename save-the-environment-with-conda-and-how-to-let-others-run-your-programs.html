@@ -156,30 +156,112 @@ numpy&gt;<span class="o">=</span><span class="m">1</span>.14.0
 <h2>Environments</h2>
 <p>An <em>environment</em> is a way of starting with a new Python installation, that doesn't look at your already installed packages. In this way, it simulates having a fresh install of Python. If two applications require different versions of Python, you can simply create different environments for them. If you start from a fresh environment and install as you go, you are able to generate a list of all packages installed in the environment so that others can easily duplicate it.</p>
 <p>There are many different environments and dependency managers in the Python ecosystem. The most common ones in use are <code>virtualenv</code> and <code>conda</code> (but there are others such as <code>poetry</code>, <code>pyenv/pipenv</code>, <code>hatch</code> and probably many more I haven't heard of). This article is about using <code>conda</code> to manage environments, although all of these tools share the same broad goals. Some of the differences between these tools are touched on in the <strong>Alternatives</strong> section.</p>
-<h3>Using conda environments</h3>
-<p>Need activate/deactivate/create/delete/export</p>
-<h4>Create a new (empty) conda environment</h4>
-<p>The following creates a new environment, <code>myenv</code>, with only python 3.6 installed.</p>
-<div class="highlight"><pre><span></span>conda create --name myenv <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6
+<h3>Using an environment (quickstart)</h3>
+<p>Let's say you wanted to create an environment <code>test_env</code> to do some testing with Python 3.6, and install numpy and Pandas. At the terminal, type the following:</p>
+<div class="highlight"><pre><span></span><span class="c1"># create the (empty) environment</span>
+$ conda create --name test_env <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.6
+
+<span class="c1"># activate the environment</span>
+$ <span class="nb">source</span> activate test_env
+
+<span class="c1"># Now in the new environment, install the packages.</span>
+<span class="c1"># Note the prompt will (typically) tell you about the environment</span>
+<span class="o">(</span>test_env<span class="o">)</span> $ conda install numpy pandas
 </pre></div>
 
 
-<h4>Create a new conda environment with some packages</h4>
-<div class="highlight"><pre><span></span>conda create --name myenv pandas numpy statsmodels
+<p>If you want Jupyter notebooks to see your new environment, you need a couple of extra instructions. Jupyter sees the different environments as different <em>kernels</em>. Once we create a new environment, we need to tell Jupyter that it is there:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Note you&#39;ll want to do this in the new environment.</span>
+<span class="c1"># First we will need the ipykernel package</span>
+<span class="o">(</span>test_env<span class="o">)</span> $ conda install ipykernel
+
+<span class="c1"># This tells jupyter to take the current environment (test_env)</span>
+<span class="c1"># and make a &quot;kernel&quot; option named &quot;test kernel&quot; in the </span>
+<span class="c1"># kernel menu</span>
+<span class="o">(</span>test_env<span class="o">)</span> $ python -m ipykernel install --user --name myenv --display-name <span class="s2">&quot;test kernel&quot;</span>
 </pre></div>
 
 
-<h4>Get a list of all installed environments</h4>
-<div class="highlight"><pre><span></span>conda env list
+<p>When loading a jupyter notebook, you can use the menu options <strong>Kernel-&gt;Change Kernel-&gt;test kernel</strong> to ensure you are using the <code>test_env</code> environment.</p>
+<p>Now you want to make an <code>environment.yaml</code> file that will allow others to recreate the environment from scratch. To make this file, we use the <code>export</code> command and send the output to <code>environment.yaml</code>:</p>
+<div class="highlight"><pre><span></span><span class="c1"># while in test_env, export the packages used to an environment file</span>
+<span class="o">(</span>test_env<span class="o">)</span> $ conda env <span class="nb">export</span> &gt; environment.yaml
 </pre></div>
 
 
-<h4>Create the environment file</h4>
-<div class="highlight"><pre><span></span>conda env <span class="nb">export</span> &gt; environment.yaml
+<p>Once we are done with the environment, we can deactivate and delete the environment:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Leave the environment</span>
+<span class="o">(</span>test_env<span class="o">)</span> $ deactivate
+
+<span class="c1"># Now we are no longer in test_env, we can delete it</span>
+$ conda env remove --name test_env
 </pre></div>
 
 
-<h3>Summary</h3>
+<h3>Making the environment again from the yaml file</h3>
+<p>If you have the yaml file (created from <code>conda env export</code>), then recreating the environment is a single command:</p>
+<div class="highlight"><pre><span></span>$ conda env create --file environment.yaml
+</pre></div>
+
+
+<p>Note that you don't need to supply the name of the new environment, as the yaml file also contains the name of the environment it saved. Make sure you don't give your environment an embarassing name, as everyone who recreates from the yaml file will see the name you used!</p>
+<h3>Finding conda environments on your system</h3>
+<p>Of course, you may choose to deactivate your environment but keep it around for later. If you want to see the environments installed on your system, use </p>
+<div class="highlight"><pre><span></span>$ conda env list
+</pre></div>
+
+
+<h2>Useful commands</h2>
+<p>Here is a brief summary of useful commands for environemnts. Anaconda has also published a <a href="https://conda.io/docs/_downloads/conda-cheatsheet.pdf">cheat sheet</a> with a more extensive list of useful commands.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Create a new environment <code>ENV_NAME</code> with Python version 3.X</td>
+<td><code>conda create --name ENV_NAME python=3.X</code></td>
+</tr>
+<tr>
+<td>Create a new environment <code>ENV_NAME</code> with some initial packages</td>
+<td><code>conda create --name ENV_NAME python=3.X pandas ipykernel</code></td>
+</tr>
+<tr>
+<td>Create a new environment from a yaml file</td>
+<td><code>conda env create --file environment.yaml</code></td>
+</tr>
+<tr>
+<td>Activate the environment <code>ENV_NAME</code> (OSX, Linux)</td>
+<td><code>source activate ENV_NAME</code></td>
+</tr>
+<tr>
+<td>Activate the environment <code>ENV_NAME</code> (Windows)</td>
+<td><code>activate ENV_NAME</code></td>
+</tr>
+<tr>
+<td>Deactivate the current environment (*)</td>
+<td><code>deactivate ENV_NAME</code></td>
+</tr>
+<tr>
+<td>Delete the environment <code>ENV_NAME</code></td>
+<td><code>conda env remove --name ENV_NAME</code></td>
+</tr>
+<tr>
+<td>List all installed environments</td>
+<td>conda env list</td>
+</tr>
+<tr>
+<td>Create a YAML file for active environment(*)</td>
+<td><code>conda env export &gt; environment.yaml</code></td>
+</tr>
+</tbody>
+</table>
+<p>The commands with (*) require you to have the environment active before using them. The naming is a little odd for creating environments: if creating them yourself the command is <code>conda create .....</code>, but if creating them from a yaml file we use <code>conda env create ......</code>. This is not a typo!</p>
+<h2>Summary</h2>
+<p>Using environments helps reproduce the setup of our current machine.</p>
 <h3>Alternatives</h3>
 <ul>
 <li>The original virtualenv. As the Jake VanderPlas article <a href="https://jakevdp.github.io/blog/2016/08/25/conda-myths-and-misconceptions/">"Conda: Myths and Misconceptions"</a> points out, these are mostly interchangle if you are only installing python packages into your environment. In slightly more detail</li>
