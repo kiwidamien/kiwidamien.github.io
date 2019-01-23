@@ -139,7 +139,7 @@
                 <h2>Save the environment with conda (and how to let others run your programs)</h2>
 <p>If you have been developing in Python, you may have tried to distribute your program to friends and colleagues. It can be mildly annoying when they try to run your program and it fails because they don't have <code>obscurePackage42</code> installed. If you are nearby, then it is easy for you to call <code>pip install</code> a few times and get them started with your program. If you are trying to distribute a program to end users (or even some non-technical executives) then you really want something that is going to work "out of the box".</p>
 <p>Using an environment has the additional benefit of having us deal with one specific <em>known</em> version of Python. The problem of "which Python am I using?" is one familiar to many of us.</p>
-<p>![Too many Pythons (xkcd/1987)[images/environments/python_environment_2x.png]</p>
+<p><img alt="Too many Pythons (xkcd/1987)" src="images/environments/python_environment_2x.png"></p>
 <h2>The old way (and its drawbacks)</h2>
 <p>One way of doing this was to write a <code>requirements.txt</code> file. The format of this file was pretty simple:</p>
 <div class="highlight"><pre><span></span><span class="c1"># Installs </span>
@@ -151,9 +151,11 @@ numpy&gt;<span class="o">=</span><span class="m">1</span>.14.0
 
 
 <p>A single command, <code>pip install -r requirements.txt</code> and everything would be written to the main Python repository. </p>
-<p>While simple to use, there are a couple of different problems with this approach:
-<em> <strong>Version conflicts:</strong> What if one application required version <code>0.23.4</code> of Pandas, but a different application required <code>0.19.0</code> (because it used a now deprecated feature)? We would have to reinstall from <code>requirements.txt</code> when switching between these applications.
-</em> <strong>Tracking dependencies:</strong> It can be difficult to keep track of which packages your application is actually using. You don't want to include all installed packages on your machine, as only a few are relevant to your application.</p>
+<p>While simple to use, there are a couple of different problems with this approach:</p>
+<ul>
+<li><strong>Version conflicts:</strong> What if one application required version <code>0.23.4</code> of Pandas, but a different application required <code>0.19.0</code> (because it used a now deprecated feature)? We would have to reinstall from <code>requirements.txt</code> when switching between these applications.</li>
+<li><strong>Tracking dependencies:</strong> It can be difficult to keep track of which packages your application is actually using. You don't want to include all installed packages on your machine, as only a few are relevant to your application.</li>
+</ul>
 <p>Environments were designed to address both of these issues.</p>
 <h2>Environments</h2>
 <p>An <em>environment</em> is a way of starting with a new Python installation, that doesn't look at your already installed packages. In this way, it simulates having a fresh install of Python. If two applications require different versions of Python, you can simply create different environments for them. If you start from a fresh environment and install as you go, you are able to generate a list of all packages installed in the environment so that others can easily duplicate it.</p>
@@ -260,7 +262,7 @@ $ conda env remove --name test_env
 </tr>
 <tr>
 <td>List all installed environments</td>
-<td>conda env list</td>
+<td><code>conda env list</code></td>
 </tr>
 <tr>
 <td>Create a YAML file for active environment(*)</td>
@@ -294,13 +296,17 @@ $ conda env remove --name test_env
 
 <h3>Alternatives</h3>
 <ul>
-<li>The original virtualenv. As the Jake VanderPlas article <a href="https://jakevdp.github.io/blog/2016/08/25/conda-myths-and-misconceptions/">"Conda: Myths and Misconceptions"</a> points out, these are mostly interchangle if you are only installing python packages into your environment. In slightly more detail</li>
+<li>The original virtualenv. As the Jake VanderPlas article <a href="https://jakevdp.github.io/blog/2016/08/25/conda-myths-and-misconceptions/">"Conda: Myths and Misconceptions"</a> points out, these are mostly interchangle if you are only installing python packages into your environment. In slightly more detail<ul>
 <li><code>virtualenv/pip</code> installs python packages into <em>any</em> environment, while</li>
 <li><code>conda</code> installs <em>any</em> packages into <em>conda</em> environments.</li>
 </ul>
-<p>If you are solely installing Python packages, there is not much difference between the two.
-<em> <a href="https://pipenv.readthedocs.io/en/latest/"><code>pyenv/pipenv</code></a> by Kenneth Reitz. The main goal of this project was to automate/simplify environment creation, but is not as mature as either <code>virtualenv</code> or <code>conda</code> solutions.
-</em> <a href="https://poetry.eustace.io/"><code>poetry</code></a> by Sébastien Eustace, which aims to be a packaging and deployment tool.</p>
+</li>
+</ul>
+<p>If you are solely installing Python packages, there is not much difference between the two.</p>
+<ul>
+<li><a href="https://pipenv.readthedocs.io/en/latest/"><code>pyenv/pipenv</code></a> by Kenneth Reitz. The main goal of this project was to automate/simplify environment creation, but is not as mature as either <code>virtualenv</code> or <code>conda</code> solutions.</li>
+<li><a href="https://poetry.eustace.io/"><code>poetry</code></a> by Sébastien Eustace, which aims to be a packaging and deployment tool.</li>
+</ul>
 <p>With the exception of <code>virtualenv</code>, none of these solutions are as mature as <code>conda</code>. This is a piece of the Python that will hopefully improve and simplify, but for now, Randall Munroe's XKCD comic puts it well.</p>
             </section>
 
