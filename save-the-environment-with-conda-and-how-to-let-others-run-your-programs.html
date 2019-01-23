@@ -138,6 +138,8 @@
             <section class="post-content">
                 <h2>Save the environment with conda (and how to let others run your programs)</h2>
 <p>If you have been developing in Python, you may have tried to distribute your program to friends and colleagues. It can be mildly annoying when they try to run your program and it fails because they don't have <code>obscurePackage42</code> installed. If you are nearby, then it is easy for you to call <code>pip install</code> a few times and get them started with your program. If you are trying to distribute a program to end users (or even some non-technical executives) then you really want something that is going to work "out of the box".</p>
+<p>Using an environment has the additional benefit of having us deal with one specific <em>known</em> version of Python. The problem of "which Python am I using?" is one familiar to many of us.</p>
+<p>![Too many Pythons (xkcd/1987)[images/environments/python_environment_2x.png]</p>
 <h2>The old way (and its drawbacks)</h2>
 <p>One way of doing this was to write a <code>requirements.txt</code> file. The format of this file was pretty simple:</p>
 <div class="highlight"><pre><span></span><span class="c1"># Installs </span>
@@ -156,6 +158,13 @@ numpy&gt;<span class="o">=</span><span class="m">1</span>.14.0
 <h2>Environments</h2>
 <p>An <em>environment</em> is a way of starting with a new Python installation, that doesn't look at your already installed packages. In this way, it simulates having a fresh install of Python. If two applications require different versions of Python, you can simply create different environments for them. If you start from a fresh environment and install as you go, you are able to generate a list of all packages installed in the environment so that others can easily duplicate it.</p>
 <p>There are many different environments and dependency managers in the Python ecosystem. The most common ones in use are <code>virtualenv</code> and <code>conda</code> (but there are others such as <code>poetry</code>, <code>pyenv/pipenv</code>, <code>hatch</code> and probably many more I haven't heard of). This article is about using <code>conda</code> to manage environments, although all of these tools share the same broad goals. Some of the differences between these tools are touched on in the <strong>Alternatives</strong> section.</p>
+<p>There are two steps to using an environment (with a third step needed if you want to use Jupyter notebooks)</p>
+<ol>
+<li>Creating the environment, either from scratch (a new project) or from a yaml file (duplicating an environment)</li>
+<li>Activating the environment for use.</li>
+<li>Register the environment with Jupyter.</li>
+</ol>
+<p>To leave an environment, we have to <em>deactivate</em> it. The quickstart below will walk through the typical workflow.</p>
 <h3>Using an environment (quickstart)</h3>
 <p>Let's say you wanted to create an environment <code>test_env</code> to do some testing with Python 3.6, and install numpy and Pandas. At the terminal, type the following:</p>
 <div class="highlight"><pre><span></span><span class="c1"># create the (empty) environment</span>
@@ -191,7 +200,7 @@ $ <span class="nb">source</span> activate test_env
 
 <p>Once we are done with the environment, we can deactivate and delete the environment:</p>
 <div class="highlight"><pre><span></span><span class="c1"># Leave the environment</span>
-<span class="o">(</span>test_env<span class="o">)</span> $ deactivate
+<span class="o">(</span>test_env<span class="o">)</span> $ <span class="nb">source</span> deactivate
 
 <span class="c1"># Now we are no longer in test_env, we can delete it</span>
 $ conda env remove --name test_env
@@ -243,7 +252,7 @@ $ conda env remove --name test_env
 </tr>
 <tr>
 <td>Deactivate the current environment (*)</td>
-<td><code>deactivate ENV_NAME</code></td>
+<td><code>source deactivate</code></td>
 </tr>
 <tr>
 <td>Delete the environment <code>ENV_NAME</code></td>
@@ -260,8 +269,29 @@ $ conda env remove --name test_env
 </tbody>
 </table>
 <p>The commands with (*) require you to have the environment active before using them. The naming is a little odd for creating environments: if creating them yourself the command is <code>conda create .....</code>, but if creating them from a yaml file we use <code>conda env create ......</code>. This is not a typo!</p>
+<h2>Tip for maximizing portability</h2>
+<p>Some packages are system dependent (e.g. the Python Image Library <code>Pillow</code> is used by OSX and Linux, but not Windows). Once you create your <code>environment.yaml</code> file, it is often a good idea to eliminate packages you don't use directly. For example, if you tell conda to install <code>pandas</code> but not <code>numpy</code> it will figure out it needs <code>numpy</code> for <code>pandas</code> to work. You should aim to eliminate all the packages in <code>environment.yaml</code> except the ones you actually import, so that conda can figure out which other packages are needed for the user's system (which may be running a different operating system to yours).</p>
 <h2>Summary</h2>
-<p>Using environments helps reproduce the setup of our current machine.</p>
+<p>Creating environments allow us to make sure users we distribute our code to have the right packages (and the right versions of those packages installed) to run our code, without interfering with other programs. We <em>activate</em> and environment to start using it, and <em>deactivate</em> to leave again. </p>
+<p>If making a new environment that you want others to use, the workflow is</p>
+<div class="highlight"><pre><span></span><span class="err">$</span> <span class="n">conda</span> <span class="n">create</span> <span class="o">--</span><span class="n">name</span> <span class="n">ENV_NAME</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.</span><span class="n">X</span> <span class="o">&lt;</span><span class="n">packages</span> <span class="n">to</span> <span class="n">install</span><span class="o">&gt;</span>
+<span class="err">$</span> <span class="n">source</span> <span class="n">activate</span> <span class="n">ENV_NAME</span>
+<span class="p">(</span><span class="n">ENV_NAME</span><span class="p">)</span><span class="err">$</span> <span class="o">......</span> <span class="n">do</span> <span class="n">stuff</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">write</span> <span class="n">code</span><span class="p">,</span> <span class="n">conda</span> <span class="n">install</span> <span class="n">more</span> <span class="n">packages</span><span class="p">)</span>
+<span class="p">(</span><span class="n">ENV_NAME</span><span class="p">)</span><span class="err">$</span> <span class="n">conda</span> <span class="n">env</span> <span class="n">export</span> <span class="o">&gt;</span> <span class="n">environment</span><span class="o">.</span><span class="n">yaml</span>
+<span class="p">(</span><span class="n">ENV_NAME</span><span class="p">)</span><span class="err">$</span> <span class="n">source</span> <span class="n">deactivate</span>
+<span class="c1"># back to regular shell</span>
+<span class="err">$</span>
+</pre></div>
+
+
+<p>If you are using an environment someone else has created:</p>
+<div class="highlight"><pre><span></span><span class="err">$</span> <span class="n">conda</span> <span class="n">env</span> <span class="n">create</span> <span class="o">--</span><span class="nb">file</span> <span class="n">environment</span><span class="o">.</span><span class="n">yaml</span>
+<span class="err">$</span> <span class="n">source</span> <span class="n">activate</span> <span class="n">ENV_NAME</span>
+<span class="p">(</span><span class="n">ENV_NAME</span><span class="p">)</span><span class="err">$</span> <span class="o">.....</span> <span class="n">do</span> <span class="n">stuff</span> <span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="n">run</span> <span class="n">program</span> <span class="n">that</span> <span class="n">uses</span> <span class="n">this</span> <span class="n">environment</span><span class="p">)</span>
+<span class="err">$</span> <span class="n">source</span> <span class="n">deactivate</span>
+</pre></div>
+
+
 <h3>Alternatives</h3>
 <ul>
 <li>The original virtualenv. As the Jake VanderPlas article <a href="https://jakevdp.github.io/blog/2016/08/25/conda-myths-and-misconceptions/">"Conda: Myths and Misconceptions"</a> points out, these are mostly interchangle if you are only installing python packages into your environment. In slightly more detail</li>
