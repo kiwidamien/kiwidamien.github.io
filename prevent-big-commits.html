@@ -131,97 +131,128 @@
         <article class="post">
         <div class="inner">
             <section class="post-content">
-                <p>Have you ever accidentally made a large commit to github (i.e. a file that is larger than 100 MB)? If so, you might have experienced the problem discussed in an earlier aricle <a href="/big-commits-in-github.html">big commits in github</a>. Github doesn't accept large files, which is reasonable. The problem is simple attempts to undo the commit don't seem to resolve the issue, which is counter-intuitive. The reason is git is designed to be able to undo commits, so even removing the file and making a new commit, git still tries to push up the large deleted file to Github (in case you want to undo the delete later).</p>
+                <p>Have you ever accidentally made a large commit to github (i.e. a file that is larger than 100 MB)? If so, you might have experienced the problem discussed in an <a href="/big-commits-in-github.html">earlier aricle</a>. Github doesn't accept large files, which is reasonable, and rejects pushes that contain commits with larg files. When you delete the file, re-commit, and push again it will still fail, complaining about the large file you deleted.</p>
+<p>The problem is that git is a version control system, so it "remembers" the commit with the large file, even though you deleted it. By keeping this large file, you are able to go back to your previous commit where you deleted it. </p>
 <p>The previous article showed how to fix the problem. In this article, we will show how to use git hooks to prevent the problem in the first place.</p>
-<h3>(Article still under construction)</h3>
-<ul>
-<li>Gist on <a href="https://gist.github.com/kiwidamien/597ebbaeaf2388932ac9a3aaff7d1287">python hook</a></li>
-<li>Gist on <a href="https://gist.github.com/kiwidamien/a6a909ee196be8795b30431079074d64">shell hook</a></li>
-</ul>
-<p>Included previous article below (want to keep instructions on generating big files)</p>
-<h2>Undoing a large commit</h2>
-<p>Accidentally committing a large file (i.e. greater than git's limit of 100MB) is a frustrating experience. For example, let's say you made some changes to <code>big_file.bin</code>, a 200MB file, and to your README in the following way:</p>
-<div class="highlight"><pre><span></span>$ dd <span class="k">if</span><span class="o">=</span>/dev/zero <span class="nv">of</span><span class="o">=</span>big_file.bin <span class="nv">count</span><span class="o">=</span><span class="m">200</span> <span class="nv">bs</span><span class="o">=</span><span class="m">1048576</span>  <span class="c1"># make 200 MB file</span>
-$ git add big_file.bin                              <span class="c1"># we will regret this!</span>
-$ git commit -m <span class="s2">&quot;committed huge binary file&quot;</span>
-<span class="o">[</span>master 9cee256<span class="o">]</span> committed huge binary file
-$ git add README.md
-$ git commit -m <span class="s2">&quot;... and made a small change to the README&quot;</span>
-<span class="o">[</span>master 0f1a832<span class="o">]</span> ... and made small change to the README
-</pre></div>
-
-
-<p>Everything is fine, until we try to push to our repo:</p>
-<div class="highlight"><pre><span></span>$ git push
-....
-remote: error: File big_file.bin is <span class="m">106</span>.00 MB<span class="p">;</span> this exceeds GitHub<span class="err">&#39;</span>s file size limit of <span class="m">100</span>.00 MB
-To YOUR_REPO_NAME
-! <span class="o">[</span>remote rejected<span class="o">]</span> master -&gt; master <span class="o">(</span>pre-receive hook declined<span class="o">)</span>
-error: failed to push some refs to YOUR_REPO_NAME
-</pre></div>
-
-
-<h2>Failed attempt to fix</h2>
-<p>Here is an attempt to fix that fails:</p>
-<div class="highlight"><pre><span></span>$ git rm big_file.bin
-$ git commit -m <span class="s2">&quot;removed big file&quot;</span>
-<span class="o">[</span>master 1eb14a7<span class="o">]</span> removed big_file
-$ git push
-.... <span class="o">(</span>still see message about failing to remove<span class="o">)</span>
-</pre></div>
-
-
-<p>The problem is that git is trying to keep track of the history of all your commits. Git wants to push both the file <em>and</em> the fact it was deleted, so other developers can rewind the deletion. To do this, git still needs to push the large file to the remote, which it cannot do for large files.</p>
-<p>We will look at two ways of fixing this problem:
-<em> Rewinding master locally, and pushing a new version of master. The downside is <code>big_file.bin</code> will still take up memory on your local repo.
-</em> Removing all mention of <code>big_file.bin</code> from your repo by rewriting your git history. The downside to this approach is that you can break git, and it cannot be done if you have untracked files.</p>
-<p>Let's look at these two approaches. If all else fails, the third option is to make a new clone of the repo, and copy over just the files you want -- but this should be a last resort.</p>
-<h3>Actual fix #1: keep history local</h3>
-<p>Our log of commits now looks like this on our local machine:</p>
-<div class="highlight"><pre><span></span>1eb14a7 <span class="o">(</span>HEAD -&gt; master<span class="o">)</span> removed big_file
-0f1a832 ... and made small change to the README
-9cee256 committed huge binary file
-a3a75bf commit before all this happened
-....... <span class="o">(</span>previous commits<span class="o">)</span>
-</pre></div>
-
-
-<p>We want to get rid of the file originally committed in commit <code>9cee256</code>. To do this:
-1. First, reset back to that commit:</p>
-<div class="highlight"><pre><span></span>$ git reset 9cee256~1 <span class="c1"># go back one more than the troublesome commit</span>
-</pre></div>
-
-
-<p>This is a <em>soft</em> reset, so your files will stay the same on your local machine.
-2. (Optional) If you haven't done so already, you can delete <code>big_file.bin</code>.
-3. Then add the README back to the repo, and commit it</p>
-<div class="highlight"><pre><span></span>$ git add README.md
-$ git commit -m <span class="s2">&quot;adding the README again&quot;</span>
-</pre></div>
-
-
+<h2>Introducing git hooks</h2>
+<p>In programming, a <strong>hook</strong> is a program or function we can use to extend or change the behavior of other program without touching that programs code. The more modern name is a plugin. When you run <code>git commit -m "commit message"</code> here are the steps git takes</p>
 <ol>
-<li>Finally push the new commit back up.</li>
+<li>See if <code>.git/hooks/pre-commit</code> exists. If it does, run it. If it returns with an error (i.e. a non-zero value), stop the commit.</li>
+<li>Create a default message.</li>
+<li>See if <code>.git/hooks/prepare-commit-msg</code> exists. If it does, run it. If it returns with an error (i.e. a non-zero value), stop the commit.</li>
+<li>Do the commit (including launching an editor if there is no <code>-m</code> flag)</li>
+<li>See if <code>.git/hooks/post-commit</code> exists. If it does, run it</li>
 </ol>
-<div class="highlight"><pre><span></span>$ git push origin master
+<p><strong>Note:</strong> When git checks <code>.git/hooks/*</code>, it checks at the top level of your repo, even if you are in another folder when you run your <code>git</code> commands.</p>
+<p>If you never create the <code>pre-commit</code>, <code>prepare-commit-msg</code> or <code>post-commit</code> files, git will operate normally. However, by adding these files, you can change the behavior of git without ever looking at its course code! We want to stop a commit from happening if a file is too large, so we will write a <code>pre-commit</code> hook.</p>
+<h3>Setup</h3>
+<p>Let's make a new repo. We won't connect it to github, because we don't need to push the file. We are just going to look at making commits. </p>
+<p>In the terminal, run the following</p>
+<div class="highlight"><pre><span></span>$ mkdir git_hook_example
+$ <span class="nb">cd</span> git_gook_example
+git_hook_example$ git init
+Initialized empty Git repository in /Users/damien/git_hook_example/.git/
+git_hook_example$ ls -la
+.    ..   .git
 </pre></div>
 
 
-<p>In this approach, the local git history still has the "bad" commits in it
-<img alt="what the local branches look like" src="images/github_local.png">
-They are off the main "master" track, but they will still remain on your disk. The commit you pushed up doesn't have the commits in the red box in its history, so the remote repo will look like this:
-<img alt="what the remote branch looks like" src="images/github_remote.png"></p>
-<h3>Actual Fix 2: rewrite history with <code>filter-branch</code></h3>
-<p>This one will only work if you don't have unstaged work in your repo. It also means rewriting the history, so there is the potential to mess things up!</p>
-<p>With those warnings in mind, you can run</p>
-<div class="highlight"><pre><span></span>git filter-branch -f --tree-filter <span class="s1">&#39;rm  big_file.bin&#39;</span> 9cee256..HEAD
+<p>Note the hidden <code>.git/</code> directory. This is where we are going to place our hook.</p>
+<p>Let's also create a couple of files, just to simulate a real repo:</p>
+<div class="highlight"><pre><span></span>git_hook_example$ <span class="nb">echo</span> <span class="s1">&#39;# hook example&#39;</span> &gt; readme.me <span class="c1"># creates a readme file</span>
+git_hook_example$ <span class="nb">echo</span> <span class="s1">&#39;some text&#39;</span> &gt; junk.txt
+git_hook_example$ dd <span class="k">if</span><span class="o">=</span>/dev/zero <span class="nv">of</span><span class="o">=</span>big_file.bin <span class="nv">count</span><span class="o">=</span><span class="m">200</span> <span class="nv">bs</span><span class="o">=</span><span class="m">1048576</span>  <span class="c1"># make 200 MB file</span>
 </pre></div>
 
 
-<p>This will remove <code>big_file.bin</code> from every commit from <code>9cee256</code> to <code>1eb14a7</code> (the current HEAD).</p>
-<p>You should then be able to push to your repository with</p>
-<div class="highlight"><pre><span></span>git push
+<p>We now have a repo directory with two small files (<code>readme.md</code> and <code>junk.txt</code>) as well as a 200 MB file.</p>
+<h3>Our first precommit hook</h3>
+<p>We will use the gitpython package to write our first hook. Install it with</p>
+<div class="highlight"><pre><span></span>$ pip install gitpython
 </pre></div>
+
+
+<p>In your favorite text editor, write the following file and save it to <code>.git/hooks/pre-commit</code></p>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># This is a pre-commit hook that ensures attempts to commit files that</span>
+<span class="c1"># are larger than 100 MB to your _local_ repo fail, with a helpful error</span>
+<span class="c1"># message. This is the python version.</span>
+
+<span class="kn">from</span> <span class="nn">git</span> <span class="kn">import</span> <span class="n">Repo</span>
+<span class="kn">from</span> <span class="nn">gitdb.exc</span> <span class="kn">import</span> <span class="n">BadName</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+
+<span class="n">repo</span> <span class="o">=</span> <span class="n">Repo</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+<span class="n">limit</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">8</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">filenames</span> <span class="o">=</span> <span class="p">(</span><span class="n">diff_obj</span><span class="o">.</span><span class="n">a_path</span> <span class="k">for</span> <span class="n">diff_obj</span> <span class="ow">in</span> <span class="n">repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="s1">&#39;HEAD&#39;</span><span class="p">))</span>
+<span class="k">except</span> <span class="n">BadName</span><span class="p">:</span>
+    <span class="c1"># new repo, no &#39;HEAD&#39; or master until first commit completed</span>
+    <span class="n">filenames</span> <span class="o">=</span> <span class="p">(</span><span class="n">filename</span> <span class="k">for</span> <span class="n">filename</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">entries</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+    <span class="n">filesize</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">st_size</span>
+    <span class="k">if</span> <span class="n">filesize</span> <span class="o">&gt;</span> <span class="n">limit</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">              {filename} ({filesize // 10**6} MB) is larger than the {limit // 10**6} MB limit</span>
+<span class="s2">              Commit aborted&quot;&quot;&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This file is also available as a <a href="https://gist.github.com/kiwidamien/597ebbaeaf2388932ac9a3aaff7d1287">gist</a>. </p>
+<p>Briefly, this file uses the <code>git</code> package to initialize the repo that you are currently in. It looks at the repos index and compares what you are trying to commit to what is already saved. Only going through the files you are trying to update (i.e. iterating through <code>repo.index.diff('HEAD')</code>), if any of there are larger than 100 MB (technically 10<sup>6</sup> bytes, which isn't <em>quite</em> the same thing) then stop the commit with a non-zero exit. The script prints out an error message telling you which file is problematic, and stops the commit before it happens!</p>
+<p>Note that if the script exits normally, the default return value is <code>0</code>, which is interpreted as a success.</p>
+<h3>Other uses</h3>
+<p>Notice that git didn't pass any information to this hook, it just ran the script with the right name sitting in the right place. We got the information about which files had changed by calling git within our script (i.e. we let the <code>gitpython</code> package do that for us). You can use a hook like to check other things as well, such as </p>
+<ul>
+<li><strong>Automatic linting:</strong> Run pylint on your code pre-commit, and only allow the commit if there are no linting errors.</li>
+<li><strong>Automatic testing:</strong> Run your unittests on your code pre-commit. Only allow the commit if there are no failing test cases.</li>
+<li><strong>Spell checking:</strong> If running a blog off github (such as this one), run a spell-checker and only allow the commit if there are no spelling errors (I should really implement this one!)</li>
+</ul>
+<p>The other hooks are useful too. This blog is associated with two github repos: the one that publishes the processed files, and the one that stores the original content. I work in the original content repo, and a post-commit hook ensures everytime I commit, the files are processed and published to my actual blog.</p>
+<p>You can also write your hooks in any language you like. The same hook written as a bash script is available in <a href="https://gist.github.com/kiwidamien/a6a909ee196be8795b30431079074d64">this gist</a>. This is harder to read, but is more portable to systems that don't use Python 3 (or don't have gitpython installed).</p>
+<h3>Testing</h3>
+<p>Let's test the hook! In your terminal, try adding your files and commiting them:</p>
+<div class="highlight"><pre><span></span><span class="c1"># make our hook &quot;executable&quot;</span>
+git_hook_example $ chmod a+x .git/hooks/pre-commit
+
+<span class="c1"># now do the add/commit workflow</span>
+git_hook_example $ git add .
+git_hook_example $ git status
+On branch master
+
+No commits yet
+
+Changes to be committed:
+  <span class="o">(</span>use <span class="s2">&quot;git rm --cached &lt;file&gt;...&quot;</span> to unstage<span class="o">)</span>
+
+    new file:   big_file.bin
+    new file:   junk.txt
+    new file:   readme.me
+
+git_hook_example $ git commit -m <span class="s1">&#39;will this allow a big commit?&#39;</span>
+
+              big_file.bin <span class="o">(</span><span class="m">209</span> MB<span class="o">)</span> is larger than the <span class="m">100</span> MB limit
+              Commit aborted
+</pre></div>
+
+
+<p>Fantastic! Let's remove the <code>big_file.bin</code> and check the commit goes through:</p>
+<div class="highlight"><pre><span></span>git_hook_example $ git rm big_file.bin
+git_hook_example $ git commit -m <span class="s1">&#39;It should work now&#39;</span>
+<span class="o">[</span>master <span class="o">(</span>root-commit<span class="o">)</span> 841a985<span class="o">]</span> It should work now
+ <span class="m">3</span> files changed, <span class="m">62</span> insertions<span class="o">(</span>+<span class="o">)</span>
+</pre></div>
+
+
+<p>Success!! You have made a git pre-commit hooks.</p>
+<h2>Other hooks</h2>
+<h2>Summary, and doing this in other repos</h2>
             </section>
 
             <section class="post-info">
