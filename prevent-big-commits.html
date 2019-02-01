@@ -131,7 +131,15 @@
         <article class="post">
         <div class="inner">
             <section class="post-content">
-                <h2>Undoing a large commit</h2>
+                <p>Have you ever accidentally made a large commit to github (i.e. a file that is larger than 100 MB)? If so, you might have experienced the problem discussed in an earlier aricle <a href="/big-commits-in-github.html">big commits in github</a>. Github doesn't accept large files, which is reasonable. The problem is simple attempts to undo the commit don't seem to resolve the issue, which is counter-intuitive. The reason is git is designed to be able to undo commits, so even removing the file and making a new commit, git still tries to push up the large deleted file to Github (in case you want to undo the delete later).</p>
+<p>The previous article showed how to fix the problem. In this article, we will show how to use git hooks to prevent the problem in the first place.</p>
+<h3>(Article still under construction)</h3>
+<ul>
+<li>Gist on <a href="https://gist.github.com/kiwidamien/597ebbaeaf2388932ac9a3aaff7d1287">python hook</a></li>
+<li>Gist on <a href="https://gist.github.com/kiwidamien/a6a909ee196be8795b30431079074d64">shell hook</a></li>
+</ul>
+<p>Included previous article below (want to keep instructions on generating big files)</p>
+<h2>Undoing a large commit</h2>
 <p>Accidentally committing a large file (i.e. greater than git's limit of 100MB) is a frustrating experience. For example, let's say you made some changes to <code>big_file.bin</code>, a 200MB file, and to your README in the following way:</p>
 <div class="highlight"><pre><span></span>$ dd <span class="k">if</span><span class="o">=</span>/dev/zero <span class="nv">of</span><span class="o">=</span>big_file.bin <span class="nv">count</span><span class="o">=</span><span class="m">200</span> <span class="nv">bs</span><span class="o">=</span><span class="m">1048576</span>  <span class="c1"># make 200 MB file</span>
 $ git add big_file.bin                              <span class="c1"># we will regret this!</span>
