@@ -250,9 +250,30 @@ git_hook_example $ git commit -m <span class="s1">&#39;It should work now&#39;</
 </pre></div>
 
 
-<p>Success!! You have made a git pre-commit hooks.</p>
-<h2>Other hooks</h2>
+<p>Success!! You have made a git pre-commit hook.</p>
+<h2>Making this the default</h2>
+<p>How can you make this the default for new repos on your system? There are a couple of steps:</p>
+<ol>
+<li>Create the directory <code>~/.githooks/</code> in your home directory (this is not a reserved name, you can put this directory where you would like)
+  <code>bash
+  $ mkdir ~/.githooks/`</code></li>
+<li>Copy the <code>pre-commit</code> hook to <code>~/.githooks</code></li>
+<li>Run <code>git config</code> to tell git this is where you hooks live (so it looks here instead of <code>.git/hooks</code> in your current repo)
+   <code>bash
+   $ git config --global core.hooksPath=~/.githooks/</code></li>
+</ol>
+<p>Warning: this will set your hooks to <em>always</em> use this hook, including existing repos. If you want to set it on a per-repo basis instead, follow the steps in the summary instead.</p>
+<h2>Bypassing</h2>
+<p>If for some reason you don't want to run the pre-commit hook on <em>this</em> particular commit, you can skip it by running <code>git commit --no-verify -m "some message"</code>.</p>
 <h2>Summary, and doing this in other repos</h2>
+<p>You can make this work in pre-existing repos as well. The steps are</p>
+<ol>
+<li>Copy <a href="https://gist.github.com/kiwidamien/a6a909ee196be8795b30431079074d64">this gist</a> to <code>./git/hooks/pre-commit</code>. This is the shell version, but you can also use the Python version from above</li>
+<li>Make it executable using <code>chmod a+x ./git/hooks/pre-commit</code>.</li>
+</ol>
+<p>That's it -- you now cannot accidentally commit large files to your repository!</p>
+<h4>Acknowledgements:</h4>
+<p>I'd like to thank <a href="https://www.spencertollefson.com/blog/">Spencer Tollefson</a> for suggestions and inspiration on this post.</p>
             </section>
 
             <section class="post-info">
