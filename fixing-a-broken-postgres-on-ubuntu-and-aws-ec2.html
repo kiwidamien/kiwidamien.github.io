@@ -133,28 +133,47 @@
         <article class="post">
         <div class="inner">
             <section class="post-content">
-                <p>Note: this post references installations of PostgreSQL on linux machines using APT-GET (CHECK THIS). Other installation methods, such as using homebrew on OS X, place files in a different location.</p>
+                <p>Note: this post references installations of PostgreSQL on linux machines using <code>apt-get</code>. Other installation methods, such as using homebrew on OS X, places files in a different location.</p>
 <h2>Quick-fix guide</h2>
 <p>The commands differ slightly depending on the version of postgres you have installed. These are the commands for version 9.5, for other versions simplely replace the "9.5" with your version number. </p>
-<div class="highlight"><pre><span></span><span class="c1"># Remove the lock file</span>
-</pre></div>
+<div class="highlight"><pre><span></span><span class="c1"># Remove the lock file (change 9.5 to your version number)</span>
+$ sudo rm /var/log/postgresql/9.5/main/postmaster.pid
 
-
-<h2>Quick-fix guide</h2>
-<div class="highlight"><pre><span></span><span class="c1"># find the errors in the logs</span>
-$ tail -n <span class="m">20</span> /var/log/postgresql/postgresql-9.5-main.log
-
-<span class="c1"># remove the lock file</span>
-$ sudo rm /var/lib/postgresql/9.5/main/postmaster.pid
-
+<span class="c1"># log in as user postgres and reset the permissions on the postgres directory</span>
 $ sudo su postgres
 $ chmod a+w /var/lib/postgresql/9.5/main
+$ <span class="nb">exit</span>  <span class="c1"># logs out postgres</span>
 
-The solution:
+<span class="c1"># Now make the postgres file &quot;user&quot; accessible, and restart service</span>
 $ sudo chmod u+w /var/lib/postgresql/9.5/main/
 $ sudo service postgresql restart
+
+<span class="c1"># Now restart postgres in terminal</span>
 $ psql
 </pre></div>
+
+
+<h2>What happens?</h2>
+<p>When we shut down an AWS instance, if the database is not terminated explicitly (e.g. with <code>sudo service postgresql stop</code>) then it fails to release certain locks it has on the system. The locks are in place to ensure if postgres is already running, subsequent requests connect to the <em>same</em> database server, so we don't have two servers trying to write to the database at the same time. </p>
+<p>The locks are simply a file that is created (called a <em>lock file</em>). Before postgres starts a new service, it checks to see if the lock file exists. If it does, then postgres refuses to create a new service as one should already exist. When we shut down the service normally, the lock files are deleted, so when we restart the service postgres doesn't complain. If an EC2 instance is shut down abruptly, for example by stopping the instance, then postgres doesn't have time to delete the lock files before it is terminated.</p>
+<p>Note that lock files don't actually do anything themselves. Instead, they are there as a convention. The postgres service is checking to see if they exist or not, and then will act accordingly. The files don't actively protect the data, they simply inform postgres about what it should do. For a simple system with one user, such as a typical project with public data, this isn't a huge concern. When dealing with sensitive private data, it is very important that an unauthorized user cannot simply stop the database from working (or create multiple access points) by deleting lock files. This is why we have to mess around with <code>sudo</code> and permissions -- the lock files are restricted access so that only trusted users can delete them (such as a the <code>postgres</code> user), so that we can continue using this "trust" system.</p>
+<h2>A better way?</h2>
+<p>I provide the above as some reasons why we have to go through these steps. I don't mean for it to be an excuse. The solution provided here is definately a hack. After many hours on StackOverflow, I don't think at the time of writing this article there is a tider solution. That doesn't mean this process couldn't be automated, with permission restricted to a trusted user. My ideal solution would be to extend the service command:</p>
+<div class="highlight"><pre><span></span><span class="c1"># My ideal solution to the &quot;shutdown in messy state problem&quot;</span>
+<span class="c1"># NOT implemneted (yet)</span>
+$ sudo service postgres cleanup
+</pre></div>
+
+
+<p>This is much more elegant (and robust) than trying to find the miscellaneous lock files and delete them manually. Hopefully this will get implemented, and this article will become out of date.</p>
+<h2>Further problems?</h2>
+<p>One place to investigate is in the logs. If nothing else, the exact error message recorded in the logs can be a more useful place to start looking in StackOverflow for an answer. To access the end of the logs, use</p>
+<div class="highlight"><pre><span></span><span class="c1"># find the errors in the logs</span>
+$ tail -n <span class="m">20</span> /var/log/postgresql/postgresql-9.5-main.log
+</pre></div>
+
+
+<p>Note that you may have to change the version number of postgres from 9.5 to your version.</p>
             </section>
 
             <section class="post-info">
