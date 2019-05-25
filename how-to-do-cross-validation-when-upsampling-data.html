@@ -22,6 +22,8 @@
 
   <!-- Code highlight color scheme -->
       <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
 
     <!-- CSS specified by the user -->
     <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
@@ -41,7 +43,7 @@
 
     <link href="https://kiwidamien.github.io/how-to-do-cross-validation-when-upsampling-data.html" rel="canonical" />
 
-        <meta name="description" content="Most of us know to split our data into a training and a testing set before we do our preprocessing, let alone our modeling. Often we are...">
+        <meta name="description" content="We know to split our data into a training and a testing set before we do our preprocessing, let alone our modeling. Often we are not as...">
 
         <meta name="author" content="Damien Martin">
 
@@ -63,7 +65,7 @@
   <meta property="og:url" content="https://kiwidamien.github.io/how-to-do-cross-validation-when-upsampling-data.html">
   <meta property="og:title" content="How to do cross-validation when upsampling data">
   <meta property="article:published_time" content="2019-05-20 11:00:00-07:00">
-            <meta property="og:description" content="Most of us know to split our data into a training and a testing set before we do our preprocessing, let alone our modeling. Often we are...">
+            <meta property="og:description" content="We know to split our data into a training and a testing set before we do our preprocessing, let alone our modeling. Often we are not as...">
 
             <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
 </head>
@@ -129,6 +131,805 @@
         <div class="inner">
             <section class="post-content">
                 
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One of my colleagues, Sophie Searcy, recently wrote an <a href="https://soph.info/2019/05/07/imbalance/">blog post</a> that dealt with imbalanced classes. She looked at some of the ways that you can address an imbalanced learning problem, and some of the pros and cons of each. One of the big takeaways of that article (which you should read!) was to carefully consider whether or not you should address the problem of imbalance by oversampling, or if you should look at some of the alternatives: adjusting the weights of the classes or even checking to see if your model deals with imbalanced data naturally.</p>
+<p>This article is about how to do cross-validation once you have decided that oversampling is the right approach for your problem. This article is available as a <a href="https://gist.github.com/kiwidamien/bcbe8e527a5f0cc9f28c4fe692f70cbc">notebook</a> on Github with all steps included; this article highlights the main steps.</p>
+<p>For this article, we will be going through the following steps:</p>
+<ol>
+<li> Getting a baseline</li>
+<li> Oversampling the wrong way<br />
+   Do a train-test split, then oversample, then cross-validate. Sounds fine, but results are overly optimistic.</li>
+<li> Oversampling the right way
+    <ol>
+<li> Manual oversampling</li>
+<li> Using `imblearn`'s pipelines</li>
+</ol>
+</li>
+</ol><p>We will see if cross-validation is done on already upsampled data, the scores don't generalize to new data. In a real problem, you should only use the test set <strong>ONCE</strong>; we are reusing it to show that if we do cross-validation on already upsampled data, the results are overly optimistic and do not generalize to new data (or the test set).</p>
+<h3 id="The-dataset">The dataset<a class="anchor-link" href="#The-dataset">¶</a></h3><p>We will be using a thyroid dataset, where the number of bad thyroids make up about 6% of the data (i.e. about 1 in 156patients have thyroid issues). The dataset can be found using <code>imblearn.datasets.fetch_datasets()['thyroid_sick']</code>. Our goal will be to find a classifier with a good recall (i.e.  we want our classifier to find as many positive cases as it can). We have to be aware there is a danger in using this metric, as simply predicting <em>everyone</em> has a bad thyroid will make the recall 100%.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's make sure that our results are consistent as we try different methods. It is a little simpler to have <code>cv=5</code> in all of our grid searches and cross-validations, but we will get different splits each time.</p>
+<p>If we use <code>cv=kf</code>, where <code>kf</code> is a <code>KFold</code> object we can ensure that we get the same splits each time.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [3]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">kf</span> <span class="o">=</span> <span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="1.-Baseline-(no-oversampling)">1. Baseline (no oversampling)<a class="anchor-link" href="#1.-Baseline-(no-oversampling)">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's get a baseline result by picking a random forest.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [4]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">45</span><span class="p">)</span>
+<span class="n">rf</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+<span class="n">cross_val_score</span><span class="p">(</span><span class="n">rf</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">'recall'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[4]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>array([0.81081081, 0.73684211, 0.875     , 0.7037037 , 0.7804878 ])</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>These are decent results, and we haven't even optimized the model! Let's try to do some hyperparameter tuning:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [5]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'n_estimators'</span><span class="p">:</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">],</span>
+    <span class="s1">'max_depth'</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="s1">'random_state'</span><span class="p">:</span> <span class="p">[</span><span class="mi">13</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="n">grid_no_up</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">rf</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">,</span> 
+                          <span class="n">scoring</span><span class="o">=</span><span class="s1">'recall'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="n">grid_no_up</span><span class="o">.</span><span class="n">best_score_</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[5]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0.7803820054409211</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Ok, we see that we have about 78% recall on one of our models before we have tried oversampling. This is the number to beat.</p>
+<p>Normally we would wait until we had finished our modeling to look at the test set, but an important part of this is to see how oversampling, done incorrectly, can make us too confident in our ability to generalize based off cross-validation. We haven't oversampled yet, so let's just check that the test scores are in line with what we expect from the CV scores about (i.e. about 78%)</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [6]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">grid_no_up</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[6]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0.8035714285714286</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This looks like it is (roughly) consistent with the CV results.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="2.-Oversampling-(the-wrong-way)">2. Oversampling (the wrong way)<a class="anchor-link" href="#2.-Oversampling-(the-wrong-way)">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's just oversample the training data (we are smart enough not to oversample the test data), and check that this gives us an even split of the two classes:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [7]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">X_train_upsample</span><span class="p">,</span> <span class="n">y_train_upsample</span> <span class="o">=</span> <span class="n">SMOTE</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">fit_sample</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+<span class="n">y_train_upsample</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[7]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0.5</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Ok, let's cross-validate using grid search. Remember the training set has been upsampled, that is not being done as part of the GridSearch</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [8]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'n_estimators'</span><span class="p">:</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">],</span>
+    <span class="s1">'max_depth'</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">],</span>
+    <span class="s1">'random_state'</span><span class="p">:</span> <span class="p">[</span><span class="mi">13</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="n">grid_naive_up</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">rf</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">params</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">,</span> 
+                             <span class="n">scoring</span><span class="o">=</span><span class="s1">'recall'</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train_upsample</span><span class="p">,</span> 
+                                                   <span class="n">y_train_upsample</span><span class="p">)</span>
+<span class="n">grid_naive_up</span><span class="o">.</span><span class="n">best_score_</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[8]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0.9843160927198451</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is an amazing recall! If we look at the validation scores, they <em>all</em> look pretty good:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">grid_naive_up</span><span class="o">.</span><span class="n">cv_results_</span><span class="p">[</span><span class="s1">'mean_test_score'</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>array([0.93360792, 0.9345499 , 0.93337591, 0.94714925, 0.94736138,
+       0.94273667, 0.97585677, 0.98218414, 0.97864618, 0.98237253,
+       0.98187974, 0.98431609])</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here is the model that made these results:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">grid_naive_up</span><span class="o">.</span><span class="n">best_params_</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>{'max_depth': 12, 'n_estimators': 200, 'random_state': 13}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Ok, let's look at how it does on the training set as a whole (once we eliminate the upsampling)</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">recall_score</span><span class="p">(</span><span class="n">y_train</span><span class="p">,</span> <span class="n">grid_naive_up</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>1.0</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Ok, what about the test set?</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># But wait ... uh-oh, spagetti-os!</span>
+<span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">grid_naive_up</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0.9107142857142857</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Ok, time for some good news/bad news:</p>
+<ul>
+<li>good: the recall on the test set is 91%, better than the 80% we got without upsampling</li>
+<li>bad: our confidence in the cross-valdation results went down. With no upsampling, the validation recall was 78%, which was a good estimate of the test validation of 80%. With upsampling, the validation recall was 100% which isn't a good measure of the test recall (91%)</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="3.-Let's-make-SMOTE-ing-part-of-our-cross-validation!">3. Let's make SMOTE-ing part of our cross validation!<a class="anchor-link" href="#3.-Let's-make-SMOTE-ing-part-of-our-cross-validation!">¶</a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The issue is that we</p>
+<ul>
+<li>oversample</li>
+<li>then split into cross-validation folds</li>
+</ul>
+<p>To see why this is an issue, consider the simplest method of over-sampling (namely, copying the data point). Let's say every data point from the minority class is copied 6 times before making the splits. If we did a 3-fold validation, each fold has (on average) 2 copies of each point! If our classifier overfits by memorizing its training set, it should be able to get a perfect score on the validation set! Our cross-validation will choose the model that overfits the most. We see that CV chose the deepest trees it could!</p>
+<p>Instead, we should split into training and validation folds. Then, on each fold, we should</p>
+<ol>
+<li>Oversample the minority class</li>
+<li>Train the classifier on the training folds</li>
+<li>Validate the classifier on the remaining fold</li>
+</ol>
+<p>Let's see this in detail by doing it manually:</p>
+<h3 id="3A.-Manual-upsampling-within-folds">3A. Manual upsampling within folds<a class="anchor-link" href="#3A.-Manual-upsampling-within-folds">¶</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">example_params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">'n_estimators'</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="s1">'max_depth'</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="s1">'random_state'</span><span class="p">:</span> <span class="mi">13</span>
+    <span class="p">}</span>
+
+<span class="k">def</span> <span class="nf">score_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Creates folds manually, and upsamples within each fold.</span>
+<span class="sd">    Returns an array of validation (recall) scores</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">cv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cv</span> <span class="o">=</span> <span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+
+    <span class="n">smoter</span> <span class="o">=</span> <span class="n">SMOTE</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+    
+    <span class="n">scores</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">train_fold_index</span><span class="p">,</span> <span class="n">val_fold_index</span> <span class="ow">in</span> <span class="n">cv</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+        <span class="c1"># Get the training data</span>
+        <span class="n">X_train_fold</span><span class="p">,</span> <span class="n">y_train_fold</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">train_fold_index</span><span class="p">],</span> <span class="n">y_train</span><span class="p">[</span><span class="n">train_fold_index</span><span class="p">]</span>
+        <span class="c1"># Get the validation data</span>
+        <span class="n">X_val_fold</span><span class="p">,</span> <span class="n">y_val_fold</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">val_fold_index</span><span class="p">],</span> <span class="n">y_train</span><span class="p">[</span><span class="n">val_fold_index</span><span class="p">]</span>
+
+        <span class="c1"># Upsample only the data in the training section</span>
+        <span class="n">X_train_fold_upsample</span><span class="p">,</span> <span class="n">y_train_fold_upsample</span> <span class="o">=</span> <span class="n">smoter</span><span class="o">.</span><span class="n">fit_resample</span><span class="p">(</span><span class="n">X_train_fold</span><span class="p">,</span>
+                                                                           <span class="n">y_train_fold</span><span class="p">)</span>
+        <span class="c1"># Fit the model on the upsampled training data</span>
+        <span class="n">model_obj</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train_fold_upsample</span><span class="p">,</span> <span class="n">y_train_fold_upsample</span><span class="p">)</span>
+        <span class="c1"># Score the model on the (non-upsampled) validation data</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">recall_score</span><span class="p">(</span><span class="n">y_val_fold</span><span class="p">,</span> <span class="n">model_obj</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_val_fold</span><span class="p">))</span>
+        <span class="n">scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">score</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+
+<span class="c1"># Example of the model in action</span>
+<span class="n">score_model</span><span class="p">(</span><span class="n">RandomForestClassifier</span><span class="p">,</span> <span class="n">example_params</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>array([0.78378378, 0.76315789, 0.96875   , 0.81481481, 0.90243902])</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can even do grid search this way by looping over the parameters. As a reminder, the parameter combinations we tried earlier were</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">params</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>{'n_estimators': [50, 100, 200],
+ 'max_depth': [4, 6, 10, 12],
+ 'random_state': [13]}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This loop tries all combinations, and stores the average recall score on the validation sets:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">score_tracker</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">n_estimators</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">'n_estimators'</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">max_depth</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">'max_depth'</span><span class="p">]:</span>
+        <span class="n">example_params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">'n_estimators'</span><span class="p">:</span> <span class="n">n_estimators</span><span class="p">,</span>
+            <span class="s1">'max_depth'</span><span class="p">:</span> <span class="n">max_depth</span><span class="p">,</span>
+            <span class="s1">'random_state'</span><span class="p">:</span> <span class="mi">13</span>
+        <span class="p">}</span>
+        <span class="n">example_params</span><span class="p">[</span><span class="s1">'recall'</span><span class="p">]</span> <span class="o">=</span> <span class="n">score_model</span><span class="p">(</span><span class="n">RandomForestClassifier</span><span class="p">,</span> 
+                                               <span class="n">example_params</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">score_tracker</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">example_params</span><span class="p">)</span>
+        
+<span class="c1"># What's the best model?</span>
+<span class="nb">sorted</span><span class="p">(</span><span class="n">score_tracker</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="s1">'recall'</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>{'n_estimators': 50,
+ 'max_depth': 4,
+ 'random_state': 13,
+ 'recall': 0.8486884268736002}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The best estimator appears to have the parameters</p>
+<pre><code>{'n_estimators': 50,
+  'max_depth': 4,
+  'random_state': 13,
+ }</code></pre>
+<p>and a recall score of 85% for the validation score. Let's see how this compares with the test score:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">rf</span> <span class="o">=</span> <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">13</span><span class="p">)</span>
+<span class="n">rf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train_upsample</span><span class="p">,</span> <span class="n">y_train_upsample</span><span class="p">)</span>
+<span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">rf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>0.8392857142857143</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Note that is is roughly consistent (84% vs 85%)</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="3B.-Let's-use-the-imbalanced-class-pipeline">3B. Let's use the imbalanced class pipeline<a class="anchor-link" href="#3B.-Let's-use-the-imbalanced-class-pipeline">¶</a></h3>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The imbalanced-learn dataset extends the sklearn's built-in pipeline methods. Specifically, you can import</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">make_pipeline</span>
+</pre></div>
+<p>which will allow you to do multiple steps at once. It is also nice that if you <em>fit</em> the model, all the steps (such as scaling, and the model) are fit at once. If you <em>predict</em> with the model, scaling steps are only <em>trensformed</em>, so you can pass multiple steps into a pipeline.</p>
+<p>There is a restriction. The restriction comes partially from the naming of functions (e.g. <code>transform</code> vs <code>resample</code>) but one way of thing of it is that sklearn's pipeline only allows for one row in to be transformed to another row (perhaps with different or added features). To upsample, we need to <em>increase</em> the number of rows. Imbalanced-learn generalizes the pipeline, but tries to keep the syntax and function names the same:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">imblearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">make_pipeline</span>
+</pre></div>
+<p>Let's see it in action:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">imba_pipeline</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">SMOTE</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span> 
+                              <span class="n">RandomForestClassifier</span><span class="p">(</span><span class="n">n_estimators</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">13</span><span class="p">))</span>
+<span class="n">cross_val_score</span><span class="p">(</span><span class="n">imba_pipeline</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">'recall'</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[ ]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>array([0.75675676, 0.78947368, 0.90625   , 0.77777778, 0.7804878 ])</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This is much nicer than using our manual score function! Notice that the recall scores are similar to when we did this manually.</p>
+<p>Even nicer, the pipelines play well with <code>GridSearchCV</code>, so we don't have to loop over parameters manually:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">new_params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'randomforestclassifier__'</span> <span class="o">+</span> <span class="n">key</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">}</span>
+<span class="n">grid_imba</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">imba_pipeline</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">new_params</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="n">kf</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">'recall'</span><span class="p">,</span>
+                        <span class="n">return_train_score</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">grid_imba</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can see that the best estimator selected by grid search with the pipeline matches the one we found manually:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">grid_imba</span><span class="o">.</span><span class="n">best_params_</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>How well do we do on our validation set?</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">grid_imba</span><span class="o">.</span><span class="n">best_score_</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's compare this to the test set:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_test_predict</span> <span class="o">=</span> <span class="n">grid_imba</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_predict</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We have some confidence this is doing what we want: when we did cross-validation manually, we also saw cross-validation give recall scores of 85% (vs 84% recall on the test set).</p>
+<p>When predicting, the SMOTE step doesn't do anything (it just passes the values through). We can check this explicitly by just making a prediction from the <code>randomforestclassifier</code> and seeing we get the same result:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [ ]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">y_test_predict</span> <span class="o">=</span> <span class="n">grid_imba</span><span class="o">.</span><span class="n">best_estimator_</span><span class="o">.</span><span class="n">named_steps</span><span class="p">[</span><span class="s1">'randomforestclassifier'</span><span class="p">]</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+<span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">y_test_predict</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h2><p>Here is a summary of the different approaches we took:</p>
+<table>
+<thead><tr>
+<th>Method</th>
+<th>Recall (validation)</th>
+<th>Recall (test)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No upsampling (baseline)</td>
+<td>78.0%</td>
+<td>80.3%</td>
+</tr>
+<tr>
+<td>Upsample training set before CV</td>
+<td>100%</td>
+<td>91.1%</td>
+</tr>
+<tr>
+<td>Upsample as part of CV (manual)</td>
+<td>84.9%</td>
+<td>83.9%</td>
+</tr>
+<tr>
+<td>Upsample as part of CV (pipeline)</td>
+<td>84.9%</td>
+<td>83.9%</td>
+</tr>
+</tbody>
+</table>
+<p>The last two lines should be (and are) the same. The difference is simple the pipeline is easier to manage and leads to cleaner code, but it is good to see the explicit process once. The high level takeaways:</p>
+<ul>
+<li>For each case, except when we upsampled the training set before the CV, the validation set recall was a good estimate of the test set recall.</li>
+<li>When we upsampled the training set before cross validation, there was a difference of <strong>9</strong> percentage points between the CV recall and recall on the test set.</li>
+<li>When upsampling before cross validation, you will be picking the most oversampled model, because the oversampling is allowing data to leak from the validation folds into the training folds.</li>
+<li>In <em>this example</em> doing the upsampling incorrectly lead to the best recall overall (91%). This won't generally happen! Our metric (recall) could have been much worse. The important point is that the main way we have of telling if we are doing well is using the CV scores.</li>
+<li>The test set should only be used <strong>ONCE</strong>. In this article, we used it multiple times to show when how the different upsampling method affected our ability to trust the cross-validated scores. </li>
+</ul>
+<p>In your problems, you should do your baseline model and the (correctly) upsampled models, and use the CV scores for your modeling decisions. The test set's role is to tell how well your model generalizes after making all of your modeling decisions.</p>
+</div>
+</div>
+</div>
+
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = '//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: 'center'," +
+        "    displayIndent: '0em'," +
+        "    showMathMenu: true," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['$','$'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'black ! important'} }" +
+        "    } " +
+        "}); ";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+
             </section>
 
             <section class="post-info">
@@ -167,10 +968,10 @@
 
 
                 <aside class="post-nav">
-                    <a class="post-nav-next" href="https://kiwidamien.github.io/are-you-_sure_-thats-a-probability.html">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/are-you-sure-thats-a-probability.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-left"></i>
-                                <h2 class="post-nav-title">Are you _sure_ that's a probability?</h2>
+                                <h2 class="post-nav-title">Are you sure that's a probability?</h2>
                             <p class="post-nav-excerpt">Many of the classifiers in sklearn support a predict_proba method for calculating...</p>
                         </section>
                     </a>
