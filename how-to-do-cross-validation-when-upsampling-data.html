@@ -297,7 +297,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="2.-Oversampling-(the-wrong-way)">2. Oversampling (the wrong way)<a class="anchor-link" href="#2.-Oversampling-(the-wrong-way)">¶</a></h2>
+<h2 id="2.-Oversampling-the-wrong-way">2. Oversampling the wrong way<a class="anchor-link" href="#2.-Oversampling-the-wrong-way">¶</a></h2>
 </div>
 </div>
 </div>
@@ -665,12 +665,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The best estimator appears to have the parameters</p>
-<pre><code>{'n_estimators': 50,
-  'max_depth': 4,
-  'random_state': 13,
- }</code></pre>
-<p>and a recall score of 85% for the validation score. Let's see how this compares with the test score:</p>
+<p>The best estimator has a recall score of 85% on the validation set. Let's see how this compares with the test score:</p>
 </div>
 </div>
 </div>
@@ -709,7 +704,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="3B.-Let's-use-the-imbalanced-class-pipeline">3B. Let's use the imbalanced class pipeline<a class="anchor-link" href="#3B.-Let's-use-the-imbalanced-class-pipeline">¶</a></h3>
+<h3 id="3B.-Using-the-imblearn-pipeline">3B. Using the imblearn pipeline<a class="anchor-link" href="#3B.-Using-the-imblearn-pipeline">¶</a></h3>
 </div>
 </div>
 </div>
@@ -720,7 +715,7 @@
 <p>The imbalanced-learn dataset extends the sklearn's built-in pipeline methods. Specifically, you can import</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">make_pipeline</span>
 </pre></div>
-<p>which will allow you to do multiple steps at once. It is also nice that if you <em>fit</em> the model, all the steps (such as scaling, and the model) are fit at once. If you <em>predict</em> with the model, scaling steps are only <em>trensformed</em>, so you can pass multiple steps into a pipeline.</p>
+<p>which will allow you to do multiple steps at once. It is also nice that if you <em>fit</em> the model, all the steps (such as scaling, and the model) are fit at once. If you <em>predict</em> with the model, scaling steps are only <em>transformed</em>, so you can pass multiple steps into a pipeline.</p>
 <p>There is a restriction. The restriction comes partially from the naming of functions (e.g. <code>transform</code> vs <code>resample</code>) but one way of thing of it is that sklearn's pipeline only allows for one row in to be transformed to another row (perhaps with different or added features). To upsample, we need to <em>increase</em> the number of rows. Imbalanced-learn generalizes the pipeline, but tries to keep the syntax and function names the same:</p>
 <div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">imblearn.pipeline</span> <span class="kn">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">make_pipeline</span>
 </pre></div>
