@@ -149,7 +149,7 @@
 </ol>
 </li>
 </ol><p>We will see if cross-validation is done on already upsampled data, the scores don't generalize to new data. In a real problem, you should only use the test set <strong>ONCE</strong>; we are reusing it to show that if we do cross-validation on already upsampled data, the results are overly optimistic and do not generalize to new data (or the test set).</p>
-<h3 id="The-dataset">The dataset<a class="anchor-link" href="#The-dataset">¶</a></h3><p>We will be using a thyroid dataset, where the number of bad thyroids make up about 6% of the data (i.e. about 1 in 156patients have thyroid issues). The dataset can be found using <code>imblearn.datasets.fetch_datasets()['thyroid_sick']</code>. Our goal will be to find a classifier with a good recall (i.e.  we want our classifier to find as many positive cases as it can). We have to be aware there is a danger in using this metric, as simply predicting <em>everyone</em> has a bad thyroid will make the recall 100%.</p>
+<h3 id="The-dataset">The dataset<a class="anchor-link" href="#The-dataset">¶</a></h3><p>We will be using a thyroid dataset, where the number of bad thyroids make up about 6% of the data (i.e. about 1 in 16 patients have thyroid issues). The dataset is available as part of the imbalanced learn's dataset module. Our goal will be to find a classifier with a good recall (i.e.  we want our classifier to find as many positive cases as it can). We have to be aware there is a danger in using this metric, as simply predicting <em>everyone</em> has a bad thyroid will make the recall 100%.</p>
 </div>
 </div>
 </div>
@@ -163,8 +163,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Let's make sure that our results are consistent as we try different methods. It is a little simpler to have <code>cv=5</code> in all of our grid searches and cross-validations, but we will get different splits each time.</p>
-<p>If we use <code>cv=kf</code>, where <code>kf</code> is a <code>KFold</code> object we can ensure that we get the same splits each time.</p>
+<p>We are going to ensure that we have the same splits of the data every time. We can ensure this by creating a <code>KFold</code> object, <code>kf</code>, and passing <code>cv=kf</code>,t we can ensure that we get the same splits each time.</p>
 </div>
 </div>
 </div>
