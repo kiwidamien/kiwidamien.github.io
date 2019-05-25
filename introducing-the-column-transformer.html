@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Introducing the column transformer</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/introducing-the-column-transformer.html" rel="canonical" />
+
+        <meta name="description" content="The ColumnTransformer allows us to easily apply different transformations to different features. For example, now we can scale some...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Data science">
+        <meta name="tags" content="leakage">
+        <meta name="tags" content="preprocessing">
+        <meta name="tags" content="data munging">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/introducing-the-column-transformer.html">
+  <meta property="og:title" content="Introducing the column transformer">
+  <meta property="article:published_time" content="2019-05-26 08:00:00-07:00">
+            <meta property="og:description" content="The ColumnTransformer allows us to easily apply different transformations to different features. For example, now we can scale some...">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Introducing the column transformer</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sun 26 May 2019">Sun 26 May 2019</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Here are some examples of common preprocessing steps on different types of features:</p>
+<ul>
+<li><strong>Imputation</strong>: Replacing missing values with the mean or median,</li>
+<li><strong>Log transform</strong>: Taking the log of right-skewed numeric features, or its more general cousin, the <em>Box-Cox transform</em>.</li>
+<li><strong>Scaling</strong>: Standardizing numeric features so values are on similar scales,</li>
+<li><strong>Encoding</strong>: Transforming categorical variables to numeric features.</li>
+</ul>
+<p>Some of these methods, such as taking a log transform, can be done on the full dataset as they don't require estimation of any parameters from the dataset. Methods such as standard scaling require an estimate of the mean and variance from the data, and imputation requires an estimate on the mean and median. Technically, these steps cannot be done on the full dataset. It is easy to <code>fit</code> on the training data, and then <code>transform</code> on the test data. Slightly more subtle is the issue of cross-validation: these steps should really be <code>fit</code> separately on the training <em>folds</em>, and <code>tranform</code>ed on the validation fold. Otherwise we are getting some information from the validation set for our preprocessing.</p>
+<p>As a <em>practical</em> matter, at least with standard scaler and imputation, the validation set shouldn't have a huge effect on the mean, median, or variance. More importantly, if you want to scale some variables, and log transform others (for example) it is tedious to select the features you want to transform, do the transform, and then paste the transformed features back together.</p>
+<p>A recent addition to Scikit-learn is the <code>ColumnTransformer</code>, which allows us to specify different transformations per column, making preprocessing a lot less tedious (and a lot easier to read!). As a bonus, it is easy to put a <code>ColumnTransformer</code> into a pipeline, and do the scaling and imputation correctly.</p>
+<p>In this article, we will first walk through a fairly simple example to see how to use a <code>ColumnTransformer</code>, and then a more involved example to really see how they are valuable.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Toy-example:-predict-gender-from-height,-weight,-and-colorblindness">Toy example: predict gender from height, weight, and colorblindness<a class="anchor-link" href="#Toy-example:-predict-gender-from-height,-weight,-and-colorblindness">¶</a></h2><p>In this example, we are going to make a simple predictor for predicting gender based on someone's weight (in pounds), height (in inches), and whether or not they are colorblind. It is difficult to think of an application of this model where we know someone's weight, height, and information about their vision but <em>don't</em> know his or her gender, but it is a simple example with only a few features.</p>
+<p>This dataset has 10k rows; let's look at the first few:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[162]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Height</th>
+<th>Weight</th>
+<th>Colorblind</th>
+<th>is_female</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>NaN</td>
+<td>145.576248</td>
+<td>0.0</td>
+<td>True</td>
+</tr>
+<tr>
+<th>1</th>
+<td>68.486412</td>
+<td>172.546072</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>70.505927</td>
+<td>206.440942</td>
+<td>0.0</td>
+<td>False</td>
+</tr>
+<tr>
+<th>3</th>
+<td>NaN</td>
+<td>122.034650</td>
+<td>0.0</td>
+<td>True</td>
+</tr>
+<tr>
+<th>4</th>
+<td>65.488671</td>
+<td>135.013164</td>
+<td>NaN</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We see we have some missing values that we will need to fill. We will use logistic regression, which is a regularized model. So we have two things we need to do:</p>
+<ul>
+<li>Impute missing values</li>
+<li>Standard scale the continuous features, height and weight</li>
+</ul>
+<p>Let's look at the number of missing values that we have:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[163]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>type</th>
+<th>num_missing</th>
+<th>total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>Height</th>
+<td>float64</td>
+<td>597</td>
+<td>10000</td>
+</tr>
+<tr>
+<th>Weight</th>
+<td>float64</td>
+<td>0</td>
+<td>10000</td>
+</tr>
+<tr>
+<th>Colorblind</th>
+<td>float64</td>
+<td>527</td>
+<td>10000</td>
+</tr>
+<tr>
+<th>is_female</th>
+<td>bool</td>
+<td>0</td>
+<td>10000</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The good news is that we don't have any missing weights! But in an ideal world, our imputation strategy would be different for <code>Height</code> and <code>Colorblind</code>:</p>
+<ul>
+<li>For <code>Height</code> it is natural to choose the mean or median</li>
+<li>For <code>Colorblind</code>, it is natural to choose the mode (choosing the mean would give a number that was not 0 or 1!)</li>
+</ul>
+<p>We could do it in "one shot" by picking the median, because for the special case of a binary classifier the median is also the mode. Let's replace the <code>Height</code> with the mean instead, to capture some of the difficulties that would be present in more complicated examples.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Attempt-1:-Apply-same-tranformations-to-all-columns">Attempt 1: Apply same tranformations to all columns<a class="anchor-link" href="#Attempt-1:-Apply-same-tranformations-to-all-columns">¶</a></h3><p>One way of approach this problem is to just to a mean imputation and standard scaling on all the columns, like so:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [164]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.impute</span> <span class="k">import</span> <span class="n">SimpleImputer</span> 
+
+<span class="n">pipeline_steps</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="s1">'mean_imputer'</span><span class="p">,</span> <span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">'scaler'</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">())</span>
+<span class="p">]</span>
+
+<span class="n">preprocess_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">pipeline_steps</span><span class="p">)</span>
+
+<span class="n">X_train_scaled</span> <span class="o">=</span> <span class="n">preprocess_pipeline</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+
+<span class="c1"># Look at the first 4 rows</span>
+<span class="n">X_train_scaled</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[164]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[-1.46886948e+00, -1.66737018e+00, -2.24024562e-01],
+       [-9.90723725e-01, -5.60672626e-01, -2.24024562e-01],
+       [-6.36856723e-01, -6.68249704e-01, -2.24024562e-01],
+       [ 5.72957617e-01,  9.31586346e-01,  3.42226819e-17]])</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>One of the advantages of this approach is that the pipeline makes it easy to apply these steps to the test data. We can also put our pipeline into GridSearch, and it will automatically do imputation and scaling using only the training folds (i.e. no data leakage from the validation set to the training set).</p>
+<p>Some of the downsides to this approach:</p>
+<ul>
+<li>We were lucky that we could get away with standard scaling all the columns in this case. </li>
+<li>Once we scaled our examples, we lost the binary nature of the colorblind feature. This is going to make it harder to interpret the last column.</li>
+<li>Because we did mean imputation, the missing colorblind values were replaced with the mean (i.e. not 0 or 1) before scaling. This means there are three distinct values in this column: actually colorblind, imputed colorblind, and not colorblind. Looking at the values</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[165]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Scaled Colorblind Value</th>
+<th>Observations in Train set</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>-2.240246e-01</td>
+<td>6788</td>
+</tr>
+<tr>
+<th>1</th>
+<td>3.422268e-17</td>
+<td>389</td>
+</tr>
+<tr>
+<th>2</th>
+<td>4.707984e+00</td>
+<td>323</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We can still constuct a Logistic Regression model from this, even if we would have preferred not to do mean imputation on the colorblind values. We can compose the preprocessing pipeline and do a grid search for the appropriate amount of regularization</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [166]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">LogisticRegression</span>
+
+<span class="c1"># Do preprocessing and modeling in one step. Pipelines can be attached to</span>
+<span class="c1"># one another!</span>
+<span class="n">model_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">'preprocessing'</span><span class="p">,</span> <span class="n">preprocess_pipeline</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'classifier'</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="s1">'lbfgs'</span><span class="p">))</span>
+<span class="p">])</span>
+
+<span class="n">param</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'classifier__C'</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">model_pipeline</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">param</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="c1"># How well do we do on the validation set vs the test set?</span>
+<span class="c1"># Note we don't need to separately scale / impute the test set</span>
+<span class="n">test_score</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>The validation set accuracy = 92.21%; the test set accuracy = 91.84%
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Attempt-2:-Using-the-column-transformer">Attempt 2: Using the column transformer<a class="anchor-link" href="#Attempt-2:-Using-the-column-transformer">¶</a></h3><p>Let's see how we can use the <code>ColumnTransformer</code> to address the same problem. We will look at two types of processing steps:</p>
+<ul>
+<li>For the heights and weights, we will do mean imputation, followed by standard scaling.</li>
+<li>For the colorblindness, we will only do mode imputation</li>
+</ul>
+<p>Technically we don't need any imputation on the weights for this dataset, but it is nice to include it incase we fit to future data where the weights are missing.</p>
+<p>The <code>ColumnTransformer</code> works in a similar way to a pipeline, where you feed it a list of tuples. Each tuple contains the <em>name</em> of the step, the <em>transformation</em> you want to do, and a <em>list of columns</em> you want to apply that transformation to. It is this last step that makes it different from an ordinary pipeline. Let's see it in action:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [168]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.compose</span> <span class="k">import</span> <span class="n">ColumnTransformer</span>
+
+<span class="n">cnts_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">'impute'</span><span class="p">,</span> <span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">'mean'</span><span class="p">)),</span>
+    <span class="p">(</span><span class="s1">'scale'</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">())</span>
+<span class="p">])</span>
+    
+<span class="n">colorblind_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">'impute'</span><span class="p">,</span> <span class="n">SimpleImputer</span><span class="p">(</span><span class="n">strategy</span><span class="o">=</span><span class="s1">'most_frequent'</span><span class="p">))</span>
+<span class="p">])</span>
+    
+<span class="n">preprocess_pipeline</span> <span class="o">=</span> <span class="n">ColumnTransformer</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">'continuous'</span><span class="p">,</span> <span class="n">cnts_pipeline</span><span class="p">,</span> <span class="p">[</span><span class="s1">'Height'</span><span class="p">,</span> <span class="s1">'Weight'</span><span class="p">]),</span>
+    <span class="p">(</span><span class="s1">'colorblind'</span><span class="p">,</span> <span class="n">colorblind_pipeline</span><span class="p">,</span> <span class="p">[</span><span class="s1">'Colorblind'</span><span class="p">])</span>
+<span class="p">])</span>
+    
+<span class="n">X_train_processed</span> <span class="o">=</span> <span class="n">preprocess_pipeline</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+<span class="n">X_train_processed</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[168]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[-1.46886948, -1.66737018,  0.        ],
+       [-0.99072372, -0.56067263,  0.        ],
+       [-0.63685672, -0.6682497 ,  0.        ],
+       [ 0.57295762,  0.93158635,  0.        ]])</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The <code>ColumnTransformer</code> has applied the <code>cnts_pipeline</code> to the columns <code>Height</code> and <code>Weight</code>, and applied the <code>colorblind_pipeline</code> to the <code>Colorblind</code> column. Note that the output at the end has the <em>same</em> scaled heights and weights, while preserving the binary nature of the colorblind column.</p>
+<p>This preprocessing is a little longer than the previous version, but we have been able to specify exactly what we want done to each column rather than compromising for convinience. We can now use the exact same code as above to make our model:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [169]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="k">import</span> <span class="n">LogisticRegression</span>
+
+<span class="c1"># Do preprocessing and modeling in one step. Pipelines can be attached to</span>
+<span class="c1"># one another!</span>
+<span class="n">model_pipeline</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">([</span>
+    <span class="p">(</span><span class="s1">'preprocessing'</span><span class="p">,</span> <span class="n">preprocess_pipeline</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'classifier'</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">solver</span><span class="o">=</span><span class="s1">'lbfgs'</span><span class="p">))</span>
+<span class="p">])</span>
+
+<span class="n">param</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">'classifier__C'</span><span class="p">:</span> <span class="p">[</span><span class="mf">1e-4</span><span class="p">,</span> <span class="mf">1e-2</span><span class="p">,</span> <span class="mf">1e-1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">100</span><span class="p">]</span>
+<span class="p">}</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">GridSearchCV</span><span class="p">(</span><span class="n">model_pipeline</span><span class="p">,</span> <span class="n">param_grid</span><span class="o">=</span><span class="n">param</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="c1"># How well do we do on the validation set vs the test set?</span>
+<span class="c1"># Note we don't need to separately scale / impute the test set</span>
+<span class="n">test_score</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>The validation set accuracy = 92.21%; the test set accuracy = 91.80%
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Let's see how we can use the <code>ColumnTransformer</code> on a less trivial example.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Loan-data">Loan data<a class="anchor-link" href="#Loan-data">¶</a></h2><p>We will try and find the rate people pay loans back using a Logistic Regression model. Unlike tree based models, this will require us to scale numerical features. This was originally LendingClub data, but to keep the problem simple, some of the features have been binarized, and the categorical features have been dropped. The dataset we will be using is available <a href="https://raw.githubusercontent.com/kiwidamien/StackedTurtles/master/content/platt_scaling/lending_club_clean_and_processed.csv">here</a>. Let's start by looking at the data:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[179]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>loan_amnt</th>
+<th>annual_inc</th>
+<th>open_acc</th>
+<th>dti</th>
+<th>delinq_2yrs</th>
+<th>inq_last_6mths</th>
+<th>revol_util</th>
+<th>emp_length</th>
+<th>term_5yrs</th>
+<th>has_bankruptcy</th>
+<th>defaulted</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>0</th>
+<td>10000.0</td>
+<td>49200.0</td>
+<td>10.0</td>
+<td>20.00</td>
+<td>0.0</td>
+<td>1.0</td>
+<td>21.00</td>
+<td>10.0</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<th>1</th>
+<td>3000.0</td>
+<td>80000.0</td>
+<td>15.0</td>
+<td>17.94</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>53.90</td>
+<td>1.0</td>
+<td>True</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<th>2</th>
+<td>6000.0</td>
+<td>84000.0</td>
+<td>4.0</td>
+<td>18.44</td>
+<td>2.0</td>
+<td>0.0</td>
+<td>37.73</td>
+<td>1.0</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+<tr>
+<th>3</th>
+<td>5000.0</td>
+<td>50004.0</td>
+<td>14.0</td>
+<td>13.97</td>
+<td>3.0</td>
+<td>0.0</td>
+<td>59.50</td>
+<td>2.0</td>
+<td>True</td>
+<td>False</td>
+<td>True</td>
+</tr>
+<tr>
+<th>4</th>
+<td>5000.0</td>
+<td>24044.0</td>
+<td>8.0</td>
+<td>11.93</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>29.30</td>
+<td>2.0</td>
+<td>False</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>This data doesn't have any missing values, but it has dollar amounts, which can be heavily right-skewed (i.e. the have a bump on the <em>left</em> side). It isn't obvious what some of these columns are, so it makes sense to get the definition of each of the features, and a measure of how skewed they are:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[180]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<style type="text/css">
+    #T_97e85f3a_7f15_11e9_81bd_acde48001122row0_col2 {
+            color:  red;
+        }    #T_97e85f3a_7f15_11e9_81bd_acde48001122row1_col2 {
+            color:  red;
+        }    #T_97e85f3a_7f15_11e9_81bd_acde48001122row2_col2 {
+            color:  red;
+        }    #T_97e85f3a_7f15_11e9_81bd_acde48001122row4_col2 {
+            color:  red;
+        }    #T_97e85f3a_7f15_11e9_81bd_acde48001122row5_col2 {
+            color:  red;
+        }</style><table id="T_97e85f3a_7f15_11e9_81bd_acde48001122"><thead> <tr> <th class="blank level0"></th> <th class="col_heading level0 col0">Type</th> <th class="col_heading level0 col1">Description</th> <th class="col_heading level0 col2">skew</th> </tr></thead><tbody>
+<tr>
+<th class="row_heading level0 row0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row0">loan_amnt</th>
+<td class="data row0 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row0_col0">float64</td>
+<td class="data row0 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row0_col1">Amount of loan ($)</td>
+<td class="data row0 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row0_col2">1.13328</td>
+</tr>
+<tr>
+<th class="row_heading level0 row1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row1">annual_inc</th>
+<td class="data row1 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row1_col0">float64</td>
+<td class="data row1 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row1_col1">Annual income ($)</td>
+<td class="data row1 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row1_col2">8.14486</td>
+</tr>
+<tr>
+<th class="row_heading level0 row2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row2">open_acc</th>
+<td class="data row2 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row2_col0">float64</td>
+<td class="data row2 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row2_col1">How long account has been open (months)</td>
+<td class="data row2 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row2_col2">1.03854</td>
+</tr>
+<tr>
+<th class="row_heading level0 row3" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row3">dti</th>
+<td class="data row3 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row3_col0">float64</td>
+<td class="data row3 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row3_col1">Debt-to-income ratio as percentage (e.g. 11% -> 11.0)</td>
+<td class="data row3 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row3_col2">-0.0436909</td>
+</tr>
+<tr>
+<th class="row_heading level0 row4" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row4">delinq_2yrs</th>
+<td class="data row4 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row4_col0">float64</td>
+<td class="data row4 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row4_col1">The number of times the borrower had been 30+ days past due on a payment in the past 2 years.</td>
+<td class="data row4 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row4_col2">2.99947</td>
+</tr>
+<tr>
+<th class="row_heading level0 row5" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row5">inq_last_6mths</th>
+<td class="data row5 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row5_col0">float64</td>
+<td class="data row5 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row5_col1">The borrower's number of inquiries by creditors in the last 6 months</td>
+<td class="data row5 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row5_col2">2.24966</td>
+</tr>
+<tr>
+<th class="row_heading level0 row6" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row6">revol_util</th>
+<td class="data row6 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row6_col0">float64</td>
+<td class="data row6 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row6_col1">The borrower’s revolving line utilization rate (the amount of the credit line used relative to total credit available).</td>
+<td class="data row6 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row6_col2">-0.0659327</td>
+</tr>
+<tr>
+<th class="row_heading level0 row7" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row7">emp_length</th>
+<td class="data row7 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row7_col0">float64</td>
+<td class="data row7 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row7_col1">Number of months with current employer</td>
+<td class="data row7 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row7_col2">0.193894</td>
+</tr>
+<tr>
+<th class="row_heading level0 row8" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row8">term_5yrs</th>
+<td class="data row8 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row8_col0">bool</td>
+<td class="data row8 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row8_col1">Whether this was a 5 year loan (dataset only had 5 yr and 3 yr loans)</td>
+<td class="data row8 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row8_col2">1.11532</td>
+</tr>
+<tr>
+<th class="row_heading level0 row9" id="T_97e85f3a_7f15_11e9_81bd_acde48001122level0_row9">has_bankruptcy</th>
+<td class="data row9 col0" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row9_col0">bool</td>
+<td class="data row9 col1" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row9_col1">Whether the borrower has ever declared bankruptcy</td>
+<td class="data row9 col2" id="T_97e85f3a_7f15_11e9_81bd_acde48001122row9_col2">3.96065</td>
+</tr>
+</tbody></table>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>For our processing, we want to:</p>
+<ul>
+<li>Log the highly skewed values</li>
+<li>Standard scale the numerical values we don't log (logs usually compress the range of a variable enough that we don't need to scale the logged values)</li>
+<li>Keep the boolean values untouched</li>
+</ul>
+<p>To do this, we will make two <code>ColumnTransformers</code>: one of the highly skewed features, and another for the remaining numerical (but non-boolean) features. First let's store the skews in a <code>Series</code>:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [181]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">feature_skew</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">])</span><span class="o">.</span><span class="n">skew</span><span class="p">()</span>
+<span class="n">feature_skew</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[181]:</div>
+<div class="output_text output_subarea output_execute_result">
+<pre>loan_amnt         1.133279
+annual_inc        8.144861
+open_acc          1.038542
+dti              -0.043691
+delinq_2yrs       2.999472
+inq_last_6mths    2.249655
+revol_util       -0.065933
+emp_length        0.193894
+dtype: float64</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Now we want to break our features into groups.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [182]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">log_features</span> <span class="o">=</span> <span class="n">feature_skew</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">feature_skew</span><span class="p">)</span> <span class="o">></span> <span class="mf">0.9</span><span class="p">]</span><span class="o">.</span><span class="n">index</span>
+<span class="n">scale_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">feature_skew</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">log_features</span><span class="p">]</span>
+<span class="n">boolean_features</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">number</span><span class="p">])</span><span class="o">.</span><span class="n">columns</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We could also manually specify which columns we want to be in each group. This would be equivalent:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt"></div>
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>
+log_features     = ['loan_amnt', 'annual_inc', 'open_acc', 'delinq_2yrs', 'inq_last_6mths']
+scale_features   = ['dti', 'revol_util', 'emp_length']
+boolean_features = ['term_5yrs', 'has_bankruptcy']
+
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>We have one more obstacle before using our <code>ColumnTransformer</code>, which is how to take the log of the <code>log_features</code>.  We are familiar with <code>StandardScaler</code>, but there isn't a build in transformer for taking the <code>log</code> of a column. There is a <em>function</em> (namely <code>np.log</code>), but this isn't a tranformer -- it doesn't have a <code>fit</code> or <code>transform</code> method.</p>
+<p>The problem of wanting to apply a function to a column which isn't <em>technically</em> a transformer is common, so Scikit-learn introduced a <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.FunctionTransformer.html"><code>FunctionTransformer</code></a>. A <code>FunctionTransformer</code> takes a function (such as <code>np.log</code>) and makes a transformer that does nothing when <code>fit</code> is called, but calls the function when <code>transform</code> is called. It is easy to use.</p>
+<p>Let's see how it gets used in our example. We don't have to worry about taking the log of 0, we will take <code>np.log1p</code> of the <code>log_features</code> rather than <code>np.log</code>:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [184]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">preprocessor</span> <span class="o">=</span> <span class="n">ColumnTransformer</span><span class="p">(</span>
+    <span class="n">transformers</span><span class="o">=</span><span class="p">[</span>
+        <span class="p">(</span><span class="s1">'log'</span><span class="p">,</span> <span class="n">FunctionTransformer</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">log_features</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">'scale'</span><span class="p">,</span> <span class="n">StandardScaler</span><span class="p">(),</span> <span class="n">scale_features</span><span class="p">)],</span>
+    <span class="n">remainder</span><span class="o">=</span><span class="s1">'passthrough'</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>That's all there is to it! It took far longer to describe in words than to code. By default, a <code>ColumnTransformer</code> will move all features that were not transformed, but this can be overriden (as it was here) by using the <code>remainder="passthrough"</code> argument.</p>
+<p>Now let's train our model:</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [219]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">log_reg</span> <span class="o">=</span> <span class="n">Pipeline</span><span class="p">(</span><span class="n">steps</span><span class="o">=</span><span class="p">[</span>
+    <span class="p">(</span><span class="s1">'preprocess'</span><span class="p">,</span> <span class="n">preprocessor</span><span class="p">),</span>
+    <span class="p">(</span><span class="s1">'logisitic'</span><span class="p">,</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span> <span class="n">solver</span><span class="o">=</span><span class="s1">'lbfgs'</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">class_weight</span><span class="o">=</span><span class="s1">'balanced'</span><span class="p">))</span>
+<span class="p">])</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>That's all there is to it! The model's performance isn't that great -- looking at accuracy and recall show pretty poor results (note that the default rate is about 16%, but we did use class weight's to increase accuracy)</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In [234]:</div>
+<div class="inner_cell">
+<div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># ignore</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span>
+    <span class="p">[</span><span class="n">log_reg</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="n">recall_score</span><span class="p">(</span><span class="n">y_train</span><span class="p">,</span> <span class="n">log_reg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_train</span><span class="p">))],</span>
+    <span class="p">[</span><span class="n">log_reg</span><span class="o">.</span><span class="n">score</span><span class="p">(</span><span class="n">X_test</span><span class="p">,</span> <span class="n">y_test</span><span class="p">),</span> <span class="n">recall_score</span><span class="p">(</span><span class="n">y_test</span><span class="p">,</span> <span class="n">log_reg</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">))],</span>
+<span class="p">],</span> <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Accuracy'</span><span class="p">,</span> <span class="s1">'Recall'</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="s1">'Train'</span><span class="p">,</span> <span class="s1">'Test'</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="output_wrapper">
+<div class="output">
+<div class="output_area">
+<div class="prompt output_prompt">Out[234]:</div>
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped="">
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+<thead>
+<tr style="text-align: right;">
+<th></th>
+<th>Accuracy</th>
+<th>Recall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>Train</th>
+<td>0.634098</td>
+<td>0.604733</td>
+</tr>
+<tr>
+<th>Test</th>
+<td>0.635626</td>
+<td>0.604972</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>The poor results are due to the number of informative features we threw away in order to keep this example self-contained (as well as our use of Logistic Regression, instead of a tree-based model which would require less preprocessing). That is okay; our goal in this article was to show how to use the <code>ColumnTransformer</code> in non-trivial problems, rather than to build a good classifier.</p>
+<p>We will revisit this dataset where we will use <code>CategoryEncoders</code> along with the <code>ColumnTransformer</code> to make a much better model on this dataset.</p>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h2><ul>
+<li><code>ColumnTransformer</code> is written a lot like a pipeline, except when specifying the steps we also specify which columns should be transformed</li>
+<li>This allows us to scale some features, while not scaling the OneHotEncoded or binary features (this makes interpreting the final coefficient of these features simpler, as the values are still 0 or 1, so the coefficient is the contribution of this feature being present vs absent)</li>
+<li>It also allows you to choose different imputation methods on a column-by-column basis</li>
+<li>By placing the <code>ColumnTransformer</code> in a pipeline with your model, you can easily do your preprocessing inside <code>GridSearchCV</code> and not worry about data leakage. The alternatives are either to transform the entire training set (which has data leak into your validation set, making CV scores too optimistic) or manually doing your cross-validation. For <em>most</em> types of preprocessing, this isn't a huge issue (except if upsampling, as discussed <a href="/how-to-do-cross-validation-when-upsampling-data.html">here</a>), but it is nice that the <code>ColumnTransformer</code> makes it easy to do the right thing.</li>
+</ul>
+<p>Of course, categorical variables have their own set of challenges and transformations. To tackle categorical variables, we will to introduce the <code>CategoryEncoders</code> package.</p>
+<h2 id="Related-articles">Related articles<a class="anchor-link" href="#Related-articles">¶</a></h2><ul>
+<li><a href="">An introduction to pipeslines</a>: What they are, and why you should be using them (to come)</li>
+<li><a href="/how-to-do-cross-validation-when-upsampling-data.html">How to do cross-validation when upsampling</a> An example of data leakage in cross-validation that is important.</li>
+<li><a href="">Why <code>pd.get_dummies</code> is Evil, use CategoryEncoders instead</a>: The problems of using <code>get_dummies</code> and how the new CategoryEncoders package addresses these issues (to come)</li>
+<li><a href="">Imputation by Group</a>: How to imputation on groups (to come)</li>
+</ul>
+</div>
+</div>
+</div>
+
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = '//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: 'center'," +
+        "    displayIndent: '0em'," +
+        "    showMathMenu: true," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['$','$'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'black ! important'} }" +
+        "    } " +
+        "}); ";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Introducing the column transformer&amp;url=https://kiwidamien.github.io/introducing-the-column-transformer.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/introducing-the-column-transformer.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/introducing-the-column-transformer.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/data-science.html">Data science</a><a href="https://kiwidamien.github.io/tag/leakage.html">leakage</a><a href="https://kiwidamien.github.io/tag/preprocessing.html">preprocessing</a><a href="https://kiwidamien.github.io/tag/data-munging.html">data munging</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/are-you-sure-thats-a-probability.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Are you sure that's a probability?</h2>
+                            <p class="post-nav-excerpt">Many of the classifiers in sklearn support a predict_proba method for calculating...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>
