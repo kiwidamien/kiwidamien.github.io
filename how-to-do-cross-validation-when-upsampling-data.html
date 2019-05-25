@@ -135,7 +135,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>One of my colleagues, Sophie Searcy, recently wrote an <a href="https://soph.info/2019/05/07/imbalance/">blog post</a> that dealt with imbalanced classes. She looked at some of the ways that you can address an imbalanced learning problem, and some of the pros and cons of each. One of the big takeaways of that article (which you should read!) was to carefully consider whether or not you should address the problem of imbalance by oversampling, or if you should look at some of the alternatives: adjusting the weights of the classes or even checking to see if your model deals with imbalanced data naturally.</p>
+<p>One of my colleagues, Sophie Searcy, recently wrote an <a href="https://soph.info/2019/05/07/imbalance/">blog post</a> that dealt with imbalanced classes. She looked at ways to address an imbalanced learning problem, as well as the pros and cons of the different approaches. One of the big takeaways of that article (which you should read!) was to carefully consider whether or not you should address the problem of imbalance by oversampling, or if you should look at some of the alternatives: adjusting the weights of the classes, or checking if your model deals with imbalanced data naturally.</p>
 <p>This article is about how to do cross-validation once you have decided that oversampling is the right approach for your problem. This article is available as a <a href="https://gist.github.com/kiwidamien/bcbe8e527a5f0cc9f28c4fe692f70cbc">notebook</a> on Github with all steps included; this article highlights the main steps.</p>
 <p>For this article, we will be going through the following steps:</p>
 <ol>
@@ -145,7 +145,7 @@
 <li> Oversampling the right way
     <ol>
 <li type="a"> Manual oversampling</li>
-<li type="a"> Using `imblearn`'s pipelines</li>
+<li type="a"> Using `imblearn`'s pipelines (for those in a hurry, this is the best solution)</li>
 </ol>
 </li>
 </ol><p>We will see if cross-validation is done on already upsampled data, the scores don't generalize to new data. In a real problem, you should only use the test set <strong>ONCE</strong>; we are reusing it to show that if we do cross-validation on already upsampled data, the results are overly optimistic and do not generalize to new data (or the test set).</p>
@@ -163,7 +163,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We are going to ensure that we have the same splits of the data every time. We can ensure this by creating a <code>KFold</code> object, <code>kf</code>, and passing <code>cv=kf</code>,t we can ensure that we get the same splits each time.</p>
+<p>We are going to ensure that we have the same splits of the data every time. We can ensure this by creating a <code>KFold</code> object, <code>kf</code>, and passing <code>cv=kf</code> instead of the more common <code>cv=5</code>.</p>
 </div>
 </div>
 </div>
@@ -221,7 +221,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>These are decent results, and we haven't even optimized the model! Let's try to do some hyperparameter tuning:</p>
+<p>These are decent results, and we haven't even optimized the model! Let's do some hyperparameter tuning:</p>
 </div>
 </div>
 </div>
@@ -259,7 +259,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Ok, we see that we have about 78% recall on one of our models before we have tried oversampling. This is the number to beat.</p>
+<p>We have about 78% recall on one of our models before we have tried oversampling. This is the number to beat.</p>
 <p>Normally we would wait until we had finished our modeling to look at the test set, but an important part of this is to see how oversampling, done incorrectly, can make us too confident in our ability to generalize based off cross-validation. We haven't oversampled yet, so let's just check that the test scores are in line with what we expect from the CV scores about (i.e. about 78%)</p>
 </div>
 </div>
@@ -335,7 +335,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Ok, let's cross-validate using grid search. Remember the training set has been upsampled, that is not being done as part of the GridSearch</p>
+<p>Now let's cross-validate using grid search. Remember the training set has been upsampled; that is <em>not</em> being done as part of the GridSearch</p>
 </div>
 </div>
 </div>
