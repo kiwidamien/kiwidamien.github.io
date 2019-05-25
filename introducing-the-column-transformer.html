@@ -144,7 +144,7 @@
 </ul>
 <p>Some of these methods, such as taking a log transform, can be done on the full dataset as they don't require estimation of any parameters from the dataset. Methods such as standard scaling require an estimate of the mean and variance from the data, and imputation requires an estimate on the mean and median. Technically, these steps cannot be done on the full dataset. It is easy to <code>fit</code> on the training data, and then <code>transform</code> on the test data. Slightly more subtle is the issue of cross-validation: these steps should really be <code>fit</code> separately on the training <em>folds</em>, and <code>tranform</code>ed on the validation fold. Otherwise we are getting some information from the validation set for our preprocessing.</p>
 <p>As a <em>practical</em> matter, at least with standard scaler and imputation, the validation set shouldn't have a huge effect on the mean, median, or variance. More importantly, if you want to scale some variables, and log transform others (for example) it is tedious to select the features you want to transform, do the transform, and then paste the transformed features back together.</p>
-<p>A recent addition to Scikit-learn is the <code>ColumnTransformer</code>, which allows us to specify different transformations per column, making preprocessing a lot less tedious (and a lot easier to read!). As a bonus, it is easy to put a <code>ColumnTransformer</code> into a pipeline, and do the scaling and imputation correctly.</p>
+<p>A recent addition to Scikit-learn is the <code>ColumnTransformer</code>, which allows us to specify different transformations per column, making preprocessing a lot less tedious (and a lot easier to read!). As a bonus, it is easy to put a <code>ColumnTransformer</code> into a pipeline, and do the scaling and imputation correctly. There is a <a href="https://scikit-learn.org/stable/auto_examples/compose/plot_column_transformer_mixed_types.html">nice example of doing this</a> in the documentation; this article is a more detailed walkthrough of that example.</p>
 <p>In this article, we will first walk through a fairly simple example to see how to use a <code>ColumnTransformer</code>, and then a more involved example to really see how they are valuable.</p>
 </div>
 </div>
@@ -1072,11 +1072,14 @@ boolean_features = ['term_5yrs', 'has_bankruptcy']
 <li>By placing the <code>ColumnTransformer</code> in a pipeline with your model, you can easily do your preprocessing inside <code>GridSearchCV</code> and not worry about data leakage. The alternatives are either to transform the entire training set (which has data leak into your validation set, making CV scores too optimistic) or manually doing your cross-validation. For <em>most</em> types of preprocessing, this isn't a huge issue (except if upsampling, as discussed <a href="/how-to-do-cross-validation-when-upsampling-data.html">here</a>), but it is nice that the <code>ColumnTransformer</code> makes it easy to do the right thing.</li>
 </ul>
 <p>Of course, categorical variables have their own set of challenges and transformations. To tackle categorical variables, we will to introduce the <code>CategoryEncoders</code> package.</p>
-<h2 id="Related-articles">Related articles<a class="anchor-link" href="#Related-articles">¶</a></h2><ul>
+<h2 id="Related-articles">Related articles<a class="anchor-link" href="#Related-articles">¶</a></h2><h4 id="On-my-blog">On my blog<a class="anchor-link" href="#On-my-blog">¶</a></h4><ul>
 <li><a href="">An introduction to pipeslines</a>: What they are, and why you should be using them (to come)</li>
 <li><a href="/how-to-do-cross-validation-when-upsampling-data.html">How to do cross-validation when upsampling</a> An example of data leakage in cross-validation that is important.</li>
 <li><a href="">Why <code>pd.get_dummies</code> is Evil, use CategoryEncoders instead</a>: The problems of using <code>get_dummies</code> and how the new CategoryEncoders package addresses these issues (to come)</li>
 <li><a href="">Imputation by Group</a>: How to imputation on groups (to come)</li>
+</ul>
+<h4 id="Elsewhere">Elsewhere<a class="anchor-link" href="#Elsewhere">¶</a></h4><ul>
+<li><a href="https://scikit-learn.org/stable/auto_examples/compose/plot_column_transformer_mixed_types.html">Scikit-learn tutorial on ColumnTransformers</a></li>
 </ul>
 </div>
 </div>
