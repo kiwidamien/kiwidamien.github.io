@@ -135,8 +135,8 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>One of my colleagues, Sophie Searcy, recently wrote an <a href="https://soph.info/2019/05/07/imbalance/">blog post</a> that dealt with imbalanced classes. She looked at ways to address an imbalanced learning problem, as well as the pros and cons of the different approaches. One of the big takeaways of that article (which you should read!) was to carefully consider whether or not you should address the problem of imbalance by oversampling, or if you should look at some of the alternatives: adjusting the weights of the classes, or checking if your model deals with imbalanced data naturally.</p>
-<p>This article is about how to do cross-validation once you have decided that oversampling is the right approach for your problem. This article is available as a <a href="https://gist.github.com/kiwidamien/bcbe8e527a5f0cc9f28c4fe692f70cbc">notebook</a> on Github with all steps included; this article highlights the main steps.</p>
+<p>One of my colleagues, Sophie Searcy, recently wrote an <a href="https://soph.info/2019/05/07/imbalance/">blog post</a> that dealt with imbalanced classes. She looked at ways to address an imbalanced learning problem, as well as the pros and cons of the different approaches. One big takeaway of that article (which you should read!) was to carefully consider whether or not you should address the problem of imbalance by oversampling, or if you should look at some of the alternatives: adjusting the weights of the classes, or checking if your model deals with imbalanced data naturally.</p>
+<p>This article is about how to do cross-validation once you have decided that oversampling is the right approach for your problem. A <a href="https://gist.github.com/kiwidamien/bcbe8e527a5f0cc9f28c4fe692f70cbc">notebook</a> on Github with all steps included is useful if you want to play with the process yourself; here we highlight the main steps.</p>
 <p>For this article, we will be going through the following steps:</p>
 <ol>
 <li> Getting a baseline</li>
@@ -148,7 +148,7 @@
 <li type="a"> Using `imblearn`'s pipelines (for those in a hurry, this is the best solution)</li>
 </ol>
 </li>
-</ol><p>We will see if cross-validation is done on already upsampled data, the scores don't generalize to new data. In a real problem, you should only use the test set <strong>ONCE</strong>; we are reusing it to show that if we do cross-validation on already upsampled data, the results are overly optimistic and do not generalize to new data (or the test set).</p>
+</ol><p>If cross-validation is done on already upsampled data, the scores don't generalize to new data. In a real problem, you should only use the test set <strong>ONCE</strong>; we are reusing it to show that if we do cross-validation on already upsampled data, the results are overly optimistic and do not generalize to new data (or the test set).</p>
 <h3 id="The-dataset">The dataset<a class="anchor-link" href="#The-dataset">¶</a></h3><p>We will be using a thyroid dataset, where the number of bad thyroids make up about 6% of the data (i.e. about 1 in 16 patients have thyroid issues). The dataset is available as part of the imbalanced learn's dataset module. Our goal will be to find a classifier with a good recall (i.e.  we want our classifier to find as many positive cases as it can). We have to be aware there is a danger in using this metric, as simply predicting <em>everyone</em> has a bad thyroid will make the recall 100%.</p>
 </div>
 </div>
@@ -946,6 +946,7 @@
 <li><a href="https://blog.dominodatalab.com/imbalanced-datasets/">An introduction to oversampling</a> by Domino Data Lab</li>
 <li><a href="https://beckernick.github.io/oversampling-modeling/">The right way to oversample</a> by Nick Becker, which deals with the danger of oversampling before doing your train-test split. The issue of cross-validation doesn't come up.</li>
 <li><a href="https://www.marcoaltini.com/blog/dealing-with-imbalanced-data-undersampling-oversampling-and-proper-cross-validation">Dealing with imbalanced data: undersampling, oversampling, and proper cross-validation</a> which deals with very similar issues and how to approach them in R</li>
+<li><a href="http://www.alfredo.motta.name/cross-validation-done-wrong/">Cross-Validation done wrong</a> about the problems with doing feature selection before cross-validating. Not quite the topic of this article, but closely related.</li>
 </ul>
 </div>
 </div>
