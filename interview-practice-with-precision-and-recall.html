@@ -127,11 +127,60 @@
         <article class="post">
         <div class="inner">
             <section class="post-content">
-                <h3>Problem 1: Disease detector</h3>
+                <p>When interviewing for data science positions, you are likely to be asked what sort of metric you would use in a classification problem. If a product manager is asking you this question, then the answer is almost certainly more nuenced than "precision" or "recall". The problem (as discussed <a href="">here</a>) is that "precision" and "recall" are more academic in that they prioritize the performance of the <em>model</em>, rather than the actual business problem which may require a more nuanced metric.</p>
+<p>If you are being interviewed by a data scientist or a machine learning engineer, however,  they may want you to use the terms "precision" and "recall". Part of this is because they are easy metrics to use in cross-validation (both recall and precision are built-in), part of it is because they are used frequently in articles and blogs. A small part is probably "if I had to learn this, you should know it too"! </p>
+<p>Here we will assume that you are being asked a question by a data scientist or ML engineer, and give some tips on how to structure your response. Before starting, here are the definitions of precision and recall as a quick reminder:</p>
+<table>
+<tr>
+  <th>Term</th>
+  <th>Description</th>
+  <th>Probability notation</th>
+</tr>
+<tr>
+  <td>Precision</td>
+  <td>Fraction of actually positive cases among those predicted to be positive</td>
+  <td> P(actually positive | predicted positive)</td>
+</tr>
+<tr>
+  <td>Recall</td>
+  <td>Fraction of actually positive cases found from all positive cases</td>
+  <td> P(predicted positive | actually positive)</td>
+</tr>
+<tr>
+  <td>True positive rate (TPR)</td>
+  <td>Same as recall; fraction of positive cases found</td>
+  <td>P(predicted positive | actually positive)</td>
+</tr>
+<tr>
+  <td>False positive rate (FPR)</td>
+  <td>Fraction of actually negative cases identified as positive </td>
+  <td>P(predicted positive | actually negative)</td>
+</tr>
+</table>
+
+<p>A previous article, <a href="/the-bad-names-in-classification-problems.html"><em>Bad Names In Classification Problems</em></a>, also defines precision and recall (and gives some alternatives to the names TP/FP/TN/FN). The TPR and FPR are the vertical and horizontal axes on the <a href="/what-is-a-roc-curve-a-visualization-with-credit-scores.html">ROC</a> curve, respectively.</p>
+<h2>Sample interview question</h2>
+<p>An interview question might be </p>
+<blockquote>
+<p>We are trying to build a classifier to identify whether a particular insurance claim is fraudulent. What do recall and precision mean in this context, and which is a better metric for our problem? Why?</p>
+</blockquote>
+<p><strong>Don't</strong> answer this question by repeating the definition of precision and recall back to the interviewer. Telling her that "precision is the fraction of actually positive cases from those our classifier labeled as positive" is going to ding you on communication. Instead, identify what the positive case is in this example, and explain what the terms would mean <em>in this context</em>. </p>
+<p>Since we are also asked which we should prioritize, we should also explain what the consequences of having a low precision or recall score are <em>in this context</em>. We focus on the low case as it is always good to have precision and recall as high as possible; by talking about what the problems with a low precision or recall are allow us to discuss the tradeoffs in terms relevant to the business.</p>
+<p>Using this example, we are trying to detect fradulent claims. This makes the "positive case" (the thing we are trying to detect) the fraudulent claims. Giving our definitions in terms of fraud vs not-fraud (instead of positive and negative) gives us the following:</p>
+<ul>
+<li><strong>Precision</strong> is the fraction of cases that are fraudulent out of those that our classifier labelled as positive. The problem with a low precision is that our investigators will spend a lot of time investigating claims that are actually legitimate.</li>
+<li><strong>Recall</strong> is the fraction of fraudulent cases our classifier finds. The problem with a low recall is that we would be paying out on a lot of undetected fraudulent claims.</li>
+</ul>
+<p>This would give you a basis for discussing how to trade recall vs precision. In this example, paying a claim you didn't have to is more expensive than paying someone to investigate the claim, so recall would be more important. The easiest way to maximize recall is to flag <em>every</em> claim, which clearly makes the classifier useless, so even though recall is more important, phrasing it this way can help determine how you would evaluate a trade-off between precision and recall.</p>
+<p>To help get some experience with this, try answering the following questions by rephrasing the meaning of precision and recall in the context of each problem. When doing this, also practice evaluating what the downside of having too low a precision or recall is for that problem. Answers are available (but start collapsed).</p>
+<h2>Sample problems</h2>
+<h3>Problem 1: Disease detector</h3>
 <ol>
 <li>What is the positive class?</li>
 <li>What would a recall of 80% mean?</li>
 <li>What would a precision of 75% mean?</li>
+<li>If the recall is 80% and the precision is 75%, what is the FPR?</li>
+<li>If the recall is 80% and the precision is 75%, what is the FNR?</li>
 </ol>
 <h4>Answers</h4>
 <ol>
