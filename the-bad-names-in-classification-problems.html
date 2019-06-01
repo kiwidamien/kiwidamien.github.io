@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>The Bad Names In Classification Problems</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/the-bad-names-in-classification-problems.html" rel="canonical" />
+
+        <meta name="description" content="There are a proliferation of different metrics in classification problems: accuracy, precision, recall, and more! Many of these metrics...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Metirics">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/the-bad-names-in-classification-problems.html">
+  <meta property="og:title" content="The Bad Names In Classification Problems">
+  <meta property="article:published_time" content="2019-06-01 12:00:00-07:00">
+            <meta property="og:description" content="There are a proliferation of different metrics in classification problems: accuracy, precision, recall, and more! Many of these metrics...">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">The Bad Names In Classification Problems</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sat 01 June 2019">Sat 01 June 2019</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>Many binary classifiers can be <em>naturally</em> phrased in terms of us trying to detect something, and we have two classes: the <em>positive</em> class where the thing we are trying to detect is present, and a <em>negative</em> class where it is absent. Some examples are
+<em> <strong>Metal detector</strong>: Predicts if metal is present (positive class) or not (negative class)
+</em> <strong>Disease detector</strong>: Predicts if a disease is present (positive class) or not (negative class)
+<em> <strong>Red light cameras</strong>: Detects if a car moved through a red light (positive class) or not (negative class)
+</em> <strong>Fire alarms</strong>: Detects if there is a fire (positive class) or not (negative class)</p>
+<p>Notice that the positive case carries the connotation of requiring an action: a metal detector going off may mean digging in the sand or searching a passenger, a disease being detected would be escalated to a medical professional, the red light camera detecting someone running the light would send out a ticket, and a fire alarm going off should get people to evacuate. The negative class generally requires no action.</p>
+<p>Binary classifiers by definition always differentiate between two classes, but there are cases where it doesn't make sense to distinguish one of the classes as positive. For example, if we had a collection of Chinese texts and were trying to classify them into Modern and Classical Chinese, neither class is really distingished as the one we are looking for (i.e. there isn't a <em>natural</em> positive class). If we were building a image classifier that could distinguish between cats and dogs, there also isn't really a "positive" class.</p>
+<p>Metrics like <em>precision</em>, <em>recall</em>, and <em>F<sub>1</sub></em> scores don't treat the positive and negative class symmetrically. While you could force one of the two classes to be positive (e.g. "Modern Chinese" or "images of cats"), this isn't recommended, as you will be mislead by your intuition of these metrics. For this article, we are going to assume that we are dealing with a binary classifier where we are trying to detect something (so the positive class is the presence, and the negative class is the absense). To help with the interpretation, we will talk about our classifier as an alarm going off. Note the alarm goes off based on what our classifier determines the class is, not what the actual class is (e.g. a fire alarm goes off when it "thinks" there is a fire, even though there may not be). </p>
+<h3>Problematic names</h3>
+<p>The different classes are described by the names True Positive (TP), False Positive (FP), True Negative (TN), and False Negative (FN). These names are problematic, as they invite confusion about their definition. The easiest one to remember is True Positive: this is the number of Positive cases our machine learning model identified as Positive. There really isn't any other way to interpret this. Consider the term False Positive, and the following explanations:
+<em> A FP is a case that is <em>actually</em> <em>positive</em>, but we made the (<em>false</em>) identification of negative (wrong)
+</em> A FP is a case that is <em>actually</em> negative, but we made the (<em>false</em>) identification of <em>positive</em> (correct)</p>
+<p>The problem is that we have to remember that the "positive"/"negative" refer to the <em>prediction</em> rather than the actual nature of the class. The "true"/"false" refer to whether or not the prediction was correct. When we start building other concepts such as precision and recall on top of these already confusing names, it is no wonder that we can have trouble keeping them straight.</p>
+<h3>Better names</h3>
+<p>Here are some alternative names for the four classes:</p>
+<table>
+<thead>
+<tr>
+<th>Original Name</th>
+<th>New Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>True Positive (TP)</td>
+<td>Hits (HT)</td>
+<td>The number of positive cases correctly identified</td>
+</tr>
+<tr>
+<td>False Positive (FP)</td>
+<td>False Alarms (FA)</td>
+<td>The number of times we alerted the user, when the thing we were trying to detect wasn't present</td>
+</tr>
+<tr>
+<td>True Negative (TN)</td>
+<td>Correctly Dismissed (CD)</td>
+<td>The number of negative cases correctly identified</td>
+</tr>
+<tr>
+<td>False Negative (FN)</td>
+<td>Overlooked (OL)</td>
+<td>The number of times we missed a case (and didn't alert the user)</td>
+</tr>
+</tbody>
+</table>
+<p>Let's translate precision and recall into these new names.</p>
+<h4>Precision</h4>
+<p>Precision asks "how confident am I that times my alarm went off, it was actually a positive case?". A precision of 80% would mean that 80% of the time that the alarm went off, we have a positive case (that presumably requires action on our part). In our traditional language:</p>
+<div class="math">$$\text{Precision} = \frac{\text{(positives detected)}}{\text{(number of positive identifications)}} = \frac{\text{TP}}{\text{TP} + \text{FP}}$$</div>
+<p>In the new terminology</p>
+<div class="math">$$\text{Precision} = \frac{\text{Hits}}{\text{Hits} + \text{(False Alarms)}}$$</div>
+<h4>Recall</h4>
+<p>Recall asks "what fraction of the positive cases did I detect?". A recall of 70% would mean that 70% of the positive cases would trigger the detector. The remaining 30% would go undetected. In our traditional language:</p>
+<div class="math">$$\text{Recall} = \frac{\text{(positives detected)}}{\text{(total number of positive cases)}} = \frac{\text{TP}}{\text{TP} + \text{FN}}$$</div>
+<p>In the new terminology</p>
+<div class="math">$$\text{Recall} = \frac{\text{Hits}}{\text{Hits} + \text{Overlooked}}$$</div>
+<h2>Summary</h2>
+<p>As Netscape Designer Phil Karlton stated:</p>
+<blockquote>
+<p>There are two hard problems in Computer Science: cache invalidation and naming things.</p>
+</blockquote>
+<p>This article clamed that the traditional names for binary classification (TP/FP/TN/FN) were problematic, as they require some thought to determine what the "positive" and "negative" refer to: the state of the clasifier (whether the "alarm" goes off or not) or the state of the observation (whether the case in question was <em>actually</em> positive or negative). Alternative (but non-standard) names were put forward to try and simplify how we reason about these terms.</p>
+<h2>Related Articles</h2>
+<ul>
+<li>Chad Sherrer's artice on Precision and Recall as conditional probabilities <a href="https://cscherrer.github.io/post/confusion-confusion/"><em>Confusion confusion</em></a></li>
+<li><a href="">Interview Practice with Precision and Recall</a> (to come)</li>
+<li><a href="">These aren't the metrics you're looking for</a> (to come)</li>
+</ul>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=The Bad Names In Classification Problems&amp;url=https://kiwidamien.github.io/the-bad-names-in-classification-problems.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/the-bad-names-in-classification-problems.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/the-bad-names-in-classification-problems.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/metirics.html">Metirics</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/introducing-the-column-transformer.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Introducing the column transformer</h2>
+                            <p class="post-nav-excerpt">The ColumnTransformer allows us to easily apply different transformations to different...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>
