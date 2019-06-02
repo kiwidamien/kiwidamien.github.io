@@ -179,14 +179,15 @@
 <li>What is the positive class?</li>
 <li>What would a recall of 80% mean?</li>
 <li>What would a precision of 75% mean?</li>
-<li>If the recall is 80% and the precision is 75%, what is the FPR?</li>
+<li>If the recall is 80% and the precision is 75%, what is the TPR?</li>
 <li>If the recall is 80% and the precision is 75%, what is the FNR?</li>
 </ol>
 <h4>Answers</h4>
 <ol>
 <li>The positive class is the presence of the disease.</li>
-<li>A recall of 80% would mean that 80% of the positive cases were found by the detector (if you submitted the entire population). Alternatively, a recall of 80% means that there is an 80% chance of someone with the disease setting off the detector.</li>
-<li>A precision of 75% means 75% of the times the detector went off, they were actually positive cases.</li>
+<li>A recall of 80% would mean that 80% of the positive cases were found by the detector (if you submitted the entire population). Alternatively, a recall of 80% means that there is an 80% chance of someone with the disease setting off the detector. The problem with a low recall score is that we would miss people that were unhealthy. If the recall is 80%, we are would not detect 20% of the sick population.</li>
+<li>A precision of 75% means 75% of the times the detector went off, they were actually positive cases. The problem with a low precision score is spending time having people undergo further screenings or using medication unnecessarily. In this example, 25% of the people we flagged as being sick would have unnecessary followups.</li>
+<li>TPR is the same as recall; in this case it is 80%</li>
 </ol>
 <h3>Problem 2: Breathalyzer Tests</h3>
 <ol>
