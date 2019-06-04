@@ -184,7 +184,8 @@
 <li>If the recall is 80% and the precision is 75%, what is the FPR?</li>
 </ol>
 <p>Note: It may not be possible to answer some/any of these questions without additional information.</p>
-<h4>Answers</h4>
+<details>
+<p><summary><strong>Answers</strong></summary></p>
 <ol>
 <li>The positive class is the presence of the disease.</li>
 <li>A recall of 80% would mean that 80% of the positive cases were found by the detector (if you submitted the entire population). Alternatively, a recall of 80% means that there is an 80% chance of someone with the disease setting off the detector. The problem with a low recall score is that we would miss people that were unhealthy. If the recall is 80%, we are would not detect 20% of the sick population.</li>
@@ -203,6 +204,7 @@
 - 75% precision tells us 128 people will set off the detector (96 people is 75% of 128, the other 32 people that set off the detector are healthy)
 - The FPR is the fraction of the healthy population (1080) that set off the detector (25% of 128 = 32). The FPR is 32/1080 = 3%.</p>
 <p>Since our rate changes depending on the assumed baserate, we can conclude that we don't have enough information from precision and recall alone to calculate the FPR.</p>
+</details>
 <h3>Problem 2: Breathalyzer Tests</h3>
 <p>A breathalyzer registers someone's blood alcohol content to tell if they are "over the limit" or "under the influence" of alcohol. It is typically used at roadside police stops to determine if someone is legally able to drive.</p>
 <ol>
@@ -324,22 +326,6 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
     })();
     </script>
-
-<script>
-var coll = document.getElementsByClassName("collapsible");
-var i;
-
-for (i = 0; i < coll.length; i++) {
-  coll[i].addEventListener("click", function() {
-    this.classList.toggle("active");
-    var content = this.nextElementSibling;
-    if (content.style.maxHeight){
-      content.style.maxHeight = null;
-    } else {
-      content.style.maxHeight = content.scrollHeight + "px";
-    } 
-  });
-}
-</script></body>
+</body>
 
 </html>
