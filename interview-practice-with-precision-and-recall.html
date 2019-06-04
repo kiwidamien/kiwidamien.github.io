@@ -212,7 +212,8 @@
 <li>What would a recall of 70% mean?</li>
 <li>What would a precision of 90% mean?</li>
 </ol>
-<h4>Answers</h4>
+<details>
+<p><summary><strong>Answers</strong></summary></p>
 <ol>
 <li>The postive case would be detecting someone with blood alcohol content (BAC) over the limit.</li>
 <li>A recall of 70% means there is a 70% chance of someone who has a BAC over the limit of setting off the detector. A low recall would mean that people wiht high BAC are not gettin caught when stopped.</li>
@@ -221,6 +222,7 @@
 <p>If people failing the breathalyzer are immediately ticketed, and have to contest the ticket, then it is preferrable to favor high precision (i.e. ensure that we only give tickets to those that we think are actually guilty, at the expense of letting some guilty people go). If they have to be submitted to a different field test (e.g. blood test) then we can be a little less insistent on precision, as the cost of falsely flagging someone is to pass them on to a secondary test.</p>
 <p>This example also shows one of the limitations of precision and recall as measures. If the legal limit is 0.08%, failing to flag someone that has 0.0805% counts as much against recall as failing to flag someone with a 0.10% BAC. Likewise, flagging someone with a 0.0795% counts as much against precision as flagging someone with 0.03%. In a real application, you would want to emphasize precision close to the limit, but transition to prioritizing recall for people well over the limit.</p>
 <p>For a breathalyzer, the input is generally just chemical, and we simply have to pick a threshold. If we are looking at a machine learning algorithm that has access to demographic information, we should be very careful when discretizing a continuous variable into two categories and treating mild infractions the same as serious ones.</p>
+</details>
 <h3>Problem 3: Should we approve a loan?</h3>
 <p>We are looking to develop a machine learning algorithm to predict whether someone will pay a loan back or not.</p>
 <ol>
@@ -228,7 +230,8 @@
 <li>What would a recall of 75% mean?</li>
 <li>What would a precision of 85% mean?</li>
 </ol>
-<h4>Answers</h4>
+<details>
+<p><summary><strong>Answers</strong></summary></p>
 <ol>
 <li>The positive class are the borrowers that pay back the loans.</li>
 <li>75% recall means that 75% of the borrowers that would pay back the loan are approved by our system. We miss 25% of people that would have paid us back by rejecting them. In general, the problem with a low recall is that we are rejecting customers who we would have paid us back (and for whom we would have made interest).</li>
@@ -236,6 +239,7 @@
 </ol>
 <p>In this example we would generally prefer to emphasize precision over recall, as approving a bad loan (and losing the capital investment) is more costly than missing out on the profit we could make from a good loan. </p>
 <p>We have to be a little careful here too, as we are binarizing a continuous variable: there is a difference between someone who defaults after paying 1 year of a 5 year loan, and someone who defaults after paying 4 years of a 5 year loan. A product manager might expect you to look at the expected loss of a customer and threshold on that as a more useful (and nuanced) metric, rather than precision.</p>
+</details>
 <h3>Problem 4: Should we</h3>
 <ol>
 <li>What is the positive class?</li>
