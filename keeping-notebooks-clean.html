@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Keeping Notebooks Clean</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/keeping-notebooks-clean.html" rel="canonical" />
+
+        <meta name="description" content="Jupyter notebooks allow for quick experimentation and exploration, but can encourage some bad habits. One subtle error is the usage of...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="Clean code">
+        <meta name="tags" content="best practices">
+        <meta name="tags" content="notebooks">
+        <meta name="tags" content="interview">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/keeping-notebooks-clean.html">
+  <meta property="og:title" content="Keeping Notebooks Clean">
+  <meta property="article:published_time" content="2019-06-13 22:00:00-07:00">
+            <meta property="og:description" content="Jupyter notebooks allow for quick experimentation and exploration, but can encourage some bad habits. One subtle error is the usage of...">
+
+            <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/cover_background/tool_background.svg">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Keeping Notebooks Clean</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Thu 13 June 2019">Thu 13 June 2019</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/tools.html">Tools</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover"
+      style="background-image: url('assets/images/cover_background/tool_background.svg'); background-repeat: repeat; background-size: 100px 100px; background-color: rgb(240,180,82);">
+      <div class="logoimg">
+        <img src='https://kiwidamien.github.io/assets/images/icon/turtle.svg'/>
+      </div>
+      <div class="logoimg">
+        <img src='assets/images/icon/tool_icon.png'/>
+      </div>
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>Jupyter notebooks are useful for a couple of things:</p>
+<ol>
+<li>Experimentation and exploration,</li>
+<li>Adding a narrative to your examples (for example, by including plots).</li>
+</ol>
+<p>Experimentation and exploration is typically messy code; it is not expected to be long-lived, and it is generally not considered worth the effort of refactoring and maintaining the code if it is just going to be thrown away. The second class (adding a narrative) generally requires clean code, as the document is supposed to be long lived. My suggested best practise for such cases is to <em>write meaningful code in external files, and import it</em>. That is, your analysis should be something along the lines of</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="c1"># Your file is analysis.py</span>
+<span class="kn">from</span> <span class="nn">analysis</span> <span class="kn">import</span> <span class="n">get_daily_sales</span>
+
+<span class="n">sales</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;sales.csv&#39;</span><span class="p">)</span>
+
+<span class="n">daily_sales</span> <span class="o">=</span> <span class="n">get_daily_sales</span><span class="p">(</span><span class="n">sales</span><span class="p">,</span> <span class="s1">&#39;2019-01-01&#39;</span><span class="p">,</span> <span class="s1">&#39;2019-06-01&#39;</span><span class="p">)</span>
+<span class="n">daily_sales</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+</pre></div>
+
+
+<p>i.e. the messy data wrangling is happening in <code>analysis.py</code>, allowing the person reading your notebook to focus on your analysis and the narrative. After all, we don't need to see the body of <code>get_daily_sales</code> to know what the <em>intention</em> behind that function is. Written this way, your code should have almost no comments; instead you should be using Markdown cells to make comments about the <em>analysis</em> (e.g. why daily sales is the relevant thing to look at) and not about your functions. In short:</p>
+<blockquote>
+<p>Someone reading your notebook is reading about the analysis and the business case, someone reading <code>analysis.py</code> is reading your code for correctness.</p>
+</blockquote>
+<p>So the <em>short</em> version of this article is
+<em> Explore in the notebook
+</em> Refactor into functions
+<em> Import the functions back into the notebook
+</em> Notebook markdown cells should describe the analysis; the code cells should be short with descriptively named functions.</p>
+<h3>When is it more painful to follow this advice?</h3>
+<p>Sometimes, real world practicalities make this advice difficult to follow. Some specific examples:</p>
+<ul>
+<li><strong>Takehomes:</strong> People evaluating your takehome probably are not going to simply trust that you implemented your functions correctly. They will actually want to look at your code, and it is a hassle for them to jump between your external file and your notebook. </li>
+<li><strong>Teaching:</strong> I have some experience teaching data analytics, which really involves teaching both the analytics skills (what questions should I be asking?) as well as the coding skills (how do I get Python/Pandas to answer this question?). Teaching them both together means having a notebook that contains both the analytics (the what) along with the python implementation (the how). I haven't seen a successful approach of teaching the two separately, and it would increase cognitative load to keep flipping between a Python file and a notebook. The painful irony of not adhearing to best practices while teaching is not lost on me!</li>
+<li><strong>Ad hoc analysis:</strong> Generally I would still advocate this approach for an <em>ad hoc</em> analysis. If you are sharing the analysis with someone else, and the project is too trivial to warrant a github repo, the notebook approach has the advantage of keeping all the code in one file. I would generally advocate making two files.</li>
+</ul>
+<h2>Keeping your notebook clean</h2>
+<p>So, for some reason or another, you have your code in a Jupyter notebook. Here are some steps you can take to clean it:</p>
+<ol>
+<li>Install an autoformatter, such as <code>black</code> (optional)</li>
+<li>Group your functions together into external files, such as <code>analysis.py</code>, <code>plotting.py</code></li>
+<li>Run a code linter on your external files</li>
+<li>Write all your imports into their own cells (e.g. <code>from analysis import *</code>)</li>
+<li>Run your notebook from beg</li>
+</ol>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Keeping Notebooks Clean&amp;url=https://kiwidamien.github.io/keeping-notebooks-clean.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/keeping-notebooks-clean.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/keeping-notebooks-clean.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/clean-code.html">Clean code</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best practices</a><a href="https://kiwidamien.github.io/tag/notebooks.html">notebooks</a><a href="https://kiwidamien.github.io/tag/interview.html">interview</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/globals-are-bad.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">Globals Are Bad</h2>
+                            <p class="post-nav-excerpt">Jupyter's use for quick experimentation encourages the use of global variables, as we...</p>
+                        </section>
+                    </a>
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/interview-practice-with-precision-and-recall.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Interview Practice with Precision and Recall</h2>
+                            <p class="post-nav-excerpt">How to prepare for those annoying questions about precision and recall in interviews.</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>
