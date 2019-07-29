@@ -175,7 +175,58 @@
 <p>This isn't fundamentally any different from what is happening when we find coefficients using MSE and then select the model with the lowest MAE, instead of using MAE as both the loss and the scoring. The difference is that recall is a bad loss function because it is trivial to optimize. In classification, we are a lot happier using a loss and a metric that are different.</p>
 <p>(I would put forward an opinion that because recall is a bad <em>loss</em>, it is also a bad <em>metric</em>. If I would not optimize against recall directly -- and I shouldn't -- it is because it is pathelogical, and so I shouldn't use it to select between my models either. Instead, in a given problem, I should more carefully consider the trade-offs between false positives and false negatives, and use that to pick an appropriate scoring method. I also believe I am in the minority in this view that recall is a pathelogical score, so it is probably best you don't repeat this point of view while on an interview.)</p>
 <h2>Making a custom score</h2>
-<p>Now that we understand the difference between a loss and a scorer, how do we implement a custom score? The first step is to see if we need to, or if it is already implemented for us.</p>
+<p>Now that we understand the difference between a loss and a scorer, how do we implement a custom score? The first step is to see if we need to, or if it is already implemented for us. We can find a list of build-in scores with the following code:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="k">print</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">sklearn</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">SCORERS</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+</pre></div>
+
+
+<p>This lists the 35 (at the time of writing) different scores that sklearn already recognizes.</p>
+<p>If the score you want isn't on that list, then you can build a custom scorer. The easiest way to do this is to make an ordinary python function <code>my_score_function(y_true, y_predict, **kwargs)</code>, then use sklearn's <code>make_scorer</code> to create an object with all the properties that sklearn's grid search expects. This sounds complicated, but let's build mean absolute error as a scorer to see how it would work. Note this scorer is already built-in, so in practice we would use that, but this is an easy to understand scorer:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">make_scorer</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">mean_abs_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">):</span>
+  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_predict</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">mean_abs_scorer</span> <span class="o">=</span> <span class="n">make_scorer</span><span class="p">(</span><span class="n">mean_abs_error</span><span class="p">,</span> <span class="n">greater_is_better</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The <code>make_scorer</code> function takes two arguments: the function you want to transform, and a statment about whether you want to maximize the score (like accuracy and <span class="math">\(R^2\)</span>) or minimize it (like MSE or MAE). In the standard implementation, it is assumed that the a higher score is better, which is why we see the functions we want to minimize appear in the negative form, such as <code>neg_mean_absolute_error</code>: minimizing the mean absolute error is the same as maximizing the <em>negative</em> of the mean absolute error. The <code>make_scorer</code> function allows us to specify directly whether we should maximize or minimize.</p>
+<p>We can now use the scorer in cross-validation like so:</p>
+<div class="highlight"><pre><span></span><span class="c1"># This was our original way of using cross-validation using MAE:</span>
+<span class="c1"># Note we would use the scoring parameter in GridSearchCV or others</span>
+<span class="n">rcv</span> <span class="o">=</span> <span class="n">RidgeCV</span><span class="p">(</span><span class="n">alphas</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="s1">&#39;neg_mean_absolute_error&#39;</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="c1"># This is equivalent, using our custom scorer</span>
+<span class="n">rcv</span> <span class="o">=</span> <span class="n">RidgeCV</span><span class="p">(</span><span class="n">alphas</span><span class="p">,</span> <span class="n">scoring</span><span class="o">=</span><span class="n">mean_abs_scorer</span><span class="p">,</span> <span class="n">cv</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+</pre></div>
+
+
+<h3>Unfortunate choice of terminology</h3>
+<p>In the scikit-learn documentation, they make an unfortunate distinction is made between scores you attempt to maximize, and scores you attempt to minimize. They call a score you try to maximize a "score", and a score you try to minimize a "loss" in <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html">this part of the documentation</a> when describing <code>greater_is_better</code>.</p>
+<p>I am not using those terms the same way here! It isn't you that is confused! I don't use the same terminology as sklearn for a few reasons:</p>
+<ul>
+<li>The function described, <code>make_scorer</code> should make ... scorers. It seems perverse to say some scorers return scores, and some return losses, which sklearn tries to do. This scorer is a score, and this scorer is a loss is just far too confusing.</li>
+<li>The term loss is commonly used in fitting algorithms in literate. This gives a nice distinction between a loss (used when fitting) and a score (used when choosing between fit models). Sklearn's usage "uses up" a perfectly good term "loss" instead of just talking about a score we are trying to minimize.</li>
+</ul>
+<h3>Implementing MAPE</h3>
+<p>The scorer we implemented about wasn't that useful, as we could already use the predefined <code>'neg_mean_absolute_error'</code> string to accomplish the same goal. Let's implement a new score, mean absolute percentage error (MAPE), that isn't predefined in sklearn. The definition of MAPE is </p>
+<div class="math">$$ \text{MAPE} = \frac{1}{n}\sum_{i=1}^n |\text{\% error in }y_{\text{predict, i}}| = \frac{1}{n}\sum_i \frac{|y_{\text{true, i}} - y_{\text{predict, i}}|}{|y_{\text{true, i}}|} $$</div>
+<p>In code, this is</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mape</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">):</span>
+  <span class="c1"># Note this blows up if y_true = 0</span>
+  <span class="c1"># Ignore for demo -- in some sense an unsolvable</span>
+  <span class="c1"># problem with MAPE as an error metric</span>
+  <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span>
+  <span class="n">y_predict</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y_predict</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_predict</span><span class="p">)</span><span class="o">/</span><span class="n">y_true</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+
+<span class="n">mape_scorer</span> <span class="o">=</span> <span class="n">make_scorer</span><span class="p">(</span><span class="n">mape</span><span class="p">,</span> <span class="n">greater_is_better</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+
+
 <h2>Making a custom loss</h2>
 <p>Making a custom loss is a lot harder, and I have devoted a separate (upcoming) <a href="/custom_loss.html">post</a> to it. The simple approaches are</p>
 <ul>
