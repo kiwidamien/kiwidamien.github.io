@@ -214,7 +214,7 @@
 </ul>
 <h3>Implementing MAPE</h3>
 <p>The scorer we implemented about wasn't that useful, as we could already use the predefined <code>'neg_mean_absolute_error'</code> string to accomplish the same goal. Let's implement a new score, mean absolute percentage error (MAPE), that isn't predefined in sklearn. The definition of MAPE is </p>
-<div class="math">$$ \text{MAPE} = \frac{1}{n}\sum_{i=1}^n |\text{\% error in }y_{\text{predict, i}}| = \frac{1}{n}\sum_i \frac{|y_{\text{true, i}} - y_{\text{predict, i}}|}{|y_{\text{true, i}}|} $$</div>
+<div class="math">$$ \text{MAPE} = \frac{1}{n}\sum_{i=1}^n |\text{% error in }y_{\text{predict, i}}| = \frac{1}{n}\sum_i \frac{|y_{\text{true, i}} - y_{\text{predict, i}}|}{|y_{\text{true, i}}|} $$</div>
 <p>In code, this is</p>
 <div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">mape</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_predict</span><span class="p">):</span>
   <span class="c1"># Note this blows up if y_true = 0</span>
