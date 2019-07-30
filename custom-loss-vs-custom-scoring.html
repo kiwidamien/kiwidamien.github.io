@@ -174,7 +174,7 @@
 
 <p>It is possible to get 100% recall by simply predicting everyone has the disease. That is <em>not</em> what the code above does. Instead, for each combination of hyperparameters we train a random forest in the usual way (minimizing the entropy or Gini score). Once we have all of those different trained models, <em>then</em> we compare their recall and select the best one.</p>
 <p>This isn't fundamentally any different from what is happening when we find coefficients using MSE and then select the model with the lowest MAE, instead of using MAE as both the loss and the scoring. The difference is that recall is a bad loss function because it is trivial to optimize. In classification, we are a lot happier using a loss function and a score functoin that are different.</p>
-<p>(I would put forward an opinion that because recall is a bad <em>loss</em>, it is also a bad <em>metric</em>. If I would not optimize against recall directly -- and I shouldn't -- it is because it is pathelogical, and so I shouldn't use it to select between my models either. Instead, in a given problem, I should more carefully consider the trade-offs between false positives and false negatives, and use that to pick an appropriate scoring method. I also believe I am in the minority in this view that recall is a pathelogical score, so it is probably best you don't repeat this point of view while on an interview.)</p>
+<p>(I would put forward an opinion that because recall is a bad <em>loss</em>, it is also a bad <em>scorer</em>. If I would not optimize against recall directly -- and I shouldn't -- it is because it is pathelogical, and so I shouldn't use it to select between my models either. Instead, in a given problem, I should more carefully consider the trade-offs between false positives and false negatives, and use that to pick an appropriate scoring method. I also believe I am in the minority in this view that recall is a pathelogical score, so it is probably best you don't repeat this point of view while on an interview.)</p>
 <h2>Making a custom score</h2>
 <p>Now that we understand the difference between a loss and a scorer, how do we implement a custom score? The first step is to see if we need to, or if it is already implemented for us. We can find a list of build-in scores with the following code:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sklearn</span>
@@ -231,7 +231,7 @@
 <h2>Making a custom loss</h2>
 <p>Making a custom loss is a lot harder, and I have devoted a separate (upcoming) <a href="/custom_loss.html">post</a> to it. The simple approaches are</p>
 <ul>
-<li>Write your own estimator in sklearn. <a href="https://alex.miller.im/posts/linear-model-custom-loss-function-regularization-python/">Alex Millar</a> has done this in one of his posts, which my article borrows from.</li>
+<li>Write your own estimator in sklearn. <a href="https://alex.miller.im/posts/linear-model-custom-loss-function-regularization-python/">Alex Miller</a> has done this in one of his posts, which my article borrows from.</li>
 <li>Write a custom loss in Keras. Neural nets can be used for large networks with interpretability problems, but we can also use just a single neuron to get linear models with completely custom loss functions.</li>
 </ul>
 <h2>Summary</h2>
