@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Encoding categorical variables</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/encoding-categorical-variables.html" rel="canonical" />
+
+        <meta name="description" content="Non-numeric features generally have to be encoded into one or more numeric features before applying machine learning models. This...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="pandas">
+        <meta name="tags" content="categorical">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/encoding-categorical-variables.html">
+  <meta property="og:title" content="Encoding categorical variables">
+  <meta property="article:published_time" content="2019-08-25 17:10:00-07:00">
+            <meta property="og:description" content="Non-numeric features generally have to be encoded into one or more numeric features before applying machine learning models. This...">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Encoding categorical variables</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sun 25 August 2019">Sun 25 August 2019</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>Many machine learning algorithms are not able to use non-numeric data. While many features we might use, such as a person's age, or height, are numeric there are many that are not. Usually these features are represented by strings, and we need some way of transforming them to numbers before using scikit-learn's algorithms. The different ways of doing this are called <em>encodings</em>.</p>
+<p>Examples of the features we might need to encode:</p>
+<ul>
+<li>Which college someone when to
+  <em>e.g. "Harvard", "Rutgers", "UCLA", "Berkeley", "Stanford", ...</em></li>
+<li>The state someone lives in
+  <em>e.g. California, New York, Washington, Nevada, New Hampshire, ...</em></li>
+<li>The highest degree someone has
+  <em>e.g. High school, Bachelors, Masters, PhD</em></li>
+<li>Someone's profession
+  <em>e.g. Doctor, Lawyer, Plumber, Gardener, ....</em></li>
+<li>The cuisine type of a restaurant
+  <em>e.g. Chinese, Indian, Italian, American, Greek, ....</em></li>
+<li>For medical problems, patient race might be relevant to track (either because it is associated with risk factors for various diseases, or to help identify if there are populations that are not receiving appropriate attention)</li>
+</ul>
+<p>The way you encode categorical variables changes how effective your machine learning algorithm is. This article will go over some common encoding techniques, as well as their advantages and disadvantages.</p>
+<h2>Some terminology</h2>
+<p><strong>Levels</strong>: A levels of a non-numeric feature are the number of distinct values. The examples listed above are all examples of levels. The number of levels can vary wildly: the number of races for a patient is typically four (asian, black, hispanic, and white), the number of states for the US is 51 (if we include DC separately), while the number of professions is in the thousands.</p>
+<p><strong>Ordinal</strong>: If the levels are <em>ordered</em>, then we call the feature <em>ordinal</em>. For example, if a class grade such as "B+" or "A" is a non-numeric feature, but the letters are not just different, they are ordered (an "A" is better than a "B+", which is better than a "C-" etc). The standard way of dealing with ordered features is just to map every level onto a number, in a way that preserves the encoding. This is called <em>Label</em> or <em>Ordinal Encoding</em>.</p>
+<p><strong>Categorical</strong>: If the levels are just different without an ordering, we call the feature <em>categorical</em>. For example, professions or car brands are categorical. If we use an encoding that maps levels to numbers, we introduce an ordering on the categories, which <em>may</em> not be desirable. Most of this article will be about encoding categorical variables.</p>
+<p><strong>One hot encoding</strong>: The standard technique in books for creating categorical features is to use <em>one-hot encoding</em>, which creates a new feature <em>per level</em> of the original feature. For example, the <code>race</code> category would become 4 new features: <code>race_asian</code>, <code>race_black</code>, <code>race_hispanic</code>, and <code>race_white</code>. The profession feature would turn into thousands of new features (e.g. <code>profession_doctor</code>, <code>profession_plumber</code>, etc). This is also common because Pandas implements it using the <code>get_dummies</code> function, so it is easy to implement within Pandas. This technique becomes problematic if you have a <em>lot</em> of levels, especially for tree-based models such as Random Forests.</p>
+<h2>Some considerations</h2>
+<ul>
+<li>
+<p><strong>Do you have many levels?</strong>
+  If so, using an encoding that has a level-per-feature is difficult for tree-based models. Trees separate on features that "split" the data into different classes effectively. If there are many levels, it is likely only a tiny fraction of the data belong to one level, so it will be hard for trees to "find" that feature to split on. Typically this isn't a problem for linear models.</p>
+</li>
+<li>
+<p><strong>Are there many examples of each level?</strong>
+  If there are only 5 doctors in your dataset, you probably are not going to know the doctor category very well (nor will it generalize). Some encoders deal with this gracefully, while others won't. You might consider making an explicit "other" category for levels, or grouping categories together. This is a problem for all models.</p>
+</li>
+<li>
+<p><strong>Could you have new categories at test time?</strong>
+  Some categorical variables can be completely specified at training time (e.g. the levels for race or blood type would be known even with zero training examples). Other categories, such as profession, are so broad that we probably learn the levels from the training data. Some encoders deal with levels that are <em>only</em> in the test set better than others.</p>
+</li>
+<li>
+<p><strong>Are the categories related?</strong>
+  Many encoding schemes treat two different levels as "equally different" from one another. If looking at color of a car, a typical encoding has no idea that "brick red" and "red" are more related than "red" and "yellow". One way of solving this problem is to cluster the categories into higher levels, and then encode that category as well.</p>
+</li>
+<li>
+<p><strong>Is it reversible? Does it store a lookup table?</strong>
+  Given the encoding of a feature, can you recover the original value? If so, we call the encoding <em>reversible</em>. Generally, reversible features also require a lot of storage if there are a lot of levels (to figure out how to go backward). I would generally see reversible as a negative <em>if</em> it requries storing a lookup table as well.</p>
+</li>
+</ul>
+<p>We will be looking at the following encoding schemes. We will be encoding a feature with N levels.</p>
+<table>
+<thead>
+<tr>
+<th>Encoder</th>
+<th>Num Features</th>
+<th>Encoding Ordered</th>
+<th>Reversible (for levels in train set)</th>
+<th>Tree-model friendly</th>
+<th>Useful for clustering problems?</th>
+<th>Test-only friendly</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Label</td>
+<td>1</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+<td>F</td>
+</tr>
+<tr>
+<td>One-hot</td>
+<td>N or N-1</td>
+<td>F</td>
+<td>T</td>
+<td>T</td>
+<td>Problematic</td>
+<td>Depends</td>
+</tr>
+<tr>
+<td>Hash</td>
+<td>User set</td>
+<td>F</td>
+<td>F</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+</tr>
+<tr>
+<td>Target</td>
+<td>1</td>
+<td>T (on target)</td>
+<td>F</td>
+<td>T</td>
+<td>F(*)</td>
+<td>T</td>
+</tr>
+<tr>
+<td>DRACuLa</td>
+<td>4</td>
+<td>F</td>
+<td>F</td>
+<td>T</td>
+<td>T</td>
+<td>T</td>
+</tr>
+</tbody>
+</table>
+<p>None of the encoders discussed in this article support hierarchical categories (i.e. they don't allow specifying that some levels are "closer" or "more similar" than others). This is something you typically need to feature engineer.</p>
+<p>While most of the focus of this article is on supervised learning problems, categorical variables need to be encoded before using unsupervised learning methods like clustering. If your encoding method creates a large number of categories (such as one hot encoding) you risk making clusters hard to find due to the <a href="https://en.wikipedia.org/wiki/Curse_of_dimensionality">curse of dimensionality</a>. Some encoding techniques, such as Target Encoding, require the use of a <code>target</code> variable which may not be available in an unsupervised learning problem.</p>
+<h2>Category Encoders Package</h2>
+<p>For some of these encoders, there are versions in scikit-learn (e.g. Label Encoding and One-hot encoding). I am recommending use of the category encoders package instead, as it is generally more robust to features only seen in the test set, and can return a dataframe with named columns.</p>
+<p>To install this package, run this on your terminal:</p>
+<div class="highlight"><pre><span></span>pip install category_encoders
+</pre></div>
+
+
+<p>There is a <code>conda-forge</code> version as well, but currently gets version 1.3.0, which has some usability issues. Pip installs the most up-to-date version (which is 2.0 at the time of writing).</p>
+<p>Like scikit-learn, category encoders uses a standard format for all its encoders. If we have a training set <code>df_train</code> (with targets <code>y_train</code>), and a test set <code>df_test</code> (with targets <code>y_test</code>), we can use the following pattern with category encoders:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">DesiredEncoder</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="n">cols_I_want_to_encode</span><span class="p">],</span> <span class="n">return_df</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c1"># Some encoding techniques use information about the</span>
+<span class="c1"># target values during training</span>
+<span class="n">df_train_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+<span class="c1"># Note that there is not information leakage, we don&#39;t</span>
+<span class="c1"># know about the target values on the test set.</span>
+<span class="n">df_test_transformer</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df_test</span><span class="p">)</span>
+</pre></div>
+
+
+<h2>The encoders</h2>
+<p>This section is a <em>brief</em> introduction to the different encoders. We will use the example of predicting whether someone will pay back a loan. Our data takes the form:</p>
+<table>
+<thead>
+<tr>
+<th>annual_income</th>
+<th>debt_to_income</th>
+<th>loan_amount</th>
+<th>purpose</th>
+<th>grade</th>
+<th>repaid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>120,000</td>
+<td>0.100</td>
+<td>3,500</td>
+<td>medical</td>
+<td>A</td>
+<td>True</td>
+</tr>
+<tr>
+<td>130,000</td>
+<td>0.500</td>
+<td>13,800</td>
+<td>medical</td>
+<td>C</td>
+<td>False</td>
+</tr>
+<tr>
+<td>220,000</td>
+<td>0.400</td>
+<td>33,500</td>
+<td>medical</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>65,000</td>
+<td>0.250</td>
+<td>2,000</td>
+<td>refinance</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>60,000</td>
+<td>0.200</td>
+<td>2,200</td>
+<td>refinance</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>45,000</td>
+<td>0.312</td>
+<td>5,500</td>
+<td>auto</td>
+<td>D</td>
+<td>True</td>
+</tr>
+<tr>
+<td>75,000</td>
+<td>0.111</td>
+<td>2,000</td>
+<td>auto</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>24,000</td>
+<td>0.400</td>
+<td>500</td>
+<td>other</td>
+<td>C</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<p>Here <strong>repaid</strong> is the target. The <code>grade</code> is an ordinal feature from a ratings agency, and <code>purpose</code> is a categorical feature with 4 levels: medical, refinance, auto, and other.</p>
+<p>This <a href="https://gist.github.com/kiwidamien/1ee8d6217610be9ed1dcda81dbc9eba4">gist</a> shows how to use the different encoders on each of these columns.</p>
+<h3>LabelEncoder / OrdinalEncoder</h3>
+<p>Also called an OrdinalEncoder, this maps each level to an individual number. By default, the strings will be assigned numbers in increasing alphabetical order. If the grades in our training set are <code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code> then OrdinalEncoder will map them to 1, 2, 3, 4 respectively. If a level is missing from the dataset (e.g. such as <code>C</code> missing from the dataset in our example) then we would have <code>A</code>&rightarrow; 1, <code>B</code> &rightarrow; 2, and <code>D</code> &rightarrow; 3.</p>
+<p>Here is the default usage:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">OrdinalEncoder</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;grade&#39;</span><span class="p">],</span> <span class="n">return_df</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c1"># Assume our loan data has been imported as df already</span>
+<span class="c1"># and split into df_train and df_test</span>
+<span class="n">df_train_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_train</span><span class="p">)</span>
+<span class="n">df_test_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df_test</span><span class="p">)</span>
+</pre></div>
+
+
+<p>If we have a value that isn't seen in the data set, the <code>OrdinalEncoder</code> will return <code>-1</code> by default. You can change this with the <code>handle_error</code> argument to <code>OrdinalEncoder</code> to make it use <code>nan</code> or raise an error instead.</p>
+<p>If we want to specify the mapping as well, it is a little tricker. The documentation is outdated on how to do this. Let's say we want to ensure that <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code> map to 1, 2, 3, 4 respectively. We need to write function that takes the category value (<code>A</code> -- <code>D</code>) and returns the category, then pass that in as a mapping:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
+
+<span class="k">def</span> <span class="nf">map_for_grades</span><span class="p">(</span><span class="n">grade</span><span class="p">):</span>
+  <span class="s2">&quot;Returns 1 for &#39;A&#39;, 2 for &#39;B&#39;, etc&quot;</span>
+  <span class="k">return</span> <span class="nb">ord</span><span class="p">(</span><span class="n">grade</span><span class="p">)</span> <span class="o">-</span> <span class="nb">ord</span><span class="p">(</span><span class="sb">`A`</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">OrdinalEncoder</span><span class="p">(</span><span class="n">mapping</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="s1">&#39;grade&#39;</span><span class="p">,</span> <span class="s1">&#39;mapping&#39;</span><span class="p">:</span> <span class="n">map_for_grades</span><span class="p">},</span>
+                            <span class="n">return_df</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="c1"># Assume our loan data has been imported as df already</span>
+<span class="c1"># and split into df_train and df_test</span>
+<span class="n">df_train_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_train</span><span class="p">)</span>
+<span class="n">df_test_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df_test</span><span class="p">)</span>
+</pre></div>
+
+
+<p>After encoding, our loan dataframe would take the form</p>
+<table>
+<thead>
+<tr>
+<th>annual_income</th>
+<th>debt_to_income</th>
+<th>loan_amount</th>
+<th>purpose</th>
+<th>grade</th>
+<th>repaid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>120,000</td>
+<td>0.100</td>
+<td>3,500</td>
+<td>medical</td>
+<td>1</td>
+<td>True</td>
+</tr>
+<tr>
+<td>65,000</td>
+<td>0.250</td>
+<td>2,000</td>
+<td>refinance</td>
+<td>2</td>
+<td>False</td>
+</tr>
+<tr>
+<td>60,000</td>
+<td>0.200</td>
+<td>2,200</td>
+<td>refinance</td>
+<td>2</td>
+<td>True</td>
+</tr>
+<tr>
+<td>45,000</td>
+<td>0.312</td>
+<td>5,500</td>
+<td>auto</td>
+<td>4</td>
+<td>True</td>
+</tr>
+</tbody>
+</table>
+<h4>When to use it?</h4>
+<p>When the categories have an obvious order (i.e. ordinal categories)</p>
+<h4>Does the mapping from categories to levels matter?</h4>
+<p>If the model is using tree-based methods, only the ordering matters.</p>
+<p>If you are using linear models, or models based off linear models (e.g. SVMs), then the actual values matter. If you encode <code>A</code> as 1, <code>B</code> as 2, <code>C</code> as 3, the model has baked in moving from <code>A</code> to <code>B</code> is as different as moving from <code>B</code> to <code>C</code>.</p>
+<h4>When to avoid?</h4>
+<p>Don't use this encoding method if you don't have ordered categories.</p>
+<h3>One hot encoder</h3>
+<p>One-hot encoding is one of the first encoding schemes taught when we see categorical variables. It maps each <em>level</em> of a category to its own column, and each row has a <code>1</code> for the category it belongs to, and a zero otherwise.</p>
+<p>If we wanted to encode the <code>purpose</code> column of our dataframe:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">OneHotEncoder</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;purpose&#39;</span><span class="p">],</span> <span class="n">use_cat_names</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                        <span class="n">return_df</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">df_train_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_train</span><span class="p">)</span>
+<span class="n">df_test_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df_test</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The output of the encoder is</p>
+<table>
+<thead>
+<tr>
+<th>annual_income</th>
+<th>debt_to_income</th>
+<th>loan_amount</th>
+<th>purpose_auto</th>
+<th>purpose_medical</th>
+<th>purpose_refinance</th>
+<th>purpose_other</th>
+<th>grade</th>
+<th>repaid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>120,000</td>
+<td>0.100</td>
+<td>3,500</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>A</td>
+<td>True</td>
+</tr>
+<tr>
+<td>130,000</td>
+<td>0.500</td>
+<td>13,800</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>C</td>
+<td>False</td>
+</tr>
+<tr>
+<td>220,000</td>
+<td>0.400</td>
+<td>33,500</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>65,000</td>
+<td>0.250</td>
+<td>2,000</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>60,000</td>
+<td>0.200</td>
+<td>2,200</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>45,000</td>
+<td>0.312</td>
+<td>5,500</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>D</td>
+<td>True</td>
+</tr>
+<tr>
+<td>75,000</td>
+<td>0.111</td>
+<td>2,000</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>24,000</td>
+<td>0.400</td>
+<td>500</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>C</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<p>There are lots of issues and opinions around One-hot encoding, such as whether you should drop a column or not (the so-called "dummy variable trap"). Category encoders <em>doesn't</em> drop a column, so a row of all zeros would occur if you see a column that you haven't seen in training. A more detailed article about one-hot encoding is <a href="/are_you_gettting_burned_by_one_hot_encoding.html">here</a></p>
+<h4>When to use?</h4>
+<p>This is a good choice if there are only a few levels.</p>
+<h4>When to avoid?</h4>
+<p>When you have a large number of levels for the category, particularly if you are using tree-based models.</p>
+<h3>Target and James-Stein encoders</h3>
+<p>These encoders use knowledge of the target variable to do the encoding. Target encoding replaces each category with the average value of the target for rows with that category, similar to Naive Bayes. For example, if we were looking at salaries as a target, each row with "teacher" in the profession column would be replaced with the average salary for teachers (or, more precisely, the average salary of teachers <em>in the training set</em>). This can be a very nice way of dealing with a lot of categories.</p>
+<p>Because these encoders use the target value, you have to be careful when doing cross-validation to encode during each step of cross-validation, rather than just encode.</p>
+<p>Let's see this in action with our dataset.  We will encode the purpose column, using the repaid column as a target:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
+
+<span class="n">encoder</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">TargetEncoder</span><span class="p">(</span><span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;purpose&#39;</span><span class="p">],</span> <span class="n">smoothing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_df</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+<span class="n">df_train_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_train</span><span class="p">,</span> <span class="n">df_train</span><span class="p">[</span><span class="s1">&#39;repaid&#39;</span><span class="p">])</span>
+<span class="n">df_test_transformed</span> <span class="o">=</span> <span class="n">encoder</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df_test</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This gives us</p>
+<table>
+<thead>
+<tr>
+<th>annual_income</th>
+<th>debt_to_income</th>
+<th>loan_amount</th>
+<th>purpose</th>
+<th>grade</th>
+<th>repaid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>120,000</td>
+<td>0.100</td>
+<td>3,500</td>
+<td>0.33333</td>
+<td>A</td>
+<td>True</td>
+</tr>
+<tr>
+<td>130,000</td>
+<td>0.500</td>
+<td>13,800</td>
+<td>0.33333</td>
+<td>C</td>
+<td>False</td>
+</tr>
+<tr>
+<td>220,000</td>
+<td>0.400</td>
+<td>33,500</td>
+<td>0.33333</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>65,000</td>
+<td>0.250</td>
+<td>2,000</td>
+<td>0.50000</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>60,000</td>
+<td>0.200</td>
+<td>2,200</td>
+<td>0.50000</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>45,000</td>
+<td>0.312</td>
+<td>5,500</td>
+<td>1.0000</td>
+<td>D</td>
+<td>True</td>
+</tr>
+<tr>
+<td>75,000</td>
+<td>0.111</td>
+<td>2,000</td>
+<td>1.0000</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>24,000</td>
+<td>0.400</td>
+<td>500</td>
+<td>0.50000</td>
+<td>C</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<p>We see that only 1/3 of medical bills are repaid, and that "medical" is replaced with 1/3. We can do this check for each category (e.g. <code>df_train.groupby(['purpose'])['repaid'].mean()</code> will do it, or we can do it by hand) and check that <em>almost</em> every category works. We have</p>
+<table>
+<thead>
+<tr>
+<th>purpose</th>
+<th># of rows</th>
+<th>Fraction repaid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>medical</td>
+<td>3</td>
+<td>1/3</td>
+</tr>
+<tr>
+<td>refinance</td>
+<td>2</td>
+<td>1/2</td>
+</tr>
+<tr>
+<td>auto</td>
+<td>2</td>
+<td>1</td>
+</tr>
+<tr>
+<td>other</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>The sole exception is <code>other</code>, where 100% of examples in the training set were repaid, but it was encoded as <code>0.5000</code>. For only <em>one</em> example, TargetEncoder will use the average of the dataset. (This is actually <a href="https://github.com/scikit-learn-contrib/categorical-encoding/blob/f2e408efe58362f20573a903090d70629a327faf/category_encoders/target_encoder.py#L172">hard-coded into the TargetEncoder</a> class!)</p>
+<p>The <code>smoothing</code> parameter in <code>TargetEncoder</code> allows us to interpolate between the overall average (e.g. the average number of repaid loans) and the average number in our category. Roughly speaking, as the number of examples in a particular level increase, the more the average will increase. This is similar to Laplace Smoothing in Naive Bayes, but that adds "fake counts" rather than doing a direct re-weighting. As <code>smoothing</code> increases, the overall average becomes more dominant for the same number of rows.</p>
+<p>The James-Stein encoder is similar to <code>TargetEncoder</code>. The way that it differs is how it treats smoothing. For target encoder, the only thing that matters for smoothing is the number of rows in a given category. The James-Stein encoder uses the amount of variation within examples of that category, and compares to variation over the entire dataset. This is described in more detail in the article on <a href="https://kiwidamien.github.io/derivations-and-conjugate-priors-average-ratings.html">shrinkage for regression problems</a>.</p>
+<h4>When to use?</h4>
+<p>Useful in a wide variety of cases. I typically prefer using the <code>JamesSteinEncoder</code> over the <code>TargetEncoder</code>, but the <code>TargetEncoder</code> is slightly easier to describe.</p>
+<h4>When not to use?</h4>
+<p>If there are only a few examples per category, this technique is not going to be particularly useful. We also have to be aware that we need to "save" the group average for each category, which can be problematic if we have a <em>lot</em> of categories. An example of a bad feature to use TargetEncoders on might be the "referrer page" for the ad someone came from.</p>
+<h3>Hash Encoder</h3>
+<p>Hash encoders is an encoder that is suitable for a large number of levels. It has a lot of different compromises, but scales extremely well. The user specifies the number of binary output columns that they want as output.</p>
+<p>The central part of the hashing encoder is the <em>hash function</em>, which maps the value of a category into a number. For example, a (bad) hash function might treat "a=1", "b=2", etc, so <code>hash("critic") = 3 + 18 + 9 + 20 + 9 + 3 = 62</code>. Because we are not memorizing the different levels, it deals with new levels gracefully. If we said that we wanted 4 binary features, we can take the value written in binary, and select the lowest 4 bits. For example, <code>hash("critic") = 62</code>, and in binary <code>62=0b111110</code>; taking the lower 4 bits would give the values <code>1</code>, <code>1</code>, <code>1</code>, <code>0</code>.</p>
+<p>It can be hard to see why this series of steps would lead to a useful encoding. Here is the basic intuition:</p>
+<ul>
+<li>One-hot encoding gives problems because tree-based methods don't deal well with a lot of features. Hash encoding limits the number of output features, so we (hope) a good fraction of them have "feature_1" as 0 and 1, so trees can still select them and split on them.</li>
+<li>Instead, we can think of each level as having a roughly 50% chance of getting a 0 or a 1 in each of the output features. If there are interesting properties shared by different levels, we hope that some of the features that share values will be selected by the tree models (and the others are ignored). As we get more output columns, the chances of "correlated" levels having the same value in at least one column goes up.</li>
+</ul>
+<p>Earlier, I claimed that "sum the values of letters in the level" wasn't a good hash function. That is because it is too easy for two words to have the same hash, so it is impossible for us to tell them apart after the encoding. For example, <code>hash("general")=62</code>, so the naive hash suggested would never be able to distinguish between the professions of "critic" and "general". The supplied hash functions make it unlikely to get collisions, but it is something to be aware of.</p>
+<p>We will show how to use the hash encoder on our dataset, but we would only actually use it in practice on a feature that had <em>many</em> levels.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
+
+<span class="n">encoder_purpose</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">HashingEncoder</span><span class="p">(</span><span class="n">n_components</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;purpose&#39;</span><span class="p">])</span>
+<span class="n">encoder_purpose</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">df_train</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This returns</p>
+<table>
+<thead>
+<tr>
+<th>col_0</th>
+<th>col_1</th>
+<th>col_2</th>
+<th>annual_income</th>
+<th>debt_to_income</th>
+<th>loan_amount</th>
+<th>grade</th>
+<th>repaid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>120,000</td>
+<td>0.100</td>
+<td>3,500</td>
+<td>A</td>
+<td>True</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>130,000</td>
+<td>0.500</td>
+<td>13,800</td>
+<td>C</td>
+<td>False</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>220,000</td>
+<td>0.400</td>
+<td>33,500</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>65,000</td>
+<td>0.250</td>
+<td>2,000</td>
+<td>B</td>
+<td>False</td>
+</tr>
+<tr>
+<td>0</td>
+<td>0</td>
+<td>1</td>
+<td>60,000</td>
+<td>0.200</td>
+<td>2,200</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>45,000</td>
+<td>0.312</td>
+<td>5,500</td>
+<td>D</td>
+<td>True</td>
+</tr>
+<tr>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>75,000</td>
+<td>0.111</td>
+<td>2,000</td>
+<td>B</td>
+<td>True</td>
+</tr>
+<tr>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+<td>24,000</td>
+<td>0.400</td>
+<td>500</td>
+<td>C</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+<p>Note that we have a collision between <code>medical</code> and <code>refinance</code>, as they both get mapped to <code>(0, 0, 1)</code>. They don't actually get mapped to the same value, but the values of the three bits that we take happen to coincide.</p>
+<h4>When to use?</h4>
+<p>When using tree models with <em>lots</em> of different levels.</p>
+<h4>When to avoid?</h4>
+<p>You want interpretability for the contribution of each of your levels. You won't be able to give a good answer to "how does being a medical loan differ from an auto loan" easily with this encoder, even though they don't collide.</p>
+<h3>Dracula</h3>
+<p>The DRACuLa encoder isn't supported yet by category encoders. It is an interesting exercise to "roll your own". It is generally for classification problems. We are going to introduce the concept of "buckets": the most frequently occurring B levels get their own buckets. All other levels share the leftover bucket.</p>
+<p>For binary classification, DRACuLa produces 4 columns:</p>
+<ul>
+<li><code>N+</code>: the number of times the positive class has been seen in this bucket,</li>
+<li><code>N-</code>: the number of times the negative class has been seen in this bucket,</li>
+<li><code>log(N+/N-)</code>: the log likelihood,</li>
+<li><code>is_leftover</code>: boolean, indicating if this was one of the <code>B</code> levels that got its own bucket (<code>False</code>), or if we were in the "leftover" bucket (<code>True</code>)</li>
+</ul>
+<p>This categorical encoder is used when you have a <em>lot</em> of levels. It is commonly used by advertisers to encode the IP addresses (typically <code>xxx.xxx.*.*</code> are all placed into a single bucket, and only a few of the top domains are explicitly tracked).</p>
+<p>A good video description of this encoding is given <a href="https://www.youtube.com/watch?v=7sZeTxIrnxs">here</a>.</p>
+<h4>When to use?</h4>
+<p>When you have a lot of different levels, especially if you think you will see new levels at test time.</p>
+<p>One of the big advantages over <code>TargetEncoder</code> is that only the most frequent <code>B</code> categories need to be remembered explicitly; all other categories are lumped together. It also contains the actual counts, rather than just the target value/log likelihood, which can help us be down-weight samples with low counts.</p>
+<p>Compared to <code>HashEncoder</code>, the output is still reasonably interpretable and understandable.</p>
+<h4>When to avoid</h4>
+<p>This is a pretty flexible encoding scheme, but isn't build directly into <code>scikit-learn</code>. It offers some advantages over <code>TargetEncoder</code>, but <code>TargetEncoder</code> works nicely out-of-the-box.</p>
+<p>This technique doesn't extend naturally to regression problems.</p>
+<h2>Summary</h2>
+<ul>
+<li>Machine learning algorithms in scikit-learn need to work with numeric features; non-numeric features need to be <em>encoded</em> as numbers before training.</li>
+<li>Some numeric features (e.g. zip code) are technically numbers, but are really acting as categories.</li>
+<li>How you choose to encode the categories can have a big effect on how effectively your model can learn from the data.</li>
+<li>There are many more methods than just "map each level to its own number" (Label Encoding) and "map each level to its own column" (one-hot encoding).</li>
+<li>
+<p>Things to consider about your encoding scheme:</p>
+</li>
+<li>
+<p>Do you have many levels in this category?</p>
+</li>
+<li>Do you have many examples of each level?</li>
+<li>Are you using a linear-type model (which deals gracefully with many features), or a tree-type model or distance metric (which do not)?</li>
+<li>Do you need to store a lookup table for categories?</li>
+</ul>
+<p>The answers to these questions will help determine which encoders are suitable for your problem.
+<em> You can choose different encodings for each column in your dataframe.
+</em> The category encoders package does a better job of dealing with categories robustly than the scikit-learn encoders.</p>
+<p>This article has focused on the ideas behind the different encoding schemes; this <a href="https://gist.github.com/kiwidamien/1ee8d6217610be9ed1dcda81dbc9eba4">gist</a> goes through the code on a similar example.</p>
+<h2>References</h2>
+<ul>
+<li><a href="/are-you-gettting-burned-by-one-hot-encoding.html">Are you getting burned by one-hot encoding?</a> A deeper look at one hot encoding.</li>
+<li><a href="/get-dummies-is-evil.html">Why <code>pd.get_dummies</code> is Evil, Use Category Encoders Instead</a></li>
+<li><a href="https://kiwidamien.github.io/derivations-and-conjugate-priors-average-ratings.html">Derivations and Conjugate Priors</a> shows how the James-Stein encoder interpolates between the group mean and the population mean.</li>
+<li><a href="https://contrib.scikit-learn.org/categorical-encoding/">Category Encoders</a> reference page (and links within)</li>
+<li><a href="https://www.youtube.com/watch?v=7sZeTxIrnxs">Distributed Robust Algorithm for CoUnt-based LeArning</a> (DRACuLa)
+This video is a great reference.</li>
+</ul>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Encoding categorical variables&amp;url=https://kiwidamien.github.io/encoding-categorical-variables.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/encoding-categorical-variables.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/encoding-categorical-variables.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/pandas.html">pandas</a><a href="https://kiwidamien.github.io/tag/categorical.html">categorical</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/custom-loss-vs-custom-scoring.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Custom Loss vs Custom Scoring</h2>
+                            <p class="post-nav-excerpt">Scikit learn grid search functions include a scoring parameter. Scorers allow us to...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>
