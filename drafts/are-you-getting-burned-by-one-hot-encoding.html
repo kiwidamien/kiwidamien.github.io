@@ -7,7 +7,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 
 
-  <title>An Introduction To Pipelines</title>
+  <title>Are You Getting Burned By One-Hot Encoding?</title>
 
 
   <meta name="HandheldFriendly" content="True" />
@@ -42,14 +42,15 @@
   <![endif]-->
 
 
-    <link href="https://kiwidamien.github.io/drafts/an-introduction-to-pipelines.html" rel="canonical" />
+    <link href="https://kiwidamien.github.io/drafts/are-you-getting-burned-by-one-hot-encoding.html" rel="canonical" />
 
-        <meta name="description" content="Pipelines allow us to keep our analyses tidy and robust.">
+        <meta name="description" content="A common technique for transforming categorical variables into a form suitable for machine learning is called "one-hot encoding" or...">
 
         <meta name="author" content="Damien Martin">
 
         <meta name="tags" content="pipelines">
         <meta name="tags" content="preprocessing">
+        <meta name="tags" content="categorical">
 
         <meta property="og:locale" content="" />
     <meta property="og:site_name" content="Stacked Turtles" />
@@ -61,10 +62,10 @@
 
   <meta property="og:type" content="article">
             <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
-  <meta property="og:url" content="https://kiwidamien.github.io/drafts/an-introduction-to-pipelines.html">
-  <meta property="og:title" content="An Introduction To Pipelines">
-  <meta property="article:published_time" content="2019-09-10 13:00:00-07:00">
-            <meta property="og:description" content="Pipelines allow us to keep our analyses tidy and robust.">
+  <meta property="og:url" content="https://kiwidamien.github.io/drafts/are-you-getting-burned-by-one-hot-encoding.html">
+  <meta property="og:title" content="Are You Getting Burned By One-Hot Encoding?">
+  <meta property="article:published_time" content="2019-09-01 13:00:00-07:00">
+            <meta property="og:description" content="A common technique for transforming categorical variables into a form suitable for machine learning is called "one-hot encoding" or...">
 
             <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
 </head>
@@ -102,11 +103,11 @@
             <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
           </span>
         </nav>
-        <h1 class="post-title">An Introduction To Pipelines</h1>
+        <h1 class="post-title">Are You Getting Burned By One-Hot Encoding?</h1>
         <!-- TODO : Proper class for headline -->
         <span class="post-meta">
                 <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
-            | <time datetime="Tue 10 September 2019">Tue 10 September 2019</time>
+            | <time datetime="Sun 01 September 2019">Sun 01 September 2019</time>
         </span>
         <span class="post-meta">
           Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
@@ -129,25 +130,29 @@
         <article class="post">
         <div class="inner">
             <section class="post-content">
-                
+                <h2>References</h2>
+<ul>
+<li><a href="/encoding-categorical-variables.html">Encoding categorical variables</a></li>
+<li><a href="/get-dummies-is-evil.html">Why <code>pd.get_dummies</code> is Evil, Use Category Encoders Instead</a></li>
+</ul>
             </section>
 
             <section class="post-info">
                 <div class=a"post-share">
-                    <a class="twitter" href="https://twitter.com/share?text=An Introduction To Pipelines&amp;url=https://kiwidamien.github.io/drafts/an-introduction-to-pipelines.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <a class="twitter" href="https://twitter.com/share?text=Are You Getting Burned By One-Hot Encoding?&amp;url=https://kiwidamien.github.io/drafts/are-you-getting-burned-by-one-hot-encoding.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
                     <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
                     </a>
-                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/drafts/an-introduction-to-pipelines.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/drafts/are-you-getting-burned-by-one-hot-encoding.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
                     <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
                     </a>
-                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/drafts/an-introduction-to-pipelines.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/drafts/are-you-getting-burned-by-one-hot-encoding.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
                     <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
                     </a>
                     <div class="clear"></div>
                 </div>
 
                 <aside class="post-tags">
-<a href="https://kiwidamien.github.io/tag/pipelines.html">pipelines</a><a href="https://kiwidamien.github.io/tag/preprocessing.html">preprocessing</a>                </aside>
+<a href="https://kiwidamien.github.io/tag/pipelines.html">pipelines</a><a href="https://kiwidamien.github.io/tag/preprocessing.html">preprocessing</a><a href="https://kiwidamien.github.io/tag/categorical.html">categorical</a>                </aside>
 
                 <div class="clear"></div>
 
