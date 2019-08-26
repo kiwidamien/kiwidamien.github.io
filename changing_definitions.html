@@ -130,12 +130,12 @@
         <div class="inner">
             <section class="post-content">
                 <h1>True by definition</h1>
-<p>A definition creates a term that allows us to express a complicated idea, or make a fuzzy idea (hopefully) unambiguious. Definitions also provide a standard so we can easily see how things are changing over time, provided the definition doesn't change. Ultimately, however, a definition is only useful if it accounts for something we are actuallint interested in measuring or tracking. </p>
-<p>To make this more concrete, lets consider the ficitious example of a rainy-day equipment review site, <code>Umbella.com</code>. They want to measure how many users it is losing, which is generally referred to as (user) <em>churn</em>.</p>
+<p>A definition creates a term that allows us to express a complicated idea, or make a fuzzy idea (hopefully) unambiguious. Definitions also provide a standard so we can easily see how things are changing over time, provided the definition doesn't change. Ultimately, however, a definition is only useful if it accounts for something we are actually interested in measuring or tracking. </p>
+<p>To make this more concrete, lets consider the ficitious example of a rainy-day equipment review site, <code>Umbrella.com</code>. They want to measure how many users it is losing, which is generally referred to as (user) <em>churn</em>.</p>
 <p>To measure this, we need a more explicit definition of churn. What does it mean to lose a user? If <code>Umbrella.com</code> was a paid subscription service, a reasonable answer would be a user churns when she cancels her subscription. In our example, <code>Umbrella.com</code> is a free ad-supported website, and users lose interest and stop coming to the site. How long should we wait between visits before we deem that a user isn't comping back? A day? A week? A month?</p>
 <p>After a lot of back and forth, the product team at <code>Umbrella.com</code> arrive at the following defintion:</p>
 <blockquote>
-<p>A churned user is a registered user that hasn't visited the site over the last 14 days.</p>
+<p>A churned user is a registered user that hasn't had a logged in session on the site over the last 14 days.</p>
 </blockquote>
 <h2>The power of definitions</h2>
 <p>The definition is important, because it helps shape conversations around the company. As a <em>definition</em>, using any number of days (e.g. 1 day, 14 days, or 144 days) makes sense. As a metric, you want it to be long enough that your long term users are not churning under the definition, but short enough that you can actually take action and see it reflected in the metric. A lot of time and thought should be put into your definition, especially if your definition is going to go into a metric as it is going to direct decisions.</p>
