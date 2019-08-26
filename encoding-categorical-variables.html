@@ -342,7 +342,7 @@
 <p>Here <strong>repaid</strong> is the target. The <code>grade</code> is an ordinal feature from a ratings agency, and <code>purpose</code> is a categorical feature with 4 levels: medical, refinance, auto, and other.</p>
 <p>This <a href="https://gist.github.com/kiwidamien/1ee8d6217610be9ed1dcda81dbc9eba4">gist</a> shows how to use the different encoders on each of these columns.</p>
 <h3>LabelEncoder / OrdinalEncoder</h3>
-<p>Also called an OrdinalEncoder, this maps each level to an individual number. By default, the strings will be assigned numbers in increasing alphabetical order. If the grades in our training set are <code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code> then OrdinalEncoder will map them to 1, 2, 3, 4 respectively. If a level is missing from the dataset (e.g. such as <code>C</code> missing from the dataset in our example) then we would have <code>A</code>&rightarrow; 1, <code>B</code> &rightarrow; 2, and <code>D</code> &rightarrow; 3.</p>
+<p>Also called an OrdinalEncoder, this maps each level to an individual number. By default, the strings will be assigned numbers in increasing alphabetical order. If the grades in our training set are <code>A</code>, <code>B</code>, <code>C</code>, and <code>D</code> then OrdinalEncoder will map them to 1, 2, 3, 4 respectively. If a 'C' was missing from the training set then we would have <code>A</code>&rightarrow; 1, <code>B</code> &rightarrow; 2, and <code>D</code> &rightarrow; 3.</p>
 <p>Here is the default usage:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
 
@@ -356,12 +356,12 @@
 
 
 <p>If we have a value that isn't seen in the data set, the <code>OrdinalEncoder</code> will return <code>-1</code> by default. You can change this with the <code>handle_error</code> argument to <code>OrdinalEncoder</code> to make it use <code>nan</code> or raise an error instead.</p>
-<p>If we want to specify the mapping as well, it is a little tricker. The documentation is outdated on how to do this. Let's say we want to ensure that <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code> map to 1, 2, 3, 4 respectively. We need to write function that takes the category value (<code>A</code> -- <code>D</code>) and returns the category, then pass that in as a mapping:</p>
+<p>If we want to specify the mapping as well, it is a little tricker. The documentation is outdated on how to do this. Let's say we want to ensure that <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code> map to 1, 3, 5, and 10 respectively. We need to write function that takes the category value (<code>A</code> -- <code>D</code>) and returns the category, then pass that in as a mapping:</p>
 <div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">category_encoders</span> <span class="kn">as</span> <span class="nn">ce</span>
 
 <span class="k">def</span> <span class="nf">map_for_grades</span><span class="p">(</span><span class="n">grade</span><span class="p">):</span>
-  <span class="s2">&quot;Returns 1 for &#39;A&#39;, 2 for &#39;B&#39;, etc&quot;</span>
-  <span class="k">return</span> <span class="nb">ord</span><span class="p">(</span><span class="n">grade</span><span class="p">)</span> <span class="o">-</span> <span class="nb">ord</span><span class="p">(</span><span class="sb">`A`</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+  <span class="s2">&quot;Returns 1 for &#39;A&#39;, 3 for &#39;B&#39;, 5 for &#39;C&#39; and  10 for others&quot;</span>
+  <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">}</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">grade</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 
 <span class="n">encoder</span> <span class="o">=</span> <span class="n">ce</span><span class="o">.</span><span class="n">OrdinalEncoder</span><span class="p">(</span><span class="n">mapping</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;col&#39;</span><span class="p">:</span> <span class="s1">&#39;grade&#39;</span><span class="p">,</span> <span class="s1">&#39;mapping&#39;</span><span class="p">:</span> <span class="n">map_for_grades</span><span class="p">},</span>
                             <span class="n">return_df</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
@@ -395,11 +395,27 @@
 <td>True</td>
 </tr>
 <tr>
+<td>130,000</td>
+<td>0.500</td>
+<td>13,800</td>
+<td>medical</td>
+<td>5</td>
+<td>False</td>
+</tr>
+<tr>
+<td>220,000</td>
+<td>0.400</td>
+<td>33,500</td>
+<td>medical</td>
+<td>3</td>
+<td>False</td>
+</tr>
+<tr>
 <td>65,000</td>
 <td>0.250</td>
 <td>2,000</td>
 <td>refinance</td>
-<td>2</td>
+<td>3</td>
 <td>False</td>
 </tr>
 <tr>
@@ -407,7 +423,7 @@
 <td>0.200</td>
 <td>2,200</td>
 <td>refinance</td>
-<td>2</td>
+<td>3</td>
 <td>True</td>
 </tr>
 <tr>
@@ -415,8 +431,24 @@
 <td>0.312</td>
 <td>5,500</td>
 <td>auto</td>
-<td>4</td>
+<td>10</td>
 <td>True</td>
+</tr>
+<tr>
+<td>75,000</td>
+<td>0.111</td>
+<td>2,000</td>
+<td>auto</td>
+<td>3</td>
+<td>True</td>
+</tr>
+<tr>
+<td>24,000</td>
+<td>0.400</td>
+<td>500</td>
+<td>other</td>
+<td>5</td>
+<td>False</td>
 </tr>
 </tbody>
 </table>
@@ -424,7 +456,7 @@
 <p>When the categories have an obvious order (i.e. ordinal categories)</p>
 <h4>Does the mapping from categories to levels matter?</h4>
 <p>If the model is using tree-based methods, only the ordering matters.</p>
-<p>If you are using linear models, or models based off linear models (e.g. SVMs), then the actual values matter. If you encode <code>A</code> as 1, <code>B</code> as 2, <code>C</code> as 3, the model has baked in moving from <code>A</code> to <code>B</code> is as different as moving from <code>B</code> to <code>C</code>.</p>
+<p>If you are using linear models, or models based off linear models (e.g. SVMs), then the actual values matter. If you encode <code>A</code> as 1, <code>B</code> as 2, <code>C</code> as 3, the model has baked-in moving from <code>A</code> to <code>B</code> is as different as moving from <code>B</code> to <code>C</code>.</p>
 <h4>When to avoid?</h4>
 <p>Don't use this encoding method if you don't have ordered categories.</p>
 <h3>One hot encoder</h3>
@@ -546,7 +578,7 @@
 </tr>
 </tbody>
 </table>
-<p>There are lots of issues and opinions around One-hot encoding, such as whether you should drop a column or not (the so-called "dummy variable trap"). Category encoders <em>doesn't</em> drop a column, so a row of all zeros would occur if you see a column that you haven't seen in training. A more detailed article about one-hot encoding is <a href="/are_you_gettting_burned_by_one_hot_encoding.html">here</a></p>
+<p>There are lots of issues and opinions around One-hot encoding, such as whether you should drop a column or not (the so-called "dummy variable trap"). Category encoders <em>doesn't</em> drop a column, so a row of all zeros would occur if you see a column that you haven't seen in training. A more detailed article about one-hot encoding is <a href="/are-you-getting-burned-by-one-hot-encoding.html">here</a>.</p>
 <h4>When to use?</h4>
 <p>This is a good choice if there are only a few levels.</p>
 <h4>When to avoid?</h4>
@@ -675,7 +707,7 @@
 </tr>
 </tbody>
 </table>
-<p>The sole exception is <code>other</code>, where 100% of examples in the training set were repaid, but it was encoded as <code>0.5000</code>. For only <em>one</em> example, TargetEncoder will use the average of the dataset. (This is actually <a href="https://github.com/scikit-learn-contrib/categorical-encoding/blob/f2e408efe58362f20573a903090d70629a327faf/category_encoders/target_encoder.py#L172">hard-coded into the TargetEncoder</a> class!)</p>
+<p>The sole exception is <code>other</code>, where 0% of examples in the training set were repaid, but it was encoded as <code>0.5000</code>. For only <em>one</em> example, TargetEncoder will use the average of the dataset. (This is actually <a href="https://github.com/scikit-learn-contrib/categorical-encoding/blob/f2e408efe58362f20573a903090d70629a327faf/category_encoders/target_encoder.py#L172">hard-coded into the TargetEncoder</a> class!)</p>
 <p>The <code>smoothing</code> parameter in <code>TargetEncoder</code> allows us to interpolate between the overall average (e.g. the average number of repaid loans) and the average number in our category. Roughly speaking, as the number of examples in a particular level increase, the more the average will increase. This is similar to Laplace Smoothing in Naive Bayes, but that adds "fake counts" rather than doing a direct re-weighting. As <code>smoothing</code> increases, the overall average becomes more dominant for the same number of rows.</p>
 <p>The James-Stein encoder is similar to <code>TargetEncoder</code>. The way that it differs is how it treats smoothing. For target encoder, the only thing that matters for smoothing is the number of rows in a given category. The James-Stein encoder uses the amount of variation within examples of that category, and compares to variation over the entire dataset. This is described in more detail in the article on <a href="https://kiwidamien.github.io/derivations-and-conjugate-priors-average-ratings.html">shrinkage for regression problems</a>.</p>
 <h4>When to use?</h4>
@@ -684,7 +716,12 @@
 <p>If there are only a few examples per category, this technique is not going to be particularly useful. We also have to be aware that we need to "save" the group average for each category, which can be problematic if we have a <em>lot</em> of categories. An example of a bad feature to use TargetEncoders on might be the "referrer page" for the ad someone came from.</p>
 <h3>Hash Encoder</h3>
 <p>Hash encoders is an encoder that is suitable for a large number of levels. It has a lot of different compromises, but scales extremely well. The user specifies the number of binary output columns that they want as output.</p>
-<p>The central part of the hashing encoder is the <em>hash function</em>, which maps the value of a category into a number. For example, a (bad) hash function might treat "a=1", "b=2", etc, so <code>hash("critic") = 3 + 18 + 9 + 20 + 9 + 3 = 62</code>. Because we are not memorizing the different levels, it deals with new levels gracefully. If we said that we wanted 4 binary features, we can take the value written in binary, and select the lowest 4 bits. For example, <code>hash("critic") = 62</code>, and in binary <code>62=0b111110</code>; taking the lower 4 bits would give the values <code>1</code>, <code>1</code>, <code>1</code>, <code>0</code>.</p>
+<p>The central part of the hashing encoder is the <em>hash function</em>, which maps the value of a category into a number. For example, a (bad) hash function might treat "a=1", "b=2", and sum all the values together of the label together. For example:</p>
+<div class="highlight"><pre><span></span><span class="nb">hash</span><span class="p">(</span><span class="s2">&quot;critic&quot;</span><span class="p">)</span> <span class="o">=</span> <span class="mi">3</span> <span class="o">+</span> <span class="mi">18</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">+</span> <span class="mi">20</span> <span class="o">+</span> <span class="mi">9</span> <span class="o">+</span> <span class="mi">3</span> <span class="o">=</span> <span class="mi">62</span>
+</pre></div>
+
+
+<p>Because we are not memorizing the different levels, it deals with new levels gracefully. If we said that we wanted 4 binary features, we can take the value written in binary, and select the lowest 4 bits. For example, <code>hash("critic") = 62</code>, and in binary <code>62=0b111110</code>; taking the lower 4 bits would give the values <code>1</code>, <code>1</code>, <code>1</code>, <code>0</code>.</p>
 <p>It can be hard to see why this series of steps would lead to a useful encoding. Here is the basic intuition:</p>
 <ul>
 <li>One-hot encoding gives problems because tree-based methods don't deal well with a lot of features. Hash encoding limits the number of output features, so we (hope) a good fraction of them have "feature_1" as 0 and 1, so trees can still select them and split on them.</li>
