@@ -309,9 +309,11 @@
 <ul>
 <li>Instead of dealing with species, maybe you have classes <code>Cats</code>, <code>Dogs</code>, <code>Birds</code>, <code>Reptiles</code>, <code>Fish</code></li>
 <li>Instead of dealing with neighborhoods of New York like <code>Chinatown</code> and <code>DUMBO</code>, you use the boroughs (Manhatten, Queens, the Bronx, Brooklyn, and Staten Island).</li>
-<li><strong>Keep the first K levels with an "Other"</strong>
-  Many problems have some common levels that are most important to get right from a business perspective, and then other categories that you don't have a lot of data on. It might be worth lumping levels together <em>not</em> because we thing they are similar, but we don't really have eonugh data to say anything about them. For example, a California company might with customers in all states, but 80% of its business is from California, 15% for Oregon, and the remaining 5% across the other 48 states. An encoding such as <code>(State_CA, State_OR, State_OTHER)</code> makes sense in this context.</li>
 </ul>
+</li>
+<li>
+<p><strong>Keep the first K levels with an "Other"</strong>
+  Many problems have some common levels that are most important to get right from a business perspective, and then other categories that you don't have a lot of data on. It might be worth lumping levels together <em>not</em> because we thing they are similar, but we don't really have eonugh data to say anything about them. For example, a California company might with customers in all states, but 80% of its business is from California, 15% for Oregon, and the remaining 5% across the other 48 states. An encoding such as <code>(State_CA, State_OR, State_OTHER)</code> makes sense in this context.</p>
 </li>
 </ul>
 <p>Summarizing the "dummy variable trap" discussion:
