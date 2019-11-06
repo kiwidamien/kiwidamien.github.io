@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Stylish Pandas</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/stylish-pandas.html" rel="canonical" />
+
+        <meta name="description" content="As the Zen of Python states, "readability counts". With a few simple tips and tricks, we can make our Pandas dataframes a lot more readable.">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="tricks">
+        <meta name="tags" content="formatting">
+        <meta name="tags" content="notebook">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/stylish-pandas.html">
+  <meta property="og:title" content="Stylish Pandas">
+  <meta property="article:published_time" content="2018-11-05 18:25:00-08:00">
+            <meta property="og:description" content="As the Zen of Python states, "readability counts". With a few simple tips and tricks, we can make our Pandas dataframes a lot more readable.">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Stylish Pandas</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Mon 05 November 2018">Mon 05 November 2018</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <h1>Stylish Pandas Dataframes</h1>
+<p>When used in an ETL, we generally don't format numbers on the screen, and styling our dataframes isn't that useful. If we are using a notebook, we are generally writing code to communicate our result, either as an exploratory data analysis (where we want to read and quickly act on results) or as part of a reproducible report for others.</p>
+<p>By default, Jupyter outputs our dataframes in a Jupyter notebook in nice HTML tables. Sometimes the formatting of these tables can still make them difficult to read, specifically:</p>
+<ul>
+<li>
+<p>Jupyter truncates the number of rows (and columns). There is a good argument for limiting the number of columns displayed. When doing EDA, however, it can be useful to scroll through multiple columns.</p>
+</li>
+<li>
+<p>When you have very large numbers, such as <code>10639524</code> it can be difficult to read them as 106 million (and change) without visual breaks. Especially since the number is actually only <code>10,638,524</code> (i.e. 10.6 million and change).</p>
+</li>
+<li>
+<p>An excessive number of decimal places can make comparing numbers between different rows difficult.</p>
+</li>
+</ul>
+<p>According to the <em>Zen of Python</em>, "readability counts". This article goes through some tricks to make your Jupyter notebook dataframes a little more readable.</p>
+<h2>Number formatting</h2>
+<p>An example DataFrame with code is posted in <a href="https://nbviewer.jupyter.org/gist/kiwidamien/f808d4b5e4efeb072d60c14def32253a">this gist</a>, which uses campaign finance data. Let's look at a slightly simplified version, which contains fewer columns:</p>
+<table>
+<thead>
+<tr>
+<th>Last Name</th>
+<th>First Name</th>
+<th>Party</th>
+<th>Individual Contrib</th>
+<th>Candidate Contrib</th>
+<th>Transfers</th>
+<th>Other</th>
+<th>Total Funding</th>
+<th>Individual % of total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clinton</td>
+<td>Hillary</td>
+<td>Democrat</td>
+<td>2.311585e+08</td>
+<td>997159.15</td>
+<td>33940000.00</td>
+<td>8446040.85</td>
+<td>2.745417e+08</td>
+<td>0.841980</td>
+</tr>
+<tr>
+<td>Sanders</td>
+<td>Bernard</td>
+<td>Democrat</td>
+<td>2.306704e+08</td>
+<td>0</td>
+<td>1500000.00</td>
+<td>3252100.00</td>
+<td>2.354225e+08</td>
+<td>0.979814</td>
+</tr>
+<tr>
+<td>Cruz</td>
+<td>Rafael</td>
+<td>Republican</td>
+<td>9.211106e+07</td>
+<td>0</td>
+<td>250012.93</td>
+<td>263277.07</td>
+<td>9.262435e+07</td>
+<td>0.994458</td>
+</tr>
+<tr>
+<td>Trump</td>
+<td>Donald</td>
+<td>Republican</td>
+<td>3.695986e+07</td>
+<td>49950643.36</td>
+<td>2201313.93</td>
+<td>2186292.71</td>
+<td>9.129811e+07</td>
+<td>0.404826</td>
+</tr>
+<tr>
+<td>Carson</td>
+<td>Benjamin</td>
+<td>Republican</td>
+<td>6.346140e+07</td>
+<td>25000.00</td>
+<td>0.00</td>
+<td>757560.00</td>
+<td>6.424396e+07</td>
+<td>0.987819</td>
+</tr>
+</tbody>
+</table>
+<p>This dataframe has some very large numbers that have defaulted to scientific notation, as well as percentages, and "normal" numbers such as 25000. It doesn't have too many columns, but does have multiple numbers.</p>
+<h3>Global change of number formats</h3>
+<p>The simplest thing we can do is to set the format for all numbers, which we can do with the command <code>pd.options</code> structure:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Add a comma and keep to two d.p.</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="s1">&#39;{:,.2f}&#39;</span><span class="o">.</span><span class="n">format</span>
+</pre></div>
+
+
+<p>We need to pass <code>float_format</code> a <em>function</em> rather than a specific format string. Writing string with <code>format</code> (and no parethesis) is a function that we are passing. There is no specific "string" formatting for <code>float_format</code>, we are using the standard string formatting from Python. We could this code slightly less cryptically as</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">format_float</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;{value:,.2f}&#39;</span>
+
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="n">format_float</span>
+</pre></div>
+
+
+<p>The head of our dataframe would now be displayed as </p>
+<table>
+<thead>
+<tr>
+<th>Last Name</th>
+<th>First Name</th>
+<th>Party</th>
+<th>Individual Contrib</th>
+<th>Candidate Contrib</th>
+<th>Transfers</th>
+<th>Other</th>
+<th>Total Funding</th>
+<th>Individual % of total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clinton</td>
+<td>Hillary</td>
+<td>Democrat</td>
+<td>231,158,512.33</td>
+<td>997,159.15</td>
+<td>33,940,000.00</td>
+<td>8,446,040.85</td>
+<td>274,541,697.77</td>
+<td>0.84</td>
+</tr>
+<tr>
+<td>Sanders</td>
+<td>Bernard</td>
+<td>Democrat</td>
+<td>230,670,405.61</td>
+<td>0.00</td>
+<td>1,500,000.00</td>
+<td>3,252,100.00</td>
+<td>235,422,542.44</td>
+<td>0.98</td>
+</tr>
+<tr>
+<td>Cruz</td>
+<td>Rafael</td>
+<td>Republican</td>
+<td>92,111,063.05</td>
+<td>0.00</td>
+<td>250,012.93</td>
+<td>263,277.07</td>
+<td>992,624,351.05</td>
+<td>0.99</td>
+</tr>
+<tr>
+<td>Trump</td>
+<td>Donald</td>
+<td>Republican</td>
+<td>36,959,857.71</td>
+<td>49,950,643.36</td>
+<td>2,201,313.93</td>
+<td>2,186,292.71</td>
+<td>91,298,110.38</td>
+<td>0.40</td>
+</tr>
+<tr>
+<td>Carson</td>
+<td>Benjamin</td>
+<td>Republican</td>
+<td>63,461,402.63</td>
+<td>25,000.00</td>
+<td>0.00</td>
+<td>757,560.00</td>
+<td>64,243,961.26</td>
+<td>0.99</td>
+</tr>
+</tbody>
+</table>
+<p>Note that all numbers, including the percentages, have commas and two decimal places. This global change will also make <em>all</em> dataframes have this format (which might be what you want).</p>
+<h3>Styling individual columns</h3>
+<p>Let's make the percentages look nice. Here is an example of how to format percentages:</p>
+<div class="highlight"><pre><span></span><span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;{:.1%}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mf">0.1033</span><span class="p">)</span>
+<span class="s1">&#39;10.3%&#39;</span>
+</pre></div>
+
+
+<p>To style the dataframe <code>df</code>, we can use the <code>df.style.format(format_dict)</code>, where <code>format_dict</code> has column names for keys, and the format string as the value. We can called our dataframe <code>contribution</code> to contain the financial information for each candidate. In this case, we could use</p>
+<div class="highlight"><pre><span></span><span class="c1"># Note the value is a format STRING, NOT a function!</span>
+<span class="n">format_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;Individual </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">:</span> <span class="s1">&#39;{:.1%}&#39;</span>
+<span class="p">}</span>
+
+<span class="c1"># our dataframe containing the data is called contribution</span>
+<span class="n">contribution</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_dict</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The output is</p>
+<table>
+<thead>
+<tr>
+<th>Last Name</th>
+<th>First Name</th>
+<th>Party</th>
+<th>Individual Contrib</th>
+<th>Candidate Contrib</th>
+<th>Transfers</th>
+<th>Other</th>
+<th>Total Funding</th>
+<th>Individual % of total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clinton</td>
+<td>Hillary</td>
+<td>Democrat</td>
+<td>2.311585e+08</td>
+<td>997159.15</td>
+<td>33940000.00</td>
+<td>8446040.85</td>
+<td>2.745417e+08</td>
+<td>84.2%</td>
+</tr>
+<tr>
+<td>Sanders</td>
+<td>Bernard</td>
+<td>Democrat</td>
+<td>2.306704e+08</td>
+<td>0</td>
+<td>1500000.00</td>
+<td>3252100.00</td>
+<td>2.354225e+08</td>
+<td>98.0%</td>
+</tr>
+<tr>
+<td>Cruz</td>
+<td>Rafael</td>
+<td>Republican</td>
+<td>9.211106e+07</td>
+<td>0</td>
+<td>250012.93</td>
+<td>263277.07</td>
+<td>9.262435e+07</td>
+<td>99.4%</td>
+</tr>
+<tr>
+<td>Trump</td>
+<td>Donald</td>
+<td>Republican</td>
+<td>3.695986e+07</td>
+<td>49950643.36</td>
+<td>2201313.93</td>
+<td>2186292.71</td>
+<td>9.129811e+07</td>
+<td>40.5%</td>
+</tr>
+<tr>
+<td>Carson</td>
+<td>Benjamin</td>
+<td>Republican</td>
+<td>6.346140e+07</td>
+<td>25000.00</td>
+<td>0.00</td>
+<td>757560.00</td>
+<td>6.424396e+07</td>
+<td>98.8%</td>
+</tr>
+</tbody>
+</table>
+<h4>What happened to the default formatting? An aside on stylers vs dataframes</h4>
+<p>Our earlier <code>pd.options.display.float_format = '{:,.2f}'.format</code> command changed the default style for all <em>dataframes</em> in our notebook. When we access the style attribute, a <em>styler</em> is returned. Specifically:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th><code>type(Variable)</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>contribution</code></td>
+<td><code>pd.DataFrame</code></td>
+</tr>
+<tr>
+<td><code>contribution.style</code></td>
+<td><code>pd.io.formats.style.Styler</code></td>
+</tr>
+</tbody>
+</table>
+<p>As a side effect, dataframe methods don't work on stylers. So while <code>contribution.head().style.format(format_dict)</code> is legal, <code>contribution.style.format(format_dict).head()</code> is not, as a styler doesn't have a <code>head()</code> method.</p>
+<p>The default styling options <em>don't</em> apply to styler objects (annoyingly). If you use the format specification for a column, you will get the original formatting for all the other columns. A trick I use to get around this is to use <code>select_dtypes</code> to select the numeric columns, and then use a dictionary comprehension to generate a dictionary with defaults, and then override the columns I want. In code:</p>
+<div class="highlight"><pre><span></span><span class="c1"># set ALL float columns to &#39;${:,.2f}&#39; formatting (including the percentage)</span>
+<span class="n">format_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">col_name</span><span class="p">:</span> <span class="s1">&#39;${:,.2f}&#39;</span> <span class="k">for</span> <span class="n">col_name</span> <span class="ow">in</span> <span class="n">contribution</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="p">}</span>
+<span class="c1"># override the percentage column</span>
+<span class="n">format_dict</span><span class="p">[</span><span class="s1">&#39;Individual </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;{:.1%}&#39;</span>
+
+<span class="n">contribution</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_dict</span><span class="p">)</span>
+</pre></div>
+
+
+<p>This will display</p>
+<table>
+<thead>
+<tr>
+<th>Last Name</th>
+<th>First Name</th>
+<th>Party</th>
+<th>Individual Contrib</th>
+<th>Candidate Contrib</th>
+<th>Transfers</th>
+<th>Other</th>
+<th>Total Funding</th>
+<th>Individual % of total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clinton</td>
+<td>Hillary</td>
+<td>Democrat</td>
+<td>$231,158,512.33</td>
+<td>$997,159.15</td>
+<td>$33,940,000.00</td>
+<td>$8,446,040.85</td>
+<td>$274,541,697.77</td>
+<td>84.2%</td>
+</tr>
+<tr>
+<td>Sanders</td>
+<td>Bernard</td>
+<td>Democrat</td>
+<td>$230,670,405.61</td>
+<td>$0.00</td>
+<td>$1,500,000.00</td>
+<td>$3,252,100.00</td>
+<td>$235,422,542.44</td>
+<td>98.0%</td>
+</tr>
+<tr>
+<td>Cruz</td>
+<td>Rafael</td>
+<td>Republican</td>
+<td>$92,111,063.05</td>
+<td>$0.00</td>
+<td>$250,012.93</td>
+<td>$263,277.07</td>
+<td>$992,624,351.05</td>
+<td>99.4%</td>
+</tr>
+<tr>
+<td>Trump</td>
+<td>Donald</td>
+<td>Republican</td>
+<td>$36,959,857.71</td>
+<td>$49,950,643.36</td>
+<td>$2,201,313.93</td>
+<td>$2,186,292.71</td>
+<td>$91,298,110.38</td>
+<td>40.5%</td>
+</tr>
+<tr>
+<td>Carson</td>
+<td>Benjamin</td>
+<td>Republican</td>
+<td>$63,461,402.63</td>
+<td>$25,000.00</td>
+<td>$0.00</td>
+<td>$757,560.00</td>
+<td>$64,243,961.26</td>
+<td>98.8%</td>
+</tr>
+</tbody>
+</table>
+<h3>Summary on number formatting</h3>
+<ul>
+<li>To set the number format for all dataframes, use <code>pd.options.display.float_format</code> to a <em>function</em>.</li>
+<li>To set the number format for a specific set of columns, use <code>df.style.format(format_dict)</code>, where <code>format_dict</code> has column names as keys, and format <em>strings</em> as values.</li>
+<li>If you use <code>df.style.format(....)</code>, you get a styler object back, not a dataframe. The default options won't be set.</li>
+<li>You can use <code>df.select_dtypes(float).columns</code> to get the names of all the float columns, which can be used to generate a dictionary with default format strings, that you can then selectively override.</li>
+</ul>
+<h2>Other formatting</h2>
+<h3>Making more columns visible</h3>
+<p>A common problem when exploring data is having 20 (or more) columns, and having Jupyter truncate the display. This isn't an issue with our contributions dataset, but it can be an issue when exploring larger datasets. The options here are largely self-explanatory:</p>
+<div class="highlight"><pre><span></span><span class="c1"># Show up to 15 cols, 50 rows by default</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_cols&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_rows&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The pandas <a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.set_option.html"><code>set_option</code></a> documentation lists other settings you can change, but <code>max_cols</code> and <code>max_rows</code> are generally the only ones I set.</p>
+<h3>Graph magics</h3>
+<p>With graphics, the things I generally want to change are </p>
+<ul>
+<li>the default figure size (make larger)</li>
+<li>making the figures higher defintion</li>
+<li>changing the figures from PNG to SVG (see note below)</li>
+</ul>
+<p>SVG (Scalable Vector Graphics) are rendered as web elements, and rescale as the size of the figure scales. This means that they are not prone to pixelation artifacts, and are generally much cleaner. However, each point and line is now a new HTML element in the page. If you have hundreds or thousands of points in a scatter plot, this will put hundreds or thousnads of points to your page. A PNG graphic only saves the output, so it scales much better to many points.</p>
+<p>The code for achieving these changes are</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="o">%</span><span class="n">config</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">figure_formats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;retina&#39;</span><span class="p">]</span>        <span class="c1"># retina only</span>
+<span class="o">%</span><span class="n">config</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">figure_formats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;svg&#39;</span><span class="p">,</span> <span class="s1">&#39;retina&#39;</span><span class="p">]</span> <span class="c1"># both SVG and retina </span>
+</pre></div>
+
+
+<p>The <a href="https://ipython.org/ipython-doc/2/config/options/notebook.html">matplotlib options docs</a> give a range of options that might be useful for customizing your graphs.</p>
+<h3>String formatting</h3>
+<p>These next two sections are probably a little gimmicky, but might come in handy. If we want to <em>display</em> the last name in capital letters, without actually changing it, we can use the format dict for that as well:</p>
+<div class="highlight"><pre><span></span><span class="c1"># .... using same format_dict as before, but add a key</span>
+<span class="n">format_dict</span><span class="p">[</span><span class="s1">&#39;Last Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+<span class="c1"># Print out the resulting dataframe</span>
+<span class="n">contribution</span><span class="o">.</span><span class="n">head</span><span class="p">()</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_dict</span><span class="p">)</span>
+</pre></div>
+
+
+<table>
+<thead>
+<tr>
+<th>Last Name</th>
+<th>First Name</th>
+<th>Party</th>
+<th>Individual Contrib</th>
+<th>Candidate Contrib</th>
+<th>Transfers</th>
+<th>Other</th>
+<th>Total Funding</th>
+<th>Individual % of total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLINTON</td>
+<td>Hillary</td>
+<td>Democrat</td>
+<td>$231,158,512.33</td>
+<td>$997,159.15</td>
+<td>$33,940,000.00</td>
+<td>$8,446,040.85</td>
+<td>$274,541,697.77</td>
+<td>84.2%</td>
+</tr>
+<tr>
+<td>SANDERS</td>
+<td>Bernard</td>
+<td>Democrat</td>
+<td>$230,670,405.61</td>
+<td>$0.00</td>
+<td>$1,500,000.00</td>
+<td>$3,252,100.00</td>
+<td>$235,422,542.44</td>
+<td>98.0%</td>
+</tr>
+<tr>
+<td>CRUZ</td>
+<td>Rafael</td>
+<td>Republican</td>
+<td>$92,111,063.05</td>
+<td>$0.00</td>
+<td>$250,012.93</td>
+<td>$263,277.07</td>
+<td>$992,624,351.05</td>
+<td>99.4%</td>
+</tr>
+<tr>
+<td>TRUMP</td>
+<td>Donald</td>
+<td>Republican</td>
+<td>$36,959,857.71</td>
+<td>$49,950,643.36</td>
+<td>$2,201,313.93</td>
+<td>$2,186,292.71</td>
+<td>$91,298,110.38</td>
+<td>40.5%</td>
+</tr>
+<tr>
+<td>CARSON</td>
+<td>Benjamin</td>
+<td>Republican</td>
+<td>$63,461,402.63</td>
+<td>$25,000.00</td>
+<td>$0.00</td>
+<td>$757,560.00</td>
+<td>$64,243,961.26</td>
+<td>98.8%</td>
+</tr>
+</tbody>
+</table>
+<h3>Cell formatting</h3>
+<p>Our second gimmicky trick shows you how to apply CSS to a cell in a dataframe. In CSS, <code>background-color: &lt;value&gt;</code> assigns the background color of a cell, while <code>color: &lt;value&gt;</code> assigns the color of the text in the cell. We need a function that, given the value of a cell, returns the CSS string we want applied to the cell. If we are trying to apply multiple attributes (such as a background color and a text color) we separate the different attributes by a semi-colon.</p>
+<p>This example shows how to make changes based on the party affilication of the candidate. First we need a function that will return the appropriate CSS string for the given input value:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">party_color</span><span class="p">(</span><span class="n">party_value</span><span class="p">):</span>
+    <span class="n">bgcolor</span> <span class="o">=</span> <span class="s1">&#39;grey&#39;</span>
+    <span class="k">if</span> <span class="n">party_value</span> <span class="o">==</span> <span class="s1">&#39;Democrat&#39;</span><span class="p">:</span>
+        <span class="n">bgcolor</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span>
+    <span class="k">if</span> <span class="n">party_value</span> <span class="o">==</span> <span class="s1">&#39;Republican&#39;</span><span class="p">:</span>
+        <span class="n">bgcolor</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
+    <span class="k">if</span> <span class="n">party_value</span> <span class="o">==</span> <span class="s1">&#39;Green&#39;</span><span class="p">:</span>
+        <span class="n">bgcolor</span> <span class="o">=</span> <span class="s1">&#39;green&#39;</span>
+    <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;color: white; background-color: {bgcolor}&#39;</span>
+</pre></div>
+
+
+<p>We can now use <code>applymap</code> on the styler object to color the "Party" column, like so:</p>
+<div class="highlight"><pre><span></span><span class="p">(</span>
+<span class="n">contributions</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+ <span class="o">.</span><span class="n">style</span>
+ <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_dict</span><span class="p">)</span>
+ <span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="n">party_color</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Party&#39;</span><span class="p">])</span>
+<span class="p">)</span>
+</pre></div>
+
+
+<table>
+<tr>
+    <th>Last Name</th> 
+    <th>First Name</th>
+    <th>Party</th>
+    <th>Individual Contrib</th> 
+    <th>Candidate Contrib</th>
+    <th>Transfers</th>
+    <th>Other</th>
+    <th>Total Funding</th>
+    <th>Individual % of total</th>
+</tr>
+<tr>
+    <td>CLINTON</td>
+    <td>Hillary</td>
+    <td style='background-color: blue; color: white'>Democrat</td>
+    <td>$231,158,512.33</td>
+    <td>$997,159.15</td>
+    <td>$33,940,000.00</td>
+    <td>$8,446,040.85</td>
+    <td>$274,541,697.77</td>
+    <td>84.2%</td>
+</tr>
+<tr>
+    <td>SANDERS</td>
+    <td>Bernard</td>
+    <td style='background-color: blue; color: white'>Democrat</td>
+    <td>$230,670,405.61</td>
+    <td>$0.00</td> 
+    <td>$1,500,000.00</td>
+    <td>$3,252,100.00</td>
+    <td>$235,422,542.44</td>
+    <td>98.0%</td>
+</tr>
+<tr>
+    <td>CRUZ</td>
+    <td>Rafael</td>
+    <td style='background-color: red; color: white'>Republican</td>
+    <td>$92,111,063.05</td>
+    <td>$0.00</td>
+    <td>$250,012.93</td>
+    <td>$263,277.0</td>
+    <td>$992,624,351.05</td>
+    <td>99.4%</td>
+</tr>
+<tr>
+    <td>TRUMP</td>
+    <td>Donald</td>
+    <td style='background-color: red; color: white'>Republican</td>
+    <td>$36,959,857.71</td>
+    <td>$49,950,643.36</td>
+    <td>$2,201,313.93</td>
+    <td>$2,186,292.71</td>
+    <td>$91,298,110.38</td>
+    <td>40.5%</td>
+</tr>
+<tr>
+    <td>CARSON</td>
+    <td>Benjamin</td> 
+    <td style='background-color: red; color: white'>Republican</td>
+    <td>$63,461,402.63</td>
+    <td>$25,000.00</td>
+    <td>$0.00</td>
+    <td>$757,560.00</td>
+    <td>$64,243,961.26</td>
+    <td>98.8%</td>
+</table>
+
+<h2>Summary</h2>
+<p>We have seen quite a few tricks. Some of them, like coloring the background of a cell or uppercasing a cell, have very limited applicability. Especially capitalizing a string, it probably isn't a great idea to change the representation of a string from it's underlying form. But there are some options I like to put at the top of most of my Python files:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Show up to 15 cols, 50 rows by default</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_cols&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_rows&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="c1"># Suitable default display for floats</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="s1">&#39;{:,.2f}&#39;</span><span class="o">.</span><span class="n">format</span>
+
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># This one is optional -- change graphs to SVG</span>
+<span class="c1"># Only use if you don&#39;t have a lot of points/lines</span>
+<span class="c1"># on your graph.</span>
+<span class="c1"># Can also just use [&#39;retina&#39;] if you don&#39;t want SVG.</span>
+<span class="o">%</span><span class="n">config</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">figure_formats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;retina&#39;</span><span class="p">,</span> <span class="s1">&#39;svg&#39;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>Often, one of the most frustrating things is formatting floats. The summary in formatting numbers is pretty useful:</p>
+<ul>
+<li>To set the number format for all dataframes, use <code>pd.options.display.float_format</code> to a <em>function</em>.</li>
+<li>To set the number format for a specific set of columns, use <code>df.style.format(format_dict)</code>, where <code>format_dict</code> has column names as keys, and format <em>strings</em> as values. (Note: functions will also work as values, such as the upper case example)</li>
+<li>If you use <code>df.style.format(....)</code>, you get a styler object back, not a dataframe. The default options won't be set.</li>
+<li>You can use <code>df.select_dtypes(float).columns</code> to get the names of all the float columns, which can be used to generate a dictionary with default format strings, that you can then selectively override.</li>
+</ul>
+<p>A nice function for applying the default style and overwrites is</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">style_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">format_dict</span><span class="p">,</span> <span class="n">default_float_format</span><span class="o">=</span><span class="s1">&#39;{:,2f}&#39;</span><span class="p">):</span>
+    <span class="n">full_format_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span> <span class="n">default_float_format</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">select_dtypes</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">columns</span><span class="p">}</span>
+    <span class="c1"># merge the two dictionaries, giving priority to format_dict</span>
+    <span class="n">full_format_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">full_format_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">format_dict</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full_format_dict</span><span class="p">)</span>
+
+<span class="c1"># Usage:</span>
+<span class="n">style_columns</span><span class="p">(</span><span class="n">contributions</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Individual </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">:</span> <span class="s1">&#39;{:.1%}&#39;</span><span class="p">})</span>
+</pre></div>
+
+
+<p>Look at the <a href="https://nbviewer.jupyter.org/gist/kiwidamien/f808d4b5e4efeb072d60c14def32253a">example gist</a> to get a view of a notebook that uses these tip and tricks.</p>
+<h3>Other resources</h3>
+<ul>
+<li><a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.set_option.html"><code>set_option</code> documentation</a></li>
+<li><a href="https://nbviewer.jupyter.org/gist/kiwidamien/f808d4b5e4efeb072d60c14def32253a">Example gist</a> </li>
+<li><a href="https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html">Documentation on styling</a></li>
+</ul>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Stylish Pandas&amp;url=https://kiwidamien.github.io/stylish-pandas.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/stylish-pandas.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/stylish-pandas.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/tricks.html">tricks</a><a href="https://kiwidamien.github.io/tag/formatting.html">formatting</a><a href="https://kiwidamien.github.io/tag/notebook.html">notebook</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/an-introduction-to-simpleprophet.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">An introduction to SimpleProphet</h2>
+                            <p class="post-nav-excerpt">Introduces SimpleProphet, a less automated version of Facebook's time series analysis...</p>
+                        </section>
+                    </a>
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/data-lakes-data-warehouses-and-databases-oh-my.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Data Lakes, Data Warehouses and Databases - Oh My!</h2>
+                            <p class="post-nav-excerpt">What is the difference between a production database and a data warehouse? How does...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>

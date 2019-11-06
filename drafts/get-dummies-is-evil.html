@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Why `pd.get_dummies` is Evil, Use Category Encoders Instead</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/drafts/get-dummies-is-evil.html" rel="canonical" />
+
+        <meta name="description" content="A common technique for transforming categorical variables into a form suitable for machine learning is called "one hot encoding". Pandas...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="pandas">
+        <meta name="tags" content="categorical">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/drafts/get-dummies-is-evil.html">
+  <meta property="og:title" content="Why `pd.get_dummies` is Evil, Use Category Encoders Instead">
+  <meta property="article:published_time" content="2018-09-02 21:00:00-07:00">
+            <meta property="og:description" content="A common technique for transforming categorical variables into a form suitable for machine learning is called "one hot encoding". Pandas...">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Why `pd.get_dummies` is Evil, Use Category Encoders Instead</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sun 02 September 2018">Sun 02 September 2018</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>While many features we might use, such as a person's age, or height, are numeric there are many that are not. Usually these features are represented by strings, and we need some way of transforming them to numbers before using scikit-learn's algorithms. The different ways of doing this are called <em>encodings</em>.</p>
+<p>Other articles on this blog have looked at <a href="/encoding-categorical-variables.html">different methods for encoding categorical variables</a>, and some of the <a href="/are-you-getting-burned-by-one-hot-encoding.html">issues with one-hot encoding</a> in particular. This article is about the dangers of using <code>pd.get_dummies</code> to do one-hot encoding, and some of the better alternatives.</p>
+<h2>Example dataset</h2>
+<p>To look at some of the issues with <code>pd.get_dummies</code>, we will use the example of predicting the traffic volume on I-94, outside of St Paul, Minnesota. This is a slightly processed version of the original dataset (available <a href="https://archive.ics.uci.edu/ml/machine-learning-databases/00492/Metro_Interstate_Traffic_Volume.csv.gz">here</a>).</p>
+<p>The first few five rows of the dataset are</p>
+<table>
+<thead>
+<tr>
+<th>date_time</th>
+<th>is_holiday</th>
+<th>temp_F</th>
+<th>rain_1h</th>
+<th>snow_1h</th>
+<th>clouds_all</th>
+<th>weather_main</th>
+<th>traffic_volume</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2012-10-02 09:00</td>
+<td>False</td>
+<td>59.234</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>40</td>
+<td>Clouds</td>
+<td>5545</td>
+</tr>
+<tr>
+<td>2012-10-02 10:00</td>
+<td>False</td>
+<td>61.178</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>75</td>
+<td>Clouds</td>
+<td>4516</td>
+</tr>
+<tr>
+<td>2012-10-02 11:00</td>
+<td>False</td>
+<td>61.574</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>90</td>
+<td>Clouds</td>
+<td>4767</td>
+</tr>
+<tr>
+<td>2012-10-02 12:00</td>
+<td>False</td>
+<td>62.564</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>90</td>
+<td>Clouds</td>
+<td>5026</td>
+</tr>
+<tr>
+<td>2012-10-02 13:00</td>
+<td>False</td>
+<td>64.382</td>
+<td>0.0</td>
+<td>0.0</td>
+<td>75</td>
+<td>Clouds</td>
+<td>4918</td>
+</tr>
+</tbody>
+</table>
+<p>We will need to encode the <code>weather_main</code> variable before we can apply our machine learning techniques to this dataset. Let's split this dataset into a training and testing set. Becacuse this is time-series data, we will use the last 10% of it as "hold-out" data.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;....&quot;</span>
+<span class="n">traffic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+<span class="n">split_loc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="mf">0.9</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">traffic</span><span class="p">))</span>
+<span class="n">raw_features</span> <span class="o">=</span> <span class="n">traffic</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;traffic_volume&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">traffic</span><span class="p">[</span><span class="s1">&#39;traffic_volume&#39;</span><span class="p">]</span>
+
+<span class="n">X_train</span><span class="p">,</span> <span class="n">X_test</span> <span class="o">=</span> <span class="n">raw_features</span><span class="p">[:</span><span class="n">split_loc</span><span class="p">],</span> <span class="n">raw_features</span><span class="p">[</span><span class="n">split_loc</span><span class="p">:]</span>
+<span class="n">y_train</span><span class="p">,</span> <span class="n">y_test</span> <span class="o">=</span> <span class="n">target</span><span class="p">[:</span><span class="n">split_loc</span><span class="p">],</span> <span class="n">target</span><span class="p">[</span><span class="n">split_loc</span><span class="p">:]</span>
+</pre></div>
+
+
+<h3>What are the categories?</h3>
+<p>Let's start by looking at the training set. We can get a list of each of the eleven distinct values and how frequently they appear using <code>X_train['weather_main'].value_counts()</code></p>
+<table>
+<thead>
+<tr>
+<th>Weather main value</th>
+<th>Frequency in training set</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clouds</td>
+<td>13903</td>
+</tr>
+<tr>
+<td>Clear</td>
+<td>12042</td>
+</tr>
+<tr>
+<td>Mist</td>
+<td>5355</td>
+</tr>
+<tr>
+<td>Rain</td>
+<td>4756</td>
+</tr>
+<tr>
+<td>Snow</td>
+<td>2872</td>
+</tr>
+<tr>
+<td>Drizzle</td>
+<td>1584</td>
+</tr>
+<tr>
+<td>Haze</td>
+<td>1251</td>
+</tr>
+<tr>
+<td>Fog</td>
+<td>821</td>
+</tr>
+<tr>
+<td>Thunderstorm</td>
+<td>777</td>
+</tr>
+<tr>
+<td>Smoke</td>
+<td>18</td>
+</tr>
+<tr>
+<td>Squall</td>
+<td>4</td>
+</tr>
+</tbody>
+</table>
+<p>When we one-hot encode the training set, we will get the <code>weather_main</code> column replaced with 11 columns instead (<code>weather_main_Clouds</code> to <code>weather_main_Squall</code>), for a total of 17 features.</p>
+<p>We can (easily!) use <code>pd.get_dummies(X_train)</code> to one-hot encode the training data:</p>
+<p>| date_time | is_holiday | temp_F | rain_1h | snow_1h | clouds_all | weather_main_Clear |   weather_main_Clouds | weather_main_Drizzle | ... | weather_main_Squall  | 
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2012-10-02 09:00 | False | 59.234 | 0.0 | 0.0 | 40 | 0 | 1 | 0 | ... | 0 | 5545 | 
+| 2012-10-02 10:00 | False | 61.178 | 0.0 | 0.0 | 75 | 0 | 1 | 0 | ... | 0 | 4516 | 
+| 2012-10-02 11:00 | False | 61.574 | 0.0 | 0.0 | 90 | 0 | 1 | 0 | ... | 0 | 4767 | 
+| 2012-10-02 12:00 | False | 62.564 | 0.0 | 0.0 | 90 | 0 | 1 | 0 | ... | 0 | 5026 | 
+| 2012-10-02 13:00 | False | 64.382 | 0.0 | 0.0 | 75 | 0 | 1 | 0 | ... | 0 | 4918 | </p>
+<p>Pandas reports to us that we have 17 columns of data. Any model we train is going to expect 17 features.</p>
+<p>Now let's encode the test set. While we should not peak and look at the <em>distribution</em> of a feature in the test set, we should ensure that we can encode it properly. By doing <code>X_test['weather_main'].unique()</code> we get the list of 10 types of weather that appear in the test set, which are a subset of the original 11. Not surprisingly, the rare "Squall" is missing. Summarizing we have</p>
+<table>
+<thead>
+<tr>
+<th>Weather main value</th>
+<th>Frequency in training set</th>
+<th>In test set</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clouds</td>
+<td>13903</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Clear</td>
+<td>12042</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Mist</td>
+<td>5355</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Rain</td>
+<td>4756</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Snow</td>
+<td>2872</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Drizzle</td>
+<td>1584</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Haze</td>
+<td>1251</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Fog</td>
+<td>821</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Thunderstorm</td>
+<td>777</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Smoke</td>
+<td>18</td>
+<td>Y</td>
+</tr>
+<tr>
+<td>Squall</td>
+<td>4</td>
+<td>N</td>
+</tr>
+</tbody>
+</table>
+<p>The test set doesn't have any "new" or "unseen" values that were not present in the training set. When we use <code>pd.get_dummies(X_test)</code> to encode this dataframe, we run into an issue -- our one-hot encoded dataframe only has <em>16</em> columns. Any model trained will break, as it is expecting 17 different columns.</p>
+<h3>Can't we get around this by encoding before splitting?</h3>
+<p>We could get around this problem by using <code>pd.get_dummies(traffic)</code> <em>before</em> doing the split into training and testing data. There are a couple of reasons this doesn't really solve your problem:</p>
+<ol>
+<li><strong>Don't process before the split</strong></li>
+</ol>
+<p>The test set is supposed to give us an indication of what our model will do on new, unseen data. In particular, if we encode the columns based on <em>all</em> data, we lose the ability to infer what will happen if our model sees a new value "in the wild".</p>
+<p>Maybe this is a possiblity that you can live with. If we didn't see the value in our data (training or test set) maybe we <em>should</em> raise an error instead of trying to make a prediction. Or maybe we are in a well-known domain, where we know we have exhausted all the possible categories. Blood group would be one such example: we know we will only encounter 8 different types.</p>
+<p>Even if you are happy processing before the split, there is a much more pragmatic problem.....</p>
+<ol>
+<li><strong>We cannot encode new data reliably</strong></li>
+</ol>
+<p>Let's say that you decided to use <code>pd.get_dummies</code> on all your data, so both the training set and the test set have access to the 17 different features. Now we want to make a prediction for tomorrow's traffic, and the prediction is there will be Fog. We cannot use <code>pd.get_dummies</code> to make one prediction at a time, because it will only replace <code>weather_main</code> with a single column (<code>weather_main_Fog</code> in our example).</p>
+<p>To say it slightly differently, doing the encoding before the split allowed us to work with both <code>X_train</code> and <code>X_test</code> to build our model, and assess its performance. However, when making new predictions after putting our app into deployment, we cannot make one-at-a-time predictions using <code>pd.get_dummies</code> on production data. We would be stick with a cumbersome solution of <em>manually</em> creating the required columns.</p>
+<p>There is an even more subtle error that can occur. In this example, we didn't see any new values in <code>weather_main</code> in the test set that were not in the training set. If we used <code>pd.get_dummies(X_train)</code> and trained a model, we would have errors using <code>pd.get_dummies(X_test)</code> when we tried using the same model. If the test set had more distinct values ("levels") than the training set, we would also encounter errors. At least then we would know something was wrong, and could (in the worst case) manually add missing columns or drop extra columns. If the test set had a new value, such as <code>Balmy</code>, and was missing <code>Squall</code>, then the dataframes would be the same size, but the columns would be shifted!
+Our model would see a dataframe the right size, but would process it with the wrong interpretation of the columns. Our model would confidently predict <strong>non-sense</strong>.</p>
+<p>What we need is an encoder that we can train (i.e. let it know which columns to expect) and then fit. This will ensure that our output data has a consistent, and that the columns always appear in the same order.  The <code>OneHotEncoder</code>s found in <code>sklearn.preprocessing</code> and <code>category_encoders</code> offer exactly that. </p>
+<h3>When would you use <code>pd.get_dummies</code>? Why does it exist?</h3>
+<p>If get dummies is so bad, why is it a function in Pandas? When would someone use it?</p>
+<p>It isn't particularly useful for machine learning, where you will eventually want to make predictions on new data. There are many fields where statistical analyses are done to determine what the important variables are, and how we should change them, without trying to make predictions on new data.</p>
+<p>This is common in econometrics, for example. </p>
+<h2>Summary</h2>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Why `pd.get_dummies` is Evil, Use Category Encoders Instead&amp;url=https://kiwidamien.github.io/drafts/get-dummies-is-evil.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/drafts/get-dummies-is-evil.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/drafts/get-dummies-is-evil.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/pandas.html">pandas</a><a href="https://kiwidamien.github.io/tag/categorical.html">categorical</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>
