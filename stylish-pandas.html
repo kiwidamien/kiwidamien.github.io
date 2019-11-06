@@ -638,7 +638,7 @@
 
 <p>We can now use <code>applymap</code> on the styler object to color the "Party" column, like so:</p>
 <div class="highlight"><pre><span></span><span class="p">(</span>
-<span class="n">contributions</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">contribution</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
  <span class="o">.</span><span class="n">style</span>
  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_dict</span><span class="p">)</span>
  <span class="o">.</span><span class="n">applymap</span><span class="p">(</span><span class="n">party_color</span><span class="p">,</span> <span class="n">subset</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Party&#39;</span><span class="p">])</span>
@@ -751,7 +751,7 @@
     <span class="k">return</span> <span class="n">df</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full_format_dict</span><span class="p">)</span>
 
 <span class="c1"># Usage:</span>
-<span class="n">style_columns</span><span class="p">(</span><span class="n">contributions</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Individual </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">:</span> <span class="s1">&#39;{:.1%}&#39;</span><span class="p">})</span>
+<span class="n">style_columns</span><span class="p">(</span><span class="n">contribution</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Individual </span><span class="si">% o</span><span class="s1">f total&#39;</span><span class="p">:</span> <span class="s1">&#39;{:.1%}&#39;</span><span class="p">})</span>
 </pre></div>
 
 
