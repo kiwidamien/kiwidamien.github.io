@@ -210,21 +210,19 @@ $ cat /Users/damien/Library/Jupyter/kernels/play_environment/kernel.json
 <p>Activate your newly created environment with <code>conda activate &lt;env_name&gt;</code></p>
 </li>
 <li>
-<p>Find the name of your Python executable using <code>which python</code>.</p>
+<p>Find the name of your Python executable using <code>which python</code>.
+   On my system, this is <code>/Users/damienmartin/anaconda3/envs/&lt;env_name&gt;/bin/python</code>. We will use this in step 6.</p>
 </li>
-</ol>
-<p>On my system, this is <code>/Users/damienmartin/anaconda3/envs/&lt;env_name&gt;/bin/python</code>. We will use this in step 6.</p>
-<ol>
 <li>
 <p>Create the kernel for Jupyter with <code>python -m ipykernel install --user --name &lt;env_name&gt; --display_name "&lt;env_name&gt;"</code></p>
 </li>
 <li>
-<p>Locate the kernel file with <code>jupyter kernelspec list</code></p>
+<p>Locate the kernel file with <code>jupyter kernelspec list</code>
+For me, the kernel specification file is in <code>~/Library/Jupyter/kernels/&lt;env_name&gt;</code>, but this command will tell you what it is on your system.</p>
 </li>
-</ol>
-<p>For me, the kernel specification file is in <code>~/Library/Jupyter/kernels/&lt;env_name&gt;</code>, but this command will tell you what it is on your system.</p>
-<ol>
-<li>In your favorite editor (e.g. atom, vim, VS Code), open the <code>kernel.json</code> file from the directory you found in step 4.</li>
+<li>
+<p>In your favorite editor (e.g. atom, vim, VS Code), open the <code>kernel.json</code> file from the directory you found in step 4.</p>
+</li>
 </ol>
 <p>On my system, I would open <code>~/Library/Jupyter/kernels/&lt;env_name&gt;/kernel.json</code>. Make sure the first thing in the <code>"argv"</code> entry points to your environment's version of Python (found in step 3).</p>
 <p>Now when you launch Python, you can select the <code>&lt;env_name&gt;</code> kernel to launch the <code>env_name</code> environment!</p>
