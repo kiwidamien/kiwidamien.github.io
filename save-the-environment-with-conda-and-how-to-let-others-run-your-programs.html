@@ -197,7 +197,7 @@ $ <span class="nb">source</span> activate test_env
 </pre></div>
 
 
-<p>When loading a jupyter notebook, you can use the menu options <strong>Kernel-&gt;Change Kernel-&gt;test kernel</strong> to ensure you are using the <code>test_env</code> environment.</p>
+<p>When loading a jupyter notebook, you can use the menu options <strong>Kernel-&gt;Change Kernel-&gt;test kernel</strong> to ensure you are using the <code>test_env</code> environment. (Update 2019-11-13: This process doesn't always work, <a href="/save-jupyters-environment">this article</a> gives you ways of checking and fixing it if it doesn't.)</p>
 <p>Now you want to make an <code>environment.yaml</code> file that will allow others to recreate the environment from scratch. To make this file, we use the <code>export</code> command and send the output to <code>environment.yaml</code>:</p>
 <div class="highlight"><pre><span></span><span class="c1"># while in test_env, export the packages used to an environment file</span>
 <span class="o">(</span>test_env<span class="o">)</span> $ conda env <span class="nb">export</span> &gt; environment.yaml

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>How to save Jupyter's environment (and kernels)</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/save-jupyters-environment.html" rel="canonical" />
+
+        <meta name="description" content="An earlier article, "Save the environment with conda", showed how to make a new environment and use it with Jupyter. This article walks...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="python">
+        <meta name="tags" content="engineering">
+        <meta name="tags" content="package">
+        <meta name="tags" content="best-practices">
+        <meta name="tags" content="environment">
+        <meta name="tags" content="conda">
+        <meta name="tags" content="Jupyter">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/save-jupyters-environment.html">
+  <meta property="og:title" content="How to save Jupyter's environment (and kernels)">
+  <meta property="article:published_time" content="2019-11-13 19:30:00-08:00">
+            <meta property="og:description" content="An earlier article, "Save the environment with conda", showed how to make a new environment and use it with Jupyter. This article walks...">
+
+            <meta propery="og:image" content="https://kiwidamien.github.io/assets/images/cover_background/tool_background.svg">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">How to save Jupyter's environment (and kernels)</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Wed 13 November 2019">Wed 13 November 2019</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/tools.html">Tools</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover"
+      style="background-image: url('assets/images/cover_background/tool_background.svg'); background-repeat: repeat; background-size: 100px 100px; background-color: rgb(240,180,82);">
+      <div class="logoimg">
+        <img src='https://kiwidamien.github.io/assets/images/icon/turtle.svg'/>
+      </div>
+      <div class="logoimg">
+        <img src='assets/images/icon/tool_icon.png'/>
+      </div>
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>In the article <a href="/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html">"Save the environment with conda"</a>, we gave a brief overview of how environments allowed other people to use your programs, and allowed you to manage potentially conflicting depedendices for different packages.</p>
+<p>In Jupyter, the different environments are referred to as "kernels". Each notebook has a kernel associated with it, which tells me when I run a notebook which Python environment to use. The kernel being used is in the upper right-hand corner of a Jupyter notebook (it defaults to <code>Python 2</code> or <code>Python 3</code> if you just use the base environments). You can choose the environment from the <strong>Kernel</strong> menu, as shown in the screenshot below.</p>
+<p><img alt="Choosing a kernel" src="images/environments/where_the_kernels_are.png"></p>
+<p>Before a kernel appears in drop-down list of kernels, you have to register it. This process sometimes goes wrong; this article shows how to fix it.</p>
+<h2>Quick start guide to creating an environment</h2>
+<p>Let's create an environment <em>and</em> a kernel. We will start with the packages <code>jupyter</code>, <code>pandas</code>, and <code>tabulate</code>. I have chosen <code>tabulate</code> because it is pretty rare someone has this installed on their base python installation, so a quick-and-dirty check to see we are in the right environment will be to try and import <code>tabulate</code>. We will call this kernel <em>"play environment"</em>.</p>
+<p>In the terminal, run</p>
+<div class="highlight"><pre><span></span><span class="c1"># create the new environment without asking for confirmation</span>
+$ conda create --name play_environment pandas jupyter ipykernel tabulate -y
+
+<span class="c1"># activate the environment</span>
+$ conda activate play_environment
+
+<span class="c1"># use ipykernel to register your new environment as a kernel named</span>
+<span class="c1"># play environment</span>
+<span class="o">(</span>play_environment<span class="o">)</span> $ python -m ipykernel install --user --name play_environment --display-name <span class="s2">&quot;play environment&quot;</span>
+</pre></div>
+
+
+<p>If this works, you should be able to launch Jupyter from <em>any</em> terminal, and from the kernel drop down list, select "play environment".</p>
+<h3>What might go wrong?</h3>
+<p>Often, everything will run to this point, but the kernel "play environment" might point to <em>another</em> environment. We can check this by trying to import tabulate:</p>
+<p><img alt="Check we are in the right environment (quick and dirty)" src="images/environments/python_environment_tabulate.png"></p>
+<p>Of course, checking a random package isn't the most reliable way of determining whether we are in the right kernel or not! A better way is use the <code>sys</code> module to ask which Python we are using. We can use <code>print(sys.executable)</code> in any cell to see which Python our system is actually working with. In an ideal world, it will be something like <code>~/anaconda3/envs/play_environment/bin/python</code>, which tells you that the kernel is connected to the right environment (note that older versions of Anaconda will have the directory starting at the system root rather than your home directory).</p>
+<p><img alt="Check we are in the right environment (the proper way)" src="images/environments/python_environment_with_sys.png"></p>
+<p>Sometimes, we will see a different Python version here. When we install packages in <code>play_environment</code> on the terminal, Jupyter won't be able to see them.</p>
+<h2>The fix</h2>
+<p>A kernel is connected to an environment via a <em>kernel specification file</em> called <code>kernel.json</code>. We can find this file using the terminal command <code>jupyter kernelspec list</code>, which will tell you where the kernel specification lives. On my system I get</p>
+<div class="highlight"><pre><span></span>$ jupyter kernelspec list
+Available kernels:
+  blog_env            /Users/damien/Library/Jupyter/kernels/blog_env
+  grading             /Users/damien/Library/Jupyter/kernels/grading
+  myenv               /Users/damien/Library/Jupyter/kernels/myenv
+  play_environment    /Users/damien/Library/Jupyter/kernels/play_environment
+  prohet_env          /Users/damien/Library/Jupyter/kernels/prohet_env
+  python3             /Users/damien/Library/Jupyter/kernels/python3
+</pre></div>
+
+
+<p>Let's look at the <code>play_environment</code> kernel specification file. It can happen that the kernel specification has the wrong version of Python (I haven't been able to tell <em>when</em> this occurs).</p>
+<div class="highlight"><pre><span></span># Replace this path with the output from your jupyter kernelspec list command
+$ cat /Users/damien/Library/Jupyter/kernels/play_environment/kernel.json
+{
+ &quot;argv&quot;: [
+  &quot;/anaconda3/envs/python3/bin/python&quot;,
+  &quot;-m&quot;,
+  &quot;ipykernel_launcher&quot;,
+  &quot;-f&quot;,
+  &quot;{connection_file}&quot;
+ ],
+ &quot;display_name&quot;: &quot;play environment&quot;,
+ &quot;language&quot;: &quot;python&quot;
+}
+</pre></div>
+
+
+<p>Note the first entry under <code>"argv"</code> is <code>"/anaconda3/envs/python3/bin/python"</code>, which is the <em>python3</em> environment. We just need to edit this file to be <code>"/anaconda3/envs/play_environment/bin/python"</code>. In general, the first entry of <code>"argv"</code> should be <code>&lt;directory from "jupyter kernelspec list" for your environment&gt;/bin/python</code>.</p>
+<p>Once you have made this change, you can restart Jupyter, and your kernel will be launched in the environment you expect.</p>
+<h2>Summary</h2>
+<p>Above we showed what the issue is and how to diagnose it. Here we include a short list of steps for what you should do when you create a new environment. Replace <code>&lt;env_name&gt;</code> with the name of the environment you want to create.</p>
+<ol>
+<li>Create your environment with <code>conda create --name &lt;env_name&gt; &lt;list of packages you want to install&gt;</code>.</li>
+</ol>
+<p>Include <code>jupyter</code> and <code>ipykernel</code> in the list of packages.
+2. Activate your newly created environment with <code>conda activate &lt;env_name&gt;</code>
+3. Find the name of your Python executable using <code>which python</code>.</p>
+<p>On my system, this is <code>/Users/damienmartin/anaconda3/envs/&lt;env_name&gt;/bin/python</code>. We will use this in step 6.
+4. Create the kernel for Jupyter with <code>python -m ipykernel install --user --name &lt;env_name&gt; --display_name "&lt;env_name&gt;"</code>
+5. Locate the kernel file with <code>jupyter kernelspec list</code></p>
+<p>For me, the kernel specification file is in <code>~/Library/Jupyter/kernels/&lt;env_name&gt;</code>, but this command will tell you what it is on your system.
+6. In your favorite editor (e.g. atom, vim, VS Code), open the <code>kernel.json</code> file from the directory you found in step 4. On my system, I would open <code>~/Library/Jupyter/kernels/&lt;env_name&gt;/kernel.json</code>. Make sure the first thing in the <code>"argv"</code> entry points to your environment's version of Python (found in step 3).</p>
+<p>Now when you launch Python, you can select the <code>&lt;env_name&gt;</code> kernel to launch the <code>env_name</code> environment!</p>
+<h2>Related articles</h2>
+<ul>
+<li><a href="/save-the-environment-with-conda-and-how-to-let-others-run-your-programs.html">"Save the environment with conda"</a> goes into a lot more detail about why we would want to use environments. This article <em>should</em> be unnecessary, and I hope it will be once the Jupyter kernel installation becomes more robust.</li>
+</ul>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=How to save Jupyter's environment (and kernels)&amp;url=https://kiwidamien.github.io/save-jupyters-environment.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/save-jupyters-environment.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/save-jupyters-environment.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/python.html">python</a><a href="https://kiwidamien.github.io/tag/engineering.html">engineering</a><a href="https://kiwidamien.github.io/tag/package.html">package</a><a href="https://kiwidamien.github.io/tag/best-practices.html">best-practices</a><a href="https://kiwidamien.github.io/tag/environment.html">environment</a><a href="https://kiwidamien.github.io/tag/conda.html">conda</a><a href="https://kiwidamien.github.io/tag/jupyter.html">Jupyter</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/stylish-pandas.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Stylish Pandas</h2>
+                            <p class="post-nav-excerpt">As the Zen of Python states, "readability counts". With a few simple tips and tricks,...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>

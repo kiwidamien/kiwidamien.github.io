@@ -145,6 +145,29 @@
 </li>
 </ul>
 <p>According to the <em>Zen of Python</em>, "readability counts". This article goes through some tricks to make your Jupyter notebook dataframes a little more readable.</p>
+<h2>td;dr</h2>
+<p>For those that just some standard formatting for their projects, this is what I will typically put at the beginning of my notebooks.</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+<span class="c1"># Show up to 15 cols, 50 rows by default</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_cols&#39;</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="s1">&#39;display.max_rows&#39;</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+<span class="c1"># Suitable default display for floats</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">display</span><span class="o">.</span><span class="n">float_format</span> <span class="o">=</span> <span class="s1">&#39;{:,.2f}&#39;</span><span class="o">.</span><span class="n">format</span>
+
+<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># This one is optional -- change graphs to SVG</span>
+<span class="c1"># Only use if you don&#39;t have a lot of points/lines</span>
+<span class="c1"># on your graph.</span>
+<span class="c1"># Can also just use [&#39;retina&#39;] if you don&#39;t want SVG.</span>
+<span class="o">%</span><span class="n">config</span> <span class="n">InlineBackend</span><span class="o">.</span><span class="n">figure_formats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;retina&#39;</span><span class="p">,</span> <span class="s1">&#39;svg&#39;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>The rest of this post shows how you can customize this for specific dataframes or needs.</p>
 <h2>Number formatting</h2>
 <p>An example DataFrame with code is posted in <a href="https://nbviewer.jupyter.org/gist/kiwidamien/f808d4b5e4efeb072d60c14def32253a">this gist</a>, which uses campaign finance data. Let's look at a slightly simplified version, which contains fewer columns:</p>
 <table>
@@ -761,6 +784,7 @@
 <li><a href="https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.set_option.html"><code>set_option</code> documentation</a></li>
 <li><a href="https://nbviewer.jupyter.org/gist/kiwidamien/f808d4b5e4efeb072d60c14def32253a">Example gist</a> </li>
 <li><a href="https://pandas.pydata.org/pandas-docs/stable/user_guide/style.html">Documentation on styling</a></li>
+<li><a href="https://pbpython.com/styling-pandas.html">Article with advanced styling examples</a></li>
 </ul>
             </section>
 
@@ -800,6 +824,13 @@
 
 
                 <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/save-jupyters-environment.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">How to save Jupyter's environment (and kernels)</h2>
+                            <p class="post-nav-excerpt">An earlier article, "Save the environment with conda", showed how to make a new...</p>
+                        </section>
+                    </a>
                     <a class="post-nav-prev" href="https://kiwidamien.github.io/goodhards-law.html">
                         <section class="post-nav-teaser">
                             <i class="ic ic-arrow-right"></i>
