@@ -210,14 +210,14 @@ $ cat /Users/damien/Library/Jupyter/kernels/play_environment/kernel.json
 <p>Activate your newly created environment with <code>conda activate &lt;env_name&gt;</code></p>
 </li>
 <li>
-<p>Find the name of your Python executable using <code>which python</code>.
+<p>Find the name of your Python executable using <code>which python</code>.<br/>
    On my system, this is <code>/Users/damienmartin/anaconda3/envs/&lt;env_name&gt;/bin/python</code>. We will use this in step 6.</p>
 </li>
 <li>
 <p>Create the kernel for Jupyter with <code>python -m ipykernel install --user --name &lt;env_name&gt; --display_name "&lt;env_name&gt;"</code></p>
 </li>
 <li>
-<p>Locate the kernel file with <code>jupyter kernelspec list</code>
+<p>Locate the kernel file with <code>jupyter kernelspec list</code></br>
 For me, the kernel specification file is in <code>~/Library/Jupyter/kernels/&lt;env_name&gt;</code>, but this command will tell you what it is on your system.</p>
 </li>
 <li>
