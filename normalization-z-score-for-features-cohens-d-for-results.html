@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Normalization (z-score for features, Cohen's D for results)</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/normalization-z-score-for-features-cohens-d-for-results.html" rel="canonical" />
+
+        <meta name="description" content="p-values are commonly used to determine if an effect is statistically significant. Cohen's D gives a measure of how important an effect...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="feedback">
+        <meta name="tags" content="metrics">
+        <meta name="tags" content="cross-validation">
+        <meta name="tags" content="causal">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/normalization-z-score-for-features-cohens-d-for-results.html">
+  <meta property="og:title" content="Normalization (z-score for features, Cohen's D for results)">
+  <meta property="article:published_time" content="2020-01-18 14:00:00-08:00">
+            <meta property="og:description" content="p-values are commonly used to determine if an effect is statistically significant. Cohen's D gives a measure of how important an effect...">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Normalization (z-score for features, Cohen's D for results)</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sat 18 January 2020">Sat 18 January 2020</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>Let's say we had an experiment that was looking at the effect of diet on weight. Maybe some of the features we would include are
+- height of the subject (continuous)
+- gender (categorical)
+- race (categorical)
+- initial weight (continuous)
+- diet plan (categorical)
+Our target would be the <strong>final weight</strong> of our subject, after the diet regemine comes to an end.</p>
+<p>One very simple model we could apply is a linear model, in which case we would be most interested in the coefficient of the different <code>diet_plan</code> variables. By choosing the plan with the smallest coefficient (i.e. most negative, or if there are no negative coefficients, least positive coefficient), we have a candidate for the most effective diet plan. (We would have to check the robustness of the linear assumption, and the process that people were selected into different groups, before being very certain). In a more complicated model, we might need to include interaction effects between initial weight and height, and the diet plan chosen.</p>
+<h1>avg 5.4 ft, weight 180 lbs (men and women)</h1>
+<h1>1.2</h1>
+<p>Let's say we find the following model with <em>unscaled</em> features:
+</p>
+<div class="math">$$\text{final weight in lbs} = 1.2 * (\text{height_subject_feet}) + 0.98 * (\text{initial_weight_in_lbs}) - 10*(\text{is_female}) + 0*(\text{is_diet_A}) - (2.3\text{is_diet_B}) - 6.50$$</div>
+<p>
+How much more important is height than initial weight in this model? We don't want to claim that height is more important just because it has a bigger coefficient. Someone that is an extra foot taller is <em>much</em> more noticable that somoene that is an extra pound heavier. We could claim that increasing the height of someone by 1 foot has the same effect as increasing the initial weight by 1.23 pounds to get some idea of the trade-off, but more often we standardize our features using <span class="math">\(z\)</span> scores.</p>
+<h2>Feature normalization with <span class="math">\(z\)</span> scores</h2>
+<p>For continuous features, the idea is we center values around the mean, and measure them in units of standard deviations. This allows us to compare shifts in <span class="math">\(z\)</span>-scores by how large a shift (i.e. how many standard deviations) we are moving from the typical value of the population. The formula is
+</p>
+<div class="math">$$z = (X - \mu)/\sigma$$</div>
+<p>For example, the average height in the US is 5.4 ft with a standard deviation of 0.4 feet (if we don't separate by gender). So changing a height by 1 foot would be the same as changing by 2.5 standard deviations (i.e. quite a bit!). The average weight of people in the US pooled between genders is 180 lbs with a standard deviation of 30 lbs. An increase of 1 pound is only changing by 0.033 standard deviations.</p>
+<p>If we fit our model using <span class="math">\(z\)</span>-scores, we would get
+</p>
+<div class="math">$$\text{final weight in lbs} = 0.48*(z_{\text{height}}) + 29.4*(z_{\text{ini weight}}) - 10*(\text{is_female}) + 0*(\text{is_diet_A}) - 2.3*(\text{is_diet_B}) + 180$$</div>
+<p>
+Our coefficients now capture the importance of the features, when we compare to the <em>natural</em> scale of variation of the underlying feature.</p>
+<h2>Effect normalization</h2>
+<p>Regardless of whether or not we normalize the features, we can also ask how big an effect this is:</p>
+<ul>
+<li><code>diet_A</code> has no effect on underlying weight,</li>
+<li><code>diet_B</code> causes a loss of 2.3 lbs.</li>
+</ul>
+<p>Of course, this just means that <code>diet_A</code> was chosen as the baseline. The real measureable thing is that the average weight difference between diet A and diet B is 2.3 pounds. If we are interested in absolute numbers (i.e. 2.3 pounds), this is good enough. We can also ask how big is 2.3 pounds in terms of the standard deviation of final weights. This equivalent of z-scores for the results is known as Cohen's D.</p>
+<p>In this case, suppose we have 500 people in diet A and 400 in diet B. The standard deviation in final weights in diet A was 25 lbs, while the standard deviation of final weights in diet B was 28 lbs. The pooled standard deviation from combining both distributions is
+</p>
+<div class="math">$$(\text{pooled std dev})^2 = (N_A \sigma_A^2 + N_B \sigma_B^2)/(N_A + N_B) = (500\times(25)^2 + (400)\times(28)^2)/900 = 695.66$$</div>
+<p>
+or the pooled standard deviation is 26.4 lbs after taking the square root.</p>
+<p>Cohen's D is given by
+</p>
+<div class="math">$$ D = \frac{\text{mean difference}}{\text{pool std dev}} = \frac{2.3\text{ lbs}}{26.4\text{ lbs}} = 0.087$$</div>
+<p>
+The way we can interpret this is that moving from diet A to diet B is that we "move the needle" (i.e. final weight) by 0.087 standard deviations.</p>
+<h2>Effect size</h2>
+<p>Cohen's D gives us a standard effect size, so we can compare different effects against one another. There is a "look-up" table to see how big an effect your experiment has compared to "typical" experimental results. The following size chart was taken from the <a href="https://en.wikipedia.org/wiki/Effect_size#Cohen's_d">wikipedia article</a> on Cohen's <span class="math">\(D\)</span>:</p>
+<table>
+<thead>
+<tr>
+<th>Cohen's D</th>
+<th>Size of effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 0.01</td>
+<td>Very small</td>
+</tr>
+<tr>
+<td>0.01 - 0.20</td>
+<td>Small</td>
+</tr>
+<tr>
+<td>0.20 - 0.50</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>0.50 - 0.80</td>
+<td>Large</td>
+</tr>
+<tr>
+<td>0.80 - 1.20</td>
+<td>Very Large</td>
+</tr>
+<tr>
+<td>&gt; 1.20</td>
+<td>Extremely large</td>
+</tr>
+</tbody>
+</table>
+<p>When reporting effects of a change in diet, it is probably more meaningful to describe diet B is associated with 2.3 pounds of weight loss instead of <span class="math">\(D = 0.087\)</span> or "a small effect". However, when planning an experiment, if we estimate <span class="math">\(D = 0.087\)</span> we might decide that since this is a small typical value of <span class="math">\(D\)</span>, we might be better off looking for a diet that has a greater effect.</p>
+<h2>Summary</h2>
+<p>Ultimately Cohen's D is a heuristic about effect size. Bigger Cohen's <span class="math">\(D\)</span> means a larger effect, and if you are trying to prioritize different efforts on different metrics, Cohen's D can be one way of estimating the "change" and resources you put behind a particular experiment or effort. Ultimately there isn't really a shortcut to considering your ultimate bottom line: a "large" effect on the signups might be less important to company metrics than a "small" effect to the number of abandoned checkouts. For proportions, there is the closely related <a href="https://en.wikipedia.org/wiki/Cohen%27s_h">Cohen's H</a> to look at the effect of changes in effect size.</p>
+<p>In a followup article on <a href="nbht.md">hypothesis tests and sample size</a> we will look at how we can use Cohen's H instead of a <span class="math">\(p\)</span>-value to more easily intepret the outcome of an experiment.</p>
+<p>The main takeaways:
+- When we standardize features using <span class="math">\(z\)</span>-scores we can more directly compare coefficients to see the "importance" of features.
+- When looking at the <span class="math">\(z\)</span>-scores of features, higher <span class="math">\(z\)</span> scores mean "more atypical", as we are measuring the deviation from the mean of that feature in units of that features standard deviatoin.
+- The formula for <span class="math">\(z\)</span>-scores is <span class="math">\(z = (x - \mu)/\sigma\)</span>, where <span class="math">\(\mu\)</span> is the mean of the feature and <span class="math">\(\sigma\)</span> is the standard deviation.
+- When comparing two treatments, we can assess the size of the difference in outcome in a normalized way, which is Cohen's D. The formula is <span class="math">\(D = (\text{(mean difference)}/\text{pooled std dev})\)</span>
+- Cohen's D is useful for comparing between experiments, but usually people will want to compare the actual outcomes in "natural units" (e.g. how many pounds this diet is responsible for people losing, how many conversions this email drove, etc).
+- Generally speaking, larger effects (i.e. higher <span class="math">\(D\)</span>) are easier to detect, and will require fewer samples. We will dig into this more in the article on <a href="nbht.md">hypothesis tests and sample size</a></p>
+<h3>References</h3>
+<ul>
+<li>Wikipedia's article on <a href="https://en.wikipedia.org/wiki/Effect_size#Cohen's_d">Effect size</a></li>
+<li>Wikipedia's article on <a href="https://en.wikipedia.org/wiki/Cohen%27s_h">Cohen's h</a></li>
+<li>This blog's article on <a href="nbht.md">hypothesis tests and sample size</a></li>
+</ul>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Normalization (z-score for features, Cohen's D for results)&amp;url=https://kiwidamien.github.io/normalization-z-score-for-features-cohens-d-for-results.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/normalization-z-score-for-features-cohens-d-for-results.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/normalization-z-score-for-features-cohens-d-for-results.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/feedback.html">feedback</a><a href="https://kiwidamien.github.io/tag/metrics.html">metrics</a><a href="https://kiwidamien.github.io/tag/cross-validation.html">cross-validation</a><a href="https://kiwidamien.github.io/tag/causal.html">causal</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/nbht.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">Hypothesis tests and sample size (p values and Cohen's h)</h2>
+                            <p class="post-nav-excerpt">p-values are commonly used to determine if an effect is statistically significant....</p>
+                        </section>
+                    </a>
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/save-jupyters-environment.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">How to save Jupyter's environment (and kernels)</h2>
+                            <p class="post-nav-excerpt">An earlier article, "Save the environment with conda", showed how to make a new...</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>

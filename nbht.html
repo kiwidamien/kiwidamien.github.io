@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html" charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+
+  <title>Hypothesis tests and sample size (p values and Cohen's h)</title>
+
+
+  <meta name="HandheldFriendly" content="True" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="referrer" content="origin" />
+  <meta name="generator" content="Pelican" />
+  <link href="https://kiwidamien.github.io" rel="canonical" />
+
+  <!-- Feed -->
+
+  <link href="https://kiwidamien.github.io/theme/css/style.css" type="text/css" rel="stylesheet" />
+  <link href="https://kiwidamien.github.io/theme/css/collapse.css" type="text/css" rel="stylesheet" />
+
+  <!-- Code highlight color scheme -->
+      <link href="https://kiwidamien.github.io/theme/css/code_blocks/monokai.css" rel="stylesheet">
+  
+  <link href="https://kiwidamien.github.io/theme/css/code_blocks/notebook.css" rel="stylesheet">
+
+    <!-- CSS specified by the user -->
+    <link href="https://kiwidamien.github.io/assets/css/mystyle.css" type="text/css" rel="stylesheet" />
+
+
+  <!-- Custom fonts -->
+  <link href='https://fonts.googleapis.com/css?family=Montserrat:400,300' rel='stylesheet' type='text/css' />
+  <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css" />
+
+  <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+  <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+  <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+  <![endif]-->
+
+
+    <link href="https://kiwidamien.github.io/nbht.html" rel="canonical" />
+
+        <meta name="description" content="p-values are commonly used to determine if an effect is statistically significant. Cohen's D gives a measure of how important an effect...">
+
+        <meta name="author" content="Damien Martin">
+
+        <meta name="tags" content="p_values">
+        <meta name="tags" content="cohen">
+        <meta name="tags" content="effect size">
+        <meta name="tags" content="sample size">
+        <meta name="tags" content="power">
+
+        <meta property="og:locale" content="" />
+    <meta property="og:site_name" content="Stacked Turtles" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Stacked Turtles" />
+    <meta property="og:description" content="View the blog." />
+    <meta property="og:url" content="https://kiwidamien.github.io" />
+      <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png" />
+
+  <meta property="og:type" content="article">
+            <meta property="article:author" content="https://kiwidamien.github.io/author/damien-martin.html">
+  <meta property="og:url" content="https://kiwidamien.github.io/nbht.html">
+  <meta property="og:title" content="Hypothesis tests and sample size (p values and Cohen's h)">
+  <meta property="article:published_time" content="2020-01-19 18:00:00-08:00">
+            <meta property="og:description" content="p-values are commonly used to determine if an effect is statistically significant. Cohen's D gives a measure of how important an effect...">
+
+            <meta property="og:image" content="https://kiwidamien.github.io/assets/images/tools.png">
+</head>
+<!-- TODO : Body class -->
+<body class="home-template">
+
+<nav id="menu">
+  <a class="close-button">Close</a>
+  <div class="nav-wrapper">
+    <p class="nav-label">Menu</p>
+    <ul>
+          <li><a href="https://kiwidamien.github.io/about.html" role="presentation">About this blog</a></li>
+          <li><a href="http://slashdot.org" role="presentation">slashdot</a></li>
+          <li><a href="https://thisismetis.com" role="presentation">metis</a></li>
+          <li><a href="https://stackoverflow.com" role="presentation">stackoverflow</a></li>
+
+
+    </ul>
+  </div>
+</nav>
+    <!-- Progressbar -->
+    <div class="progress-container">
+        <span class="progress-bar"></span>
+    </div>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header id="post-header" class="has-cover">
+      <div class="inner">
+        <nav id="navigation">
+            <span id="home-button" class="nav-button">
+                <a class="home-button" href="https://kiwidamien.github.io" title="Home"><i class="ic ic-arrow-left"></i> Home</a>
+            </span>
+          <span id="menu-button" class="nav-button">
+            <a class="menu-button"><i class="ic ic-menu"></i> Menu</a>
+          </span>
+        </nav>
+        <h1 class="post-title">Hypothesis tests and sample size (p values and Cohen's h)</h1>
+        <!-- TODO : Proper class for headline -->
+        <span class="post-meta">
+                <a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a>
+            | <time datetime="Sun 19 January 2020">Sun 19 January 2020</time>
+        </span>
+        <span class="post-meta">
+          Filed under: <b><a href="https://kiwidamien.github.io/category/data-science.html">Data science</a></b>
+        </span>
+
+        <!-- TODO : Modified check -->
+
+
+    <div class="post-cover cover" style="background-image: url('assets/images/tools.png')">
+
+</div>
+      </div>
+    </header>
+
+  <section id="wrapper">
+    <a class="hidden-close"></a>
+
+    <!-- Post content -->
+    <main class="content" role="main">
+        <article class="post">
+        <div class="inner">
+            <section class="post-content">
+                <p>One of the common questions we might have as data scientists is deciding which version of a webpage, email, or web advertisment to use. For each of these, we have a "call to action" (such as signing up, making an order, following a link, etc). If someone does the action we are asking them for, we call it a <strong>conversion</strong>. The question we are generally tasked with is</p>
+<blockquote>
+<p>Given different versions of <page/email/ad>, which one lead to the largest conversion rate?</p>
+</blockquote>
+<p>If we just wanted to determine the raw fraction of people that converted, this would be a simple SQL query. The challenges are:
+- We want to estimate which page/email/ad has the largest <strong>underlying</strong> conversion rate, not just the highest sample rate.<br/>
+  If we show an ad to 1000 people and 510 convert, if we did the same experiment again, maybe only 505 people convert. Our samples are trying to access the "true" conversion rate, which we only know if we take an infinitely large number of people from our experiment.
+- Often there is a <strong>control</strong> or <strong>status quo</strong> variation to beat.<br/>
+  Many times there is a pre-existing page our customers are already familiar with, so we want to be convinced that the new variation is better (not just the new version "might be" better).
+- If there is a cost to switching, we want to know that switching is worth it.<br/>
+  If we are sending out attachments in our email that are causing costs to increase, we might decide that we need a 1 percentage point increase in people's responses before the additional costs are worth it.</p>
+<p>A common framework for looking at these types of questions is null-based hypothesis testing (NBHT). In NBHT, a control is selected, which we will say is <span class="math">\(A\)</span>. The idea is that <span class="math">\(A\)</span> will be the winner <em>unless</em> we find compelling evidence that <span class="math">\(B\)</span> is the winner. In the case of a tie, or only weak evidence that <span class="math">\(B\)</span> is better, we will still use the control <span class="math">\(A\)</span>. A decision made at the beginning of the experiment is "how strong does the evidence need to be to dethrone the control", which we give as a <span class="math">\(p\)</span>-value.</p>
+<h2>The null hypthoesis and the p-value</h2>
+<p>Our null hypothesis (called <span class="math">\(H_0\)</span>) is the statement that both pages have the same conversion rate, so there is no advantage of switching from <span class="math">\(A\)</span> to <span class="math">\(B\)</span>. We write this mathematically as</p>
+<div class="math">$$ H_0: \pi_A = \pi_B$$</div>
+<p>where <span class="math">\(\pi_A\)</span> is the "true" conversion rate of page <span class="math">\(A\)</span>, and <span class="math">\(\pi_B\)</span> is the "true" conversion rate of page <span class="math">\(B\)</span>. </p>
+<p>Now, the null hypothesis is almost certaintly wrong (i.e. we are very unlikely to live in a world where <span class="math">\(A\)</span> and <span class="math">\(B\)</span> have the <strong>exact</strong> same conversion rate, or even the same to "only" the 100th decimal place). We don't pick the null hypothesis because we believe that it is true, instead we pick it because we have a specific model that we can simulate the probability we get a result this extreme (or more) if the null hypothesis was true.</p>
+<p>To see why probabilities get involved, imagine we showed page A to 1000 people and got 310 sign ups (i.e. conversion rate of 31%). If we showed the exact same page to another 1000 people, we may only get 308 sign ups (i.e. conversion rate of 30.8%). Even looking at the same page, we expect there to be some variation between our measured sample rates. We expect as we make our sample size larger, the amount of fluctuation in our measured conversion rate should decrease. The central limit theorem makes this more formal: we expect our <em>measured</em> conversion rate to follow a normal distribution with standard deviation of <span class="math">\(\sqrt{\pi_A(1-\pi_A)/N_A}\)</span>, where <span class="math">\(N_A\)</span> is the number in our sample.</p>
+<p>Suppose we got the following data from an experiment</p>
+<table>
+<thead>
+<tr>
+<th>Page Version</th>
+<th>Views</th>
+<th>Conversions</th>
+<th>Conversion rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>1000</td>
+<td>310</td>
+<td>31.0%</td>
+</tr>
+<tr>
+<td>B</td>
+<td>1000</td>
+<td>312</td>
+<td>31.2%</td>
+</tr>
+</tbody>
+</table>
+<p>We know <em>in these samples</em> B performed better. A null hypothesis test asks "if A and B were EXACTLY the same (something we don't actually believe), what is the probability that we see a conversion rate difference of 0.2% or more, just by chance?". This number is the <span class="math">\(p\)</span>-value. We generally pick a threshold, and claim that if the <span class="math">\(p\)</span>-value is less than this threshold, we should consider it strong enough evidence that the challenger is better, and use that instead.</p>
+<h3>A p-value calculation</h3>
+<p>By the central limit theorem, the <em>differences</em> between the population proportions are also normally distributed. The mean of the differences is zero (according to the null hypothesis), but the standard error takes into account we are taking the difference between distribution, which <em>adds</em> to the variance. The variance for the difference in conversion rates is</p>
+<div class="math">$$\text{Var(difference)} = \text{Var(conversion rate A)} + \text{Var(conversion rate B)} = \frac{\pi_A(1-\pi_A)}{N_A} + \frac{pi_B(1-\pi_B)}{N_B}$$</div>
+<p>We know <span class="math">\(N_A = N_B = 1000\)</span> (the number of views for each). We don't know <span class="math">\(\pi_A\)</span> (the true rate for <span class="math">\(A\)</span>) or <span class="math">\(\pi_B\)</span> (the true rate for B). We only know the rates in our sample of 1000. The null hypothesis tells us to assume <span class="math">\(\pi_A\)</span> and <span class="math">\(\pi_B\)</span> are the same, so our best estimate is 
+</p>
+<div class="math">$$\pi_A = \pi_B = \text{total conversions}{total views} = 622/2000 = 0.311$$</div>
+<p>
+Plugging this in, we get an expected variance (under the null hypothesis) of 0.000429. Taking the square root, we get a standard deviation of differences in conversion rate (also called the <em>standard error</em>) of 0.0207.</p>
+<p>So we have an actual difference in conversion rate of 0.002 (i.e. 0.312 - 0.310), and a typical variation in samples of size 1000 of 0.0207. The z-score of the fraction of teh difference we actually found, divided by the typical variation we expect to find:
+</p>
+<div class="math">$$z = \frac{0.002}{0.0207} = 0.0966$$</div>
+<p>
+The probability of getting a z-score higher than this on a standard normal distribution is shown as the shaded region (note that I am looking at a two-tailed test, which is the same as asking for the size of |z| being higher than 0.0966) in the diagram below:
+<img alt="Shaded region shows the p-value" src="images/null_hypothesis_two_tailed.png">
+Using normal distribution tables, this gives us a p-value of 0.923</p>
+<p><strong>Interpretation</strong>: <em>If</em> the null hypothesis is true, there is a 92.3% chance of seeing a difference in conversion rate of 0.2% or higher in samples of 1000, even though there is no difference.</p>
+<h2>Confusion about <span class="math">\(p\)</span>-values: significance vs statistical significance</h2>
+<p>This is <strong>not</strong> the same as saying that there is a 92.3% chance the null hypothesis is right. There is almost 100% chance that the null hypothesis is wrong (i.e. it is almost impossible that A and B have the EXACT same conversion rate). What a p-value of 0.923 says is if we pretend there is no effect, there is a 92.3% chance we see a difference at least this large by chance alone. </p>
+<p>If we make the sample size larger, we will be able to detect smaller and smaller effects. That is because the difference in effects should be the same regardless of sample size, but the standard error decreases as we increase the sample size.</p>
+<p>Suppose that the actual conversion rates are page A converts at 31.0%, and B converts at 31.5% (i.e. our experiment happened to hit exactly the right values). We could ask how the <span class="math">\(p\)</span> value changes as we make the experiment bigger and bigger. Let's pretend we have 6 different data science teams working on the same question, so for each experiment, we have 6 different <span class="math">\(p\)</span> values (one from each team) just to see how they compare. The code is in <a href="">this notebook</a> with a seed set for reproducability, with the results tabulated below:</p>
+<table>
+<thead>
+<tr>
+<th align="right">N</th>
+<th align="right">p-value trial 1</th>
+<th align="right">p-value trial 2</th>
+<th align="right">p-value trial 3</th>
+<th align="right">p-value trial 4</th>
+<th align="right">p-value trial 5</th>
+<th align="right">p-value trial 6</th>
+<th align="right">average</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">1,000</td>
+<td align="right"><strong>0.029</strong></td>
+<td align="right">0.3503</td>
+<td align="right">1</td>
+<td align="right">0.5586</td>
+<td align="right">0.923</td>
+<td align="right">0.3029</td>
+<td align="right">0.5273</td>
+</tr>
+<tr>
+<td align="right">5,000</td>
+<td align="right">0.2923</td>
+<td align="right">0.8633</td>
+<td align="right">0.0656</td>
+<td align="right">0.9139</td>
+<td align="right">0.7301</td>
+<td align="right">0.1733</td>
+<td align="right">0.5064</td>
+</tr>
+<tr>
+<td align="right">10,000</td>
+<td align="right">0.5702</td>
+<td align="right">0.7602</td>
+<td align="right">0.2722</td>
+<td align="right">0.3663</td>
+<td align="right">0.4814</td>
+<td align="right">0.4249</td>
+<td align="right">0.4792</td>
+</tr>
+<tr>
+<td align="right">50,000</td>
+<td align="right">0.4941</td>
+<td align="right">0.3019</td>
+<td align="right">0.2507</td>
+<td align="right">0.8856</td>
+<td align="right">0.7427</td>
+<td align="right">0.4863</td>
+<td align="right">0.5269</td>
+</tr>
+<tr>
+<td align="right">100,000</td>
+<td align="right">0.3645</td>
+<td align="right">0.3609</td>
+<td align="right">0.9575</td>
+<td align="right">0.3664</td>
+<td align="right">0.3316</td>
+<td align="right">0.0773</td>
+<td align="right">0.4097</td>
+</tr>
+<tr>
+<td align="right">500,000</td>
+<td align="right">0.3415</td>
+<td align="right">0.9414</td>
+<td align="right">0.1279</td>
+<td align="right">0.9552</td>
+<td align="right"><strong>0.0487</strong></td>
+<td align="right">0.4429</td>
+<td align="right">0.4763</td>
+</tr>
+<tr>
+<td align="right">1,000,000</td>
+<td align="right">0.102</td>
+<td align="right">0.4925</td>
+<td align="right">0.0791</td>
+<td align="right">0.5874</td>
+<td align="right"><strong>0.0058</strong></td>
+<td align="right">0.1107</td>
+<td align="right">0.2296</td>
+</tr>
+<tr>
+<td align="right">10,000,000</td>
+<td align="right"><strong>0.0001</strong></td>
+<td align="right"><strong>0.0022</strong></td>
+<td align="right"><strong>0.0198</strong></td>
+<td align="right">0.1127</td>
+<td align="right"><strong>0.0258</strong></td>
+<td align="right">0.3449</td>
+<td align="right">0.0843</td>
+</tr>
+</tbody>
+</table>
+<p>I have emphasized experiments that had a <span class="math">\(p\)</span>-value less than 0.05. Remember this means that even if there was no effect, we would still expect to see a p-value of 0.05 or smaller in 1 out of 20 experiments! That is because if there is no effect, the <span class="math">\(p\)</span>-value is uniformly distributed over the interval [0,1]! This is precisely because the p-value is the probability of discovering a difference by chance <em>if there is no difference</em>. </p>
+<p>The <span class="math">\(p\)</span>-value <strong>doesn't</strong> tell us if there is a difference what the probability is of seeing it. As argued above, the chance that there is <em>some</em> difference, if we go to enough decimal places is approximately 100%. In our generated dataset, once we got to sample sizes of 10 million, four out of 6 of our data science groups could detect a difference. In reality, we would not duplicate an experiment 6 times -- we would only have one group look at it. So, as a rough estimate, 1/3 of the time with a sample size of 10 million we would detect the difference between a conversion rate of 31.0% and 31.5%.</p>
+<p>If we go to N=50 million, all 6 teams saw a p-value of 0.0000 (i.e. zero to at least 4 decimal places). With a sample size of 50 million, we are pretty confident we will see a statistically significant result. But do we care about increasing conversion by 0.5 percentage points? Another way of asking this is if we had 100 million clients to run an A/B test with (50 million to see variation A, 50 million to see variation B), is this the most valuable A/B test we could run? Or are there bigger gains we could make elsewhere? Assuming the answer is that there are more valuable things we could be doing than running this experiment with 100 million clients, an experiment with 50 million people per variation would find a statistically significant result (p-value &lt;&lt; 0.05), but not one that was practically significant.</p>
+<p>Suppose we thought that this experiment <em>would</em> be worth running for a 0.5 percentage point expected gain with 10,000 clients (i.e. 5000 see variation A and 5000 see variation B). Looking at our table, we see <em>none</em> of our six teams in the simulation saw anything. That is, 5000 clients isn't enough to detect a difference this small. Even though this difference of 0.5 percentage points is "worth" an experiment of 10k clients, such an experiment would be a waste because it won't detect anything. So we may as well spend those clients doing something else.</p>
+<h3>Summary of p-values</h3>
+<p>We can take this idea of pretending we have 6 teams doing parallel experiments, and instead think we have a very large number of teams running independent experiments (e.g. 100k+ teams). In the real world, we would only have 1 team analyzing results, but pretending we have many teams helps us think about how p-values work.</p>
+<ul>
+<li>If there is actually no difference between page A and page B, then the 5% of teams will see a p-value smaller than 0.05 (and 10% will see a p-value smaller than 0.1, etc). The p-value tells you the fraction of teams that make the wrong conclusion. This is independent of the number of clients in your sample!</li>
+<li>If the difference between rates is small (roughly if the difference is smaller than <span class="math">\(1/\sqrt{N}\)</span>), the difference between page A and page B will be approximately the same as the p-value (i.e. 5% of teams will see a p-value smaller than 0.05). If <span class="math">\(N\)</span> gets big enough, you will eventually be able to detect a difference.</li>
+<li>If the difference between rates is large (roughly if the difference is much bigger than <span class="math">\(1/\sqrt{N}\)</span>), then the p-values will cluster around 0, so you will start to reliably pick the better performing result.</li>
+</ul>
+<p>A different, more mathematical way of phrasing this, is
+<em> if <span class="math">\(\pi_A = \pi_B\)</span>, the limit of the distribution of <span class="math">\(p\)</span>-value as <span class="math">\(N\rightarrow \infty\)</span> is the uniform distribution.
+</em> if <span class="math">\(\pi_A \neq \pi_B\)</span>, the limit of the dsitribution of <span class="math">\(p\)</span>-values as <span class="math">\(N\rightarrow \infty\)</span> is 0 (with probability 1).</p>
+<p>Since we know there is <em>always</em> some difference between the two versions, we know that given enough resources we should be able to pick the "best" version. Given limited resources, it may not be worth figuring out which version is best.</p>
+<h2>Cohen's h</h2>
+<p>Let's ask instead whether we expect a shift of 0.310 -&gt; 0.315 to be a big difference of not. Cohen's <span class="math">\(h\)</span> is an attempt to standardize the size of shifts in proportions (similar to Cohen's <span class="math">\(d\)</span> in a previous article). The formula is
+</p>
+<div class="math">$$\phi_A = 2\arcsin \pi_A, \quad\quad \phi_B = 2\arcsin \pi_B, \quad\quad h = |\phi_A - \phi_B|$$</div>
+<p>
+We generally don't have access to <span class="math">\(\pi_A\)</span> and <span class="math">\(\pi_B\)</span>, but can use the values we found from our experiment as an approximation. The idea is that we can look at the effects of different experiments as "small", "medium", or "large" by comparing the values of <span class="math">\(h\)</span>:</p>
+<table>
+<thead>
+<tr>
+<th>Cohen's h</th>
+<th>Size of effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0 - 0.2</td>
+<td>"small"</td>
+</tr>
+<tr>
+<td>0.2 - 0.5</td>
+<td>"medium"</td>
+</tr>
+<tr>
+<td>0.5 - 0.8</td>
+<td>"large"</td>
+</tr>
+</tbody>
+</table>
+<p>In our example, we have <span class="math">\(\phi_A = 0.315\)</span>, <span class="math">\(\phi_B = 0.320\)</span>, so <span class="math">\(h \approx 0.011\)</span> (i.e. a (very) small effect).  </p>
+<h3>The large sample behavior of Cohen's <span class="math">\(h\)</span></h3>
+<p>Let's repeat the same thought experiment we had above, where we get a lot of teams to calculate the value of <span class="math">\(h\)</span> from an experiment. If each team calculates <span class="math">\(h\)</span> using their sample data, the distribution of <span class="math">\(h\)</span> will be an (approximately) normal distribution around the true value. The bigger the number <span class="math">\(N\)</span> of clients that see each variation, the "tighter" the distribution of our different teams will be around the true value. If the effect size is there but small, we will have many teams that <em>see</em> and effect, but all those teams agree the effect is small.</p>
+<p>This differs from the <span class="math">\(p\)</span> value in one critical way. A very small <span class="math">\(p\)</span> value tells you the experiment has, with high probability, detected a difference. If there is no effect, your <span class="math">\(p\)</span>-value will be distributed randomly, so different teams will have wildly different values. It <em>doesn't</em> tell you anything about the size of that difference. Cohen's <span class="math">\(h\)</span>, on the other hand, tells you about the size of the effect and different teams will get similar values for <span class="math">\(h\)</span>. There is no contradiction here - like many things in statistics, any single team's calculation of <span class="math">\(h\)</span> based off the single sample will have a confidence interval you can calculate, so whether or not there is an effect depends on whether that confidence interval contains <span class="math">\(0\)</span>.</p>
+<h3>The inconsistency of Cohen's <span class="math">\(h\)</span></h3>
+<p>There is one troubling aspect of Cohen's <span class="math">\(h\)</span>, which is it is inconsistent about which outcome you term a success. In our example, we have looked at two pages with conversion rates of 0.310 amd 0.315. The value of Cohen's <span class="math">\(h\)</span> was approximately 0.011, which qualified as a "small" effect. </p>
+<p>But suppose we reversed the definition of "conversion" to <strong>not</strong> take the action described. Then the "conversion" rate of page A is 0.69, and the "conversion" rate of page B is 0.689. The value of Cohen's <span class="math">\(h\)</span> is now 0.003, which is significantly smaller.</p>
+<p>You might object that this is a silly distinction, as it should be clear what event should count as a conversion. To see why this is an issue, imagine that instead of picking a version of webpages, we were picking between two coins that might be weighted differently, so they may have a different distribution of heads vs tails. If we were trying to quantify how "off" these two coins were from each other, it shouldn't matter if we are measure the probability of getting heads vs the probability of getting tails -- if one of these measures says "the coins are significantly different" the other one should too. What the calculation above shows is that our choice of whether to think of <span class="math">\(\pi_A\)</span> as the probability coin <span class="math">\(A\)</span> gives heads can give a different result than if we think of <span class="math">\(\pi_A\)</span> as the probabiltiy coin <span class="math">\(A\)</span> gives tails, even when the question is "do coins A and B have the same proportion of heads vs tails as each other?"</p>
+<h2>Summary</h2>
+<p>The "textbook" hypothesis testing method is null hypothesis testing, which is centered around the <span class="math">\(p\)</span>-value. A <span class="math">\(p\)</span>-value really has one job: it makes a guarantee that if the null hypothesis was exactly true, how unlikely it would be to get a result at least as extreme as the one you actually saw. That is, it limits the probability of you rejecting the null hypothesis <em>if the null hypothesis is true</em>. The problem is, no one believes the null hypothesis actually is true, and in most cases we are almost certain it is not (because it states something like "these two rates are <strong>exactly</strong> equal"). From a business or problem-solving perspective, we are generally more interested in whether or not the difference in two webpages (or ads, or medicines) is large enough for us to switch our treatment, and the <span class="math">\(p\)</span>-value <em>doesn't</em> answer that question.</p>
+<p>More specifically, if there is <em>any</em> difference at all, at a large enough sample size we will start to see a small <span class="math">\(p\)</span>-value. If the effect size is small, maybe we can get a better payoff by running a different experiment instead. When we run an actual experiment, we should consider what the smallest effect we consider to be important is, and <a href="/power_analysis.html">design our experiment</a> around that.</p>
+<p>In bullets:</p>
+<ul>
+<li>The <span class="math">\(p\)</span>-value tells you what the probability is of getting a result as extreme as the one you saw if the null hypothesis is true (typically that your variations are <strong>exactly</strong> the same)</li>
+<li>The traditional null hypothesis test states that if your <span class="math">\(p\)</span> value is less than some threshold <span class="math">\(\alpha\)</span>, you reject the null hypothesis and claim there is a difference.</li>
+<li>By construction, if there really is no difference (i.e. the null hypothesis is correct) you will reject the null hypothesis with probability <span class="math">\(\alpha\)</span>.</li>
+<li>There is always some difference between two variations, even if it is small! So the real probability that you reject the null hypothesis is always actually less than <span class="math">\(\alpha\)</span> =)</li>
+<li>Even though rejecting the null is "always" the right thing to do, what we are generally interested in is which variation is better. Often when we have a large <span class="math">\(p\)</span>-value, we know there is some difference between the variations (i.e. the null is wrong) but we cannot tell which one is better, but we are okay with it because the difference is likely small.</li>
+</ul>
+<p>Focusing on the outcomes:
+- If there is no difference, taking really large samples doesn't force your <span class="math">\(p\)</span>-values to zero. They stay a uniform distribution!
+- If there <strong>is</strong> a difference, you can make the <span class="math">\(p\)</span>-value really small provided you get a large enough sample.
+- A low <span class="math">\(p\)</span>-value just means that it is unlikely this result happened by chance, it doesn't mean the effect is important.
+  - Our example was changing conversion rates from 31.0% to 31.5%, which was very significant if we have 50 million people look at each variation, but a 0.5 percentage point change wasn't actually that important. 
+- Textbooks focusing on just the <span class="math">\(p\)</span>-value <em>once the data has been collected</em> have done hypothesis testing a disservice. In our next article on <a href="/power_analysis.html">designing experiments</a> we show how to think about the smallest effect you would like to detect, and then determine the sample size you would need to detect it reliablely. As a spoiler, it is easier to detect big effects than small ones (i.e. you need smaller samples to detect bigger changes).</p>
+<p>Finally, there is Cohen's <span class="math">\(h\)</span>:</p>
+<ul>
+<li>Cohen's <span class="math">\(h\)</span> is a standardized measure of the difference in proportions between two treatments (e.g. webpages)</li>
+<li>While there is always a difference between treatments, so a <span class="math">\(p\)</span>-value would go to zero as the samples get larger, <span class="math">\(h\)</span> tends toward a stable value as the sample size gets larger.</li>
+<li>The values different teams measure for <span class="math">\(h\)</span> is (approximately) normally distributed around the "true" value. The distribution gets narrower around the true value as the sample size gets larger.</li>
+</ul>
+<h2>References</h2>
+<ul>
+<li><a href="https://eng.lyft.com/experimentation-in-a-ridesharing-marketplace-b39db027a66e">Lyft's blog post on experimental interference</a></li>
+<li><a href="https://github.com/WinVector/ODSCWest2017/blob/master/MythsOfDataScience/MythsOfDataScience.pdf">Nina Zumel's talk on "Myth's of Data Science</a> has some excellent slides on Cohen's <span class="math">\(d\)</span> and Cohen's <span class="math">\(h\)</span>.</li>
+<li>Wikipedia's article on <a href="https://en.wikipedia.org/wiki/Cohen%27s_h">Cohen's h</a></li>
+</ul>
+<script type="text/javascript">if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </section>
+
+            <section class="post-info">
+                <div class=a"post-share">
+                    <a class="twitter" href="https://twitter.com/share?text=Hypothesis tests and sample size (p values and Cohen's h)&amp;url=https://kiwidamien.github.io/nbht.html" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <i class="ic ic-twitter"></i><span class="hidden">Twitter</span>
+                    </a>
+                    <a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://kiwidamien.github.io/nbht.html" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <i class="ic ic-facebook"></i><span class="hidden">Facebook</span>
+                    </a>
+                    <a class="googleplus" href="https://plus.google.com/share?url=https://kiwidamien.github.io/nbht.html" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <i class="ic ic-googleplus"></i><span class="hidden">Google+</span>
+                    </a>
+                    <div class="clear"></div>
+                </div>
+
+                <aside class="post-tags">
+<a href="https://kiwidamien.github.io/tag/p_values.html">p_values</a><a href="https://kiwidamien.github.io/tag/cohen.html">cohen</a><a href="https://kiwidamien.github.io/tag/effect-size.html">effect size</a><a href="https://kiwidamien.github.io/tag/sample-size.html">sample size</a><a href="https://kiwidamien.github.io/tag/power.html">power</a>                </aside>
+
+                <div class="clear"></div>
+
+                <aside class="post-author">
+                        <figure class="post-author-avatar">
+                            <img src="../assets/images/avatar.png" alt="Damien martin" />
+                        </figure>
+                    <div class="post-author-bio">
+                        <h4 class="post-author-name"><a href="https://kiwidamien.github.io/author/damien-martin.html">Damien martin</a></h4>
+                            <p class="post-author-about">I am a data scientist with an interest in what drives the world. Background in Physics, Math, and Computer Science. Interested in Algorithms, Games, Books, Music, and Martial Arts. That is, when I am not off taking pictures somewhere! </p>
+                            <span class="post-author-location"><i class="ic ic-location"></i> USA</span>
+                            <span class="post-author-website"><a href="http://kiwidamien.github.io"><i class="ic ic-link"></i> Website</a></span>
+                    </div>
+                    <div class="clear"></div>
+                </aside>
+
+                </section>
+
+
+                <aside class="post-nav">
+                    <a class="post-nav-next" href="https://kiwidamien.github.io/setting-up-jupyter-on-the-cloud-where-you-can-disconnect.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-left"></i>
+                                <h2 class="post-nav-title">Setting up Jupyter on the Cloud (where you can disconnect)</h2>
+                            <p class="post-nav-excerpt">This article shows how you can run Jupyter on a remote server, connect to it, and have...</p>
+                        </section>
+                    </a>
+                    <a class="post-nav-prev" href="https://kiwidamien.github.io/normalization-z-score-for-features-cohens-d-for-results.html">
+                        <section class="post-nav-teaser">
+                            <i class="ic ic-arrow-right"></i>
+                                <h2 class="post-nav-title">Normalization (z-score for features, Cohen's D for results)</h2>
+                            <p class="post-nav-excerpt">p-values are commonly used to determine if an effect is statistically significant....</p>
+                        </section>
+                    </a>
+                    <div class="clear"></div>
+                </aside>
+
+            </div>
+        </article>
+    </main>
+      <!-- TODO : Body class -->
+    <div id="body-class" style="display: none;" class=""></div>
+  
+  </section>
+
+  <script type="text/javascript" src="https://kiwidamien.github.io/theme/js/script.js"></script>
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-131671634-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+</body>
+
+</html>
