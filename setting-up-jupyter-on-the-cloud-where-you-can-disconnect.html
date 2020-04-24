@@ -138,14 +138,16 @@
         <div class="inner">
             <section class="post-content">
                 <p>One of the advantages of working on a remote machine is that you can run extremely long computations without having to worry about your computer running slowly or running out of battery. If you have tried logging onto an AWS instance, however, you might have run into an issue where if you get disconnected, your process is terminated. This means that if you need to close your laptop for a meeting, need to travel, or even get momentarily disconnected, you could lose all that work.</p>
-<p>Here is what we would ideally like to happen:
-1. We start a job on AWS (e.g. run a Python script in Jupyter)
-2. We can close our computer / switch it off / put it into airplane mode, and AWS continues to work on our problem
-3. We can log back in later and see where we are with our long running job.</p>
+<p>Here is what we would ideally like to happen:</p>
+<ol>
+<li>We start a job on AWS (e.g. run a Python script in Jupyter)</li>
+<li>We can close our computer / switch it off / put it into airplane mode, and AWS continues to work on our problem</li>
+<li>We can log back in later and see where we are with our long running job.</li>
+</ol>
 <p>Here we will walk you through using <code>tmux</code> in order to get a Jupyter session running that won't quit if your computer gets disconnected. We assume that you already have an EC2 instance (or other remote machine) setup already, with a key <code>~/.ssh/aws_key.pem</code> and public IP address <code>11.22.33.44</code> already. If you don't, you can follow the instructions in <a href="">this post</a> on how to set one up using the dashboard, or <a href="">this point</a> on how to set one up using Python. We also assume that you have Python installed on your EC2 instance</p>
 <h2>Connecting to Jupyter the simple way</h2>
 <p>Before showing how to connect in a way that is tolerant to shutting down your computer, let's outline the main steps to connect to Jupyter (on AWS) from your browser on your computer.</p>
-<h3>Step 1: SSH onto the remote machine</h3>
+<h4>Step 1: SSH onto the remote machine</h4>
 <p>Let's show how you can connect to Jupyter on your EC2 instance. First, we need to log in:</p>
 <div class="highlight"><pre><span></span>localhost$ ssh -i ~/.ssh/aws_key.pem ubuntu@11.22.33.44
 <span class="c1"># some login text from your server ....</span>
@@ -154,7 +156,7 @@ ubuntu@ip-xxx-xxx-xxx-xxx$
 
 
 <p>For the prompts, we will show any command you need to run on your computer with <code>localhost$</code> (such as the <code>ssh</code> command), and any prompts for the remote computer we will show with <code>ubuntu@ip-xxx-xxx-xxx-xxx$</code>.</p>
-<h3>Step 2: Start Jupyter</h3>
+<h4>Step 2: Start Jupyter</h4>
 <p>On your remote machine, start Jupyter. Your output will look similar to the following:</p>
 <div class="highlight"><pre><span></span>ubuntu@ip-xxx-xxx-xxx-xxx$ jupyter notebook
 <span class="o">[</span>I <span class="m">03</span>:30:31.254 NotebookApp<span class="o">]</span> The Jupyter Notebook is running at:
@@ -196,10 +198,7 @@ ubuntu@ip-xxx-xxx-xxx-xxx$
 <li>On the remote machine, start Jupyter with <code>jupyter notebook</code>. Copy the token.</li>
 <li>In a new terminal, SSH to the remote machine again, but this time with a tunnel: </li>
 </ol>
-<div class="highlight"><pre><span></span>ssh -i ~/.ssh/aws_key.pem -NL <span class="m">8888</span>:localhost:12345  ubuntu@11.22.33.44
-</pre></div>
-
-
+<p><code>ssh -i ~/.ssh/aws_key.pem -NL 8888:localhost:12345  ubuntu@11.22.33.44</code></p>
 <ol>
 <li>In a browser, go to <code>https://localhost:12345/?token=.....</code>, using the token found in step 2</li>
 </ol>
