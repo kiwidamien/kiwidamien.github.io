@@ -227,32 +227,31 @@ ubuntu@ip-xxx-xxx-xxx-xxx$ jupyter notebook
 </pre></div>
 
 
-<p>Any <code>tmux</code> commands start with <kbd>Ctrl</kbd>+<kbd>B</kbd> (you can think of this as putting you in "control mode", as in VIM). To detatch a sessoin, first use  <kbd>Ctrl</kbd>+<kbd>B</kbd> to go into control mode, and then hit <kbd>d</kbd> to detatch the session. This will take you back to the login session you started with. If your login session closes (e.g. you exit, switch off your wifi, or shutdown your computer), this session will close, but your <em>detatched</em> session won't.</p>
-<p>There are a few other tmux commands we will show at the bottom, but we don't actually need them to finish this task. If you forgot the token, you can always run</p>
+<p>Any <code>tmux</code> commands start with <kbd>Ctrl</kbd>+<kbd>b</kbd> (you can think of this as putting you in "control mode", as in VIM). To detatch a sessoin, first use  <kbd>Ctrl</kbd>+<kbd>b</kbd> to go into control mode, then hit <kbd>d</kbd> to detatch the session. This will take you back to the login session you started with. If your login session closes (e.g. you exit, switch off your wifi, or shutdown your computer), your <em>detatched</em> session remains open.</p>
+<p>In the appendix, we will show some other <code>tmux</code> commands you can use to jump between sessions, but we don't need them for running Jupyter notebooks.</p>
+<p>If you forgot the token, you can always run </p>
 <div class="highlight"><pre><span></span>ubuntu@ip-xxx-xxx-xxx-xxx$ jupyter notebook list
 </pre></div>
 
 
-<p>to get a list of all running servers. You can do this from any session.</p>
+<p>from any session to get a list of all running servers.</p>
 <h3>The safe way of starting Jupyter servers</h3>
-<p>This list is almost the same as before:
-1. SSH to the remote machine: <code>ssh -i ~/.ssh/aws_key.pem ubuntu@11.22.33.44</code>
-2. On the remote machine:
-  * Run <code>tmux</code>
-  * Then run <code>jupyter notebook</code> in the new session. Copy the token.
-  * Press <kbd>Ctrl</kbd> + <kbd>b</kbd>, followed by <kbd>d</kbd> to detatch the session.
-  * Use the command <code>exit</code> to end the (login) session. The detatched session still runes.
-3. SSH in again from your local machine, but this time with a tunnel:</p>
-<div class="highlight"><pre><span></span>ssh -i ~/.ssh/aws_key.pem -NL <span class="m">8888</span>:localhost:12345  ubuntu@11.22.33.44
-</pre></div>
-
-
+<p>This list is almost the same as before:</p>
+<ol>
+<li>SSH to the remote machine: <code>ssh -i ~/.ssh/aws_key.pem ubuntu@11.22.33.44</code></li>
+<li>On the remote machine:</li>
+<li>Run <code>tmux</code></li>
+<li>Then run <code>jupyter notebook</code> in the new session. Copy the token.</li>
+<li>Press <kbd>Ctrl</kbd> + <kbd>b</kbd>, followed by <kbd>d</kbd> to detatch the session.</li>
+<li>Use the command <code>exit</code> to end the (login) session. The detatched session still runes.</li>
+<li>SSH in again from your local machine, but this time with a tunnel:</li>
+</ol>
+<p><code>ssh -i ~/.ssh/aws_key.pem -NL 8888:localhost:12345  ubuntu@11.22.33.44</code></p>
 <ol>
 <li>In a browser, go to <code>https://localhost:12345/?token=.....</code>, using the token found in step 2</li>
 </ol>
 <p>If you ever get disconnected, or restart your local machine, you just need to run steps 3 and 4 again.</p>
 <p>If you forget the token, you can ssh back onto AWS and run the command <code>jupyter notebook list</code> to get a list of all running servers.</p>
-<h2><code>tmux</code> tricks</h2>
 <h2>Summary</h2>
 <ul>
 <li>To allow our browser to "see" Jupyter on AWS we can use an SSH tunnel, where the command is
@@ -271,6 +270,7 @@ ubuntu@ip-xxx-xxx-xxx-xxx$ jupyter notebook
 <ul>
 <li><a href="https://www.xiaoru.li/post/playing-with-tmux/">Xiaoru Li</a> has a really nice overview of tmux, and some of the different commands you can use with it.</li>
 </ul>
+<h2>Appendix: tmux tricks</h2>
 <p>Log on to AWs</p>
 <div class="highlight"><pre><span></span>localhost$ ssh -i &lt;login key&gt; ubuntu@&lt;ip_address&gt;
 </pre></div>
