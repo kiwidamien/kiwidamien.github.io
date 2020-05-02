@@ -267,39 +267,72 @@ ubuntu@ip-xxx-xxx-xxx-xxx$ jupyter notebook
 <h2>References</h2>
 <ul>
 <li><a href="https://www.xiaoru.li/post/playing-with-tmux/">Xiaoru Li</a> has a really nice overview of tmux, and some of the different commands you can use with it.</li>
+<li><a href="https://www.hamvocke.com/blog/a-guide-to-customizing-your-tmux-conf/">A guide to customizing your tmux conf</a> is a nice post walking through some simple tmux configurations.</li>
 </ul>
-<h2>Appendix: tmux tricks</h2>
-<p>Log on to AWs</p>
-<div class="highlight"><pre><span></span>localhost$ ssh -i &lt;login key&gt; ubuntu@&lt;ip_address&gt;
+<h2>Appendix: <code>tmux</code> tricks</h2>
+<p>The <code>tmux</code> command can be used for detatching sessions, or splitting a terminal into multiple panes (similar to using separate panes in an editor). The name <code>tmux</code> stands for <em>Terminal Multiplexer</em>. </p>
+<p>TMUX has a command mode, which you can enter with <kbd>Ctrl</kbd> + <kbd>b</kbd>, which you can follow by some commands:</p>
+<table>
+<thead>
+<tr>
+<th>command</th>
+<th>what it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>d</code></td>
+<td>Detatches the session</td>
+</tr>
+<tr>
+<td><code>$ &lt;name&gt;</code></td>
+<td>Renames session to <code>&lt;name&gt;</code></td>
+</tr>
+<tr>
+<td><code>%</code></td>
+<td>Splits terminal horizontally</td>
+</tr>
+<tr>
+<td><code>"</code></td>
+<td>Splits terminal vertically</td>
+</tr>
+<tr>
+<td><arrow></td>
+<td>Moves between panes in that direction</td>
+</tr>
+</tbody>
+</table>
+<p>The tmux command also takes additional arguments on the command line, such as <code>tmux &lt;command&gt; &lt;args&gt;</code>. Here are some common ones:</p>
+<ol>
+<li><code>tmux ls</code>: list all the tmux sessions</li>
+<li><code>tmux attach</code>: attach to the most recent sessoin</li>
+<li><code>tmux attach -t &lt;name&gt;</code>: attach to the session with name <code>&lt;name&gt;</code> </li>
+</ol>
+<p>In our article, we launched <code>tmux</code>, then launched a jupyter notebook inside the new session, and then detatched from the session. What we could do instead is</p>
+<div class="highlight"><pre><span></span>ubuntu@xxx-xxx-xxx-xxx$ tmux
+---- &lt;new session starts&gt; -------
+<span class="c1"># &lt;Ctrl&gt; + b to enter command mode, then write &quot;$ notebook_session&quot;</span>
+<span class="c1"># Gives this session the name &quot;notebook_session</span>
+
+ubuntu@xxx-xxx-xxx-xxx$ jupyter notebook
+
+<span class="c1"># Detatch the session, use &lt;Ctrl&gt; + b to enter command mode, then hit d</span>
+---- &lt;back at regular terminal ----
+
+<span class="c1"># note the name</span>
+ubuntu@xxx-xxx-xxx-xxx$ tmux ls
+notebook_session: <span class="m">1</span> windows <span class="o">(</span>created Sat May  <span class="m">2</span> <span class="m">14</span>:38:33 <span class="m">2020</span><span class="o">)</span>
+
+<span class="c1"># if we want to go back to the session:</span>
+ubuntu@xxx-xxx-xxx-xxx$ tmux attach -t notebook_sessoin
+
+---- &lt;back in the session&gt; --------
 </pre></div>
 
 
-<p>Then setup Jupyter:</p>
-<div class="highlight"><pre><span></span>aws$ tmux
-aws$ jupyter notebook
-
-Then Ctrl + b, followed by d to detatch the session
-
-Optional: Give session a meaningful name
-Ctrl + b, followed by <span class="sb">`</span>$<span class="sb">`</span> to enter a meaningful name
-
-<span class="c1">## Tmux</span>
-
-<span class="c1"># List sessions</span>
-<span class="sb">`</span>$ tmux ls<span class="sb">`</span>
-
-<span class="c1"># Attach to the most recent session</span>
-<span class="sb">`</span>$ tmux attach<span class="sb">`</span>
-
-<span class="c1"># Attach to a specific session, e.g. 0</span>
-<span class="sb">`</span>$ tmux attach -t <span class="m">0</span><span class="sb">`</span>
-
-<span class="c1"># Detatch again</span>
-Ctrl + b followed by d
-
-Setup
-<span class="sb">```</span>bash
-localhost$ ssh -i &lt;login key&gt; -NL <span class="m">12345</span>:localhost:8888 ubuntu@&lt;ip_address&gt;
+<p>If you are using mutiple sessions, giving them separate names can help you keep track (the default naming is 0, 1, 2, etc). You can also skip the renaming step by creating sessions with the slightly more verbose command</p>
+<div class="highlight"><pre><span></span><span class="c1"># equivalent to &quot;tmux&quot; followed by &lt;Ctrl&gt; + b, then &quot;$ session_name&quot;</span>
+ubuntu@xxx-xxx-xxx-xxx$ tmux new -s session_name  
 </pre></div>
             </section>
 
