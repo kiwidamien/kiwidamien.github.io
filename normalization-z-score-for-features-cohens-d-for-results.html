@@ -131,13 +131,15 @@
         <article class="post">
         <div class="inner">
             <section class="post-content">
-                <p>Let's say we had an experiment that was looking at the effect of diet on weight. Maybe some of the features we would include are
-- height of the subject (continuous)
-- gender (categorical)
-- race (categorical)
-- initial weight (continuous)
-- diet plan (categorical)
-Our target would be the <strong>final weight</strong> of our subject, after the diet regemine comes to an end.</p>
+                <p>Let's say we had an experiment that was looking at the effect of diet on weight. Maybe some of the features we would include are</p>
+<ul>
+<li>height of the subject (continuous)</li>
+<li>gender (categorical)</li>
+<li>race (categorical)</li>
+<li>initial weight (continuous)</li>
+<li>diet plan (categorical)</li>
+</ul>
+<p>Our target would be the <strong>final weight</strong> of our subject, after the diet regemine comes to an end.</p>
 <p>One very simple model we could apply is a linear model, in which case we would be most interested in the coefficient of the different <code>diet_plan</code> variables. By choosing the plan with the smallest coefficient (i.e. most negative, or if there are no negative coefficients, least positive coefficient), we have a candidate for the most effective diet plan. (We would have to check the robustness of the linear assumption, and the process that people were selected into different groups, before being very certain). In a more complicated model, we might need to include interaction effects between initial weight and height, and the diet plan chosen.</p>
 <p>Let's say we find the following model with <em>unscaled</em> features:</p>
 <div class="highlight"><pre><span></span><span class="n">final_weight_in_lbs</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.2</span> <span class="o">*</span> <span class="p">(</span><span class="n">height_subject_feet</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.98</span> <span class="o">*</span> <span class="p">(</span><span class="n">initial_weight_in_lbs</span><span class="p">)</span> 
@@ -214,13 +216,15 @@ The way we can interpret this is that moving from diet A to diet B is that we "m
 <h2>Summary</h2>
 <p>Ultimately Cohen's D is a heuristic about effect size. Bigger Cohen's <span class="math">\(D\)</span> means a larger effect, and if you are trying to prioritize different efforts on different metrics, Cohen's D can be one way of estimating the "change" and resources you put behind a particular experiment or effort. Ultimately there isn't really a shortcut to considering your ultimate bottom line: a "large" effect on the signups might be less important to company metrics than a "small" effect to the number of abandoned checkouts. For proportions, there is the closely related <a href="https://en.wikipedia.org/wiki/Cohen%27s_h">Cohen's H</a> to look at the effect of changes in effect size.</p>
 <p>In a followup article on <a href="nbht.md">hypothesis tests and sample size</a> we will look at how we can use Cohen's H instead of a <span class="math">\(p\)</span>-value to more easily intepret the outcome of an experiment.</p>
-<p>The main takeaways:
-- When we standardize features using <span class="math">\(z\)</span>-scores we can more directly compare coefficients to see the "importance" of features.
-- When looking at the <span class="math">\(z\)</span>-scores of features, higher <span class="math">\(z\)</span> scores mean "more atypical", as we are measuring the deviation from the mean of that feature in units of that features standard deviatoin.
-- The formula for <span class="math">\(z\)</span>-scores is <span class="math">\(z = (x - \mu)/\sigma\)</span>, where <span class="math">\(\mu\)</span> is the mean of the feature and <span class="math">\(\sigma\)</span> is the standard deviation.
-- When comparing two treatments, we can assess the size of the difference in outcome in a normalized way, which is Cohen's D. The formula is <span class="math">\(D = (\text{(mean difference)}/\text{pooled std dev})\)</span>
-- Cohen's D is useful for comparing between experiments, but usually people will want to compare the actual outcomes in "natural units" (e.g. how many pounds this diet is responsible for people losing, how many conversions this email drove, etc).
-- Generally speaking, larger effects (i.e. higher <span class="math">\(D\)</span>) are easier to detect, and will require fewer samples. We will dig into this more in the article on <a href="nbht.md">hypothesis tests and sample size</a></p>
+<p>The main takeaways:</p>
+<ul>
+<li>When we standardize features using <span class="math">\(z\)</span>-scores we can more directly compare coefficients to see the "importance" of features.</li>
+<li>When looking at the <span class="math">\(z\)</span>-scores of features, higher <span class="math">\(z\)</span> scores mean "more atypical", as we are measuring the deviation from the mean of that feature in units of that features standard deviatoin.</li>
+<li>The formula for <span class="math">\(z\)</span>-scores is <span class="math">\(z = (x - \mu)/\sigma\)</span>, where <span class="math">\(\mu\)</span> is the mean of the feature and <span class="math">\(\sigma\)</span> is the standard deviation.</li>
+<li>When comparing two treatments, we can assess the size of the difference in outcome in a normalized way, which is Cohen's D. The formula is <span class="math">\(D = (\text{(mean difference)}/\text{pooled std dev})\)</span></li>
+<li>Cohen's D is useful for comparing between experiments, but usually people will want to compare the actual outcomes in "natural units" (e.g. how many pounds this diet is responsible for people losing, how many conversions this email drove, etc).</li>
+<li>Generally speaking, larger effects (i.e. higher <span class="math">\(D\)</span>) are easier to detect, and will require fewer samples. We will dig into this more in the article on <a href="nbht.md">hypothesis tests and sample size</a></li>
+</ul>
 <h3>References</h3>
 <ul>
 <li>Wikipedia's article on <a href="https://en.wikipedia.org/wiki/Effect_size#Cohen's_d">Effect size</a></li>
