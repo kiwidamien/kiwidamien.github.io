@@ -1,0 +1,10 @@
+digraph {
+	"Gas price" [pos="-1.5,0!"]
+	Demand [pos="1,1!"]
+	Price [pos="0,0!"]
+	Bookings [pos="2,0!"]
+	Demand -> Price
+	Demand -> Bookings
+	Price -> Bookings
+	"Gas price" -> Price
+}
