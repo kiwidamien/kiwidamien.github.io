@@ -233,7 +233,7 @@
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>According to the code above, if we increase the price of a ticket by a dollar, we should expect to see 1800 fewer bookings at the same level of demand. This is what we want our analysis to be able to extract.</p>
-<p>When gas is more expensive, airlines have to charge more for the flights to remain profitable. When demand is high, airlines charge more because they can. So let's make the daily price the airline charges increase with demand, but decrease with gas price:</p>
+<p>When gas is more expensive, airlines have to charge more for the flights to remain profitable. When demand is high, airlines charge more because they can. So let's make the daily price the airline charges increase with both demand and gas price:</p>
 </div>
 </div>
 </div>
@@ -252,7 +252,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We still end up with the pretty strong correlation between demand and ticket price:</p>
+<p>We end up with the pretty strong correlation between demand and ticket price:</p>
 </div>
 </div>
 </div>
@@ -4497,7 +4497,8 @@ L 627.978125 10.7
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As in the ridesharing case, we are not able to actually randomize the prices and run the "what-if" (or counterfactual) analysis, as we don't have the model of the behavior. In the ridesharing case, we could control for demand in a couple of ways:</p>
+<p>As in the ridesharing case, an analyst with access to just the observational data would not be able to actually randomize the prices and run this "what-if" (counterfactual) analysis, as she doesn't have the model of the behavior.</p>
+<p>In the ridesharing case, we could control for demand in a couple of ways:</p>
 <ul>
 <li>if we were willing to assume it was a linear model, we could add demand as one of the regressors.</li>
 <li>if we didn't want to assume a linear model, we could bucket the demand and then look at the behavior of price against bookings, so we would only be comparing the relationship at similar levels of demand.</li>
