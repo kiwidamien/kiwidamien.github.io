@@ -153,11 +153,11 @@
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Introduction">Introduction<a class="anchor-link" href="#Introduction">¶</a></h2><p>During the training steps, machine learning models learn how the <em>features</em> (or inputs) are correlated with the <em>target</em> variable you are trying to predict. If you are just trying to make predictions, without driving the inputs, then the difference between correlation and causation isn't important.</p>
-<p>The <a href="/pathological-demand-in-ridesharing-confounding-with-demand.html">previous article</a> looked at a hypothetical ridesharing application, where the number of rides booked <em>increase</em> as price increases. This defies common sense: we expect as price goes up, the number of rides taken to decrease. Hidden in this statement is the unstated assumption that the demand remain the same. If we phrase it as the weekend nights which had big concerts playing we applied surge factors, and on Tuesday nights we didn't, it is not as surprising that low prices have low number of rides, because we charge low prices when there isn't much demand in the first place.</p>
-<p>When setting a price policy, what we would <em>ideally</em> like to do is ask:</p>
+<p>The <a href="/pathological-demand-in-ridesharing-confounding-with-demand.html">previous article</a> looked at a hypothetical ridesharing application, where the number of rides booked <em>increase</em> as price increases. This defies common sense: we expect as price goes up, the number of rides taken to decrease. Hidden in this statement is the unstated assumption that demand remains the same. We would be less surprised if we saw the nights that had high prices coincided with big concerts playing, and the low prices were on quiet Tuesday nights. We charge low prices when there isn't much demand in the first place.</p>
+<p>When setting a price policy, what we would <em>ideally</em> like to ask is:</p>
 <blockquote><p>For this particular customer, how likely are they to book a ride if offered at price $p$?</p>
 </blockquote>
-<p>That is often a tricky question to answer, because we only get to show a customer one price. If we think the only thing other than price that changes the liklihood of booking a ride is demand, then we can treat all customers at the same level of demand as interchangable. Once <em>controlling</em> for demand, we see the usual relationship: as price increases, the chance of an individual booking a ride decreases, and hence the total number of rides decrease.</p>
+<p>This is often a tricky question to answer, because we only get to show a customer one price. If we think the only thing other than price that changes the liklihood of booking a ride is demand, then we can treat all customers at the same level of demand as interchangable. Once <em>controlling</em> for demand, we see the usual relationship: as price increases, the chance of an individual booking a ride decreases, and hence the total number of rides decrease.</p>
 <p>The technical name for this process is "controlling for the confounder", demand. For a ridesharing application, it is reasonably easy to measure demand by looking at the number of rides looked up, or the number of times the app is opened.  The question of what to control for, and what to leave alone, is the subject of <em>causal analysis</em>.</p>
 <p>This article looks at a similar case of pricing, demand, and airline flights. Because airline flights can be booked through many different channels, we might not have a great measurement of demand, so we are not able to explicitly control for it. The instrumental variable technique is introduced instead.</p>
 </div>
@@ -175,7 +175,7 @@
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>As with the ridesharing problem, we will start this problem by simulating data. The models this time will just be linear models, which allow us to use the instrumental variables the cleanest way, using <em>two-stage least squares</em>.</p>
+<p>As with the ridesharing problem, we will start this problem by simulating data. The models this time will just be linear models, which allow us to use instrumental variables in the cleanest way, using <em>two-stage least squares</em>.</p>
 <p>We still have</p>
 <ul>
 <li>External demand: driven by the market, in units of price per ticket</li>
@@ -183,7 +183,7 @@
 <li>Price of a ticket: set by the airline, as well as costs of business (e.g. cost of gas)</li>
 <li>At a given price of a ticket and external demand, we can determine the number of tickets booked</li>
 </ul>
-<p>In most applications, we would normalize the inputs (i.e. center the means around 0 and the standard deviations to 1). In this case, we are using unregularized linear models, so we don't get any benefit from normalization. To make the modeling simpler, we are dealing with macro-economic variables now over the course of the entire day.</p>
+<p>In most applications, we would normalize the inputs (i.e. center the means around 0 and the standard deviations to 1). In this case, we are using unregularized linear models, so we don't get any benefit from normalization. To make the modeling simpler, we are dealing with macro-economic variables over the course of the entire day.</p>
 <p>Let's start by looking at the external factors:</p>
 </div>
 </div>
@@ -4519,7 +4519,7 @@ L 627.978125 10.7
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The way we generated the data was using the following set of relationships:</p>
+<p>The way we generated the data had the following dependencies:</p>
 </div>
 </div>
 </div>
@@ -4538,7 +4538,7 @@ L 627.978125 10.7
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>The only way the gas price entered into the problem was helping us set the price the customer saw. In fact, the only way the gas price can influence anything is by affecting the price of a ticket. Informally, this allows it to be a candidate for being an <em>instrumental variable</em>.</p>
+<p>The only way the gas price entered into the problem was helping us set the price the customer saw. In fact, the only way the gas price can influence anything is by affecting the price of a ticket. Informally, this allows gas price to be a candidate for being an <em>instrumental variable</em>.</p>
 <p>Instrumental variables are used to eliminate effects from omitted or non-measured effects. Informally, a variable is an <em>instrumental variable</em> for X if it influences X, and the only way it influences the target variable is through X. In this case, the gas price is an instrument for the ticket price:</p>
 <ul>
 <li>The gas price influences the price at which tickets are offered,</li>
@@ -4566,12 +4566,13 @@ We will know the values of $A$ and $B$ from doing the fit. Because we don't know
 Now let's look at our bookings. We expand out price in terms of gas price and demand:
 $$\text{num bookings} = (\beta_0 + \beta_p  \alpha_0) + \beta_p \alpha_g \times \text{(gas price)} + (\beta_p  \alpha_d + \beta_d) \times\text{(demand)}$$
 When we regress this against gas price we get
-$$\text{num bookings} = \beta_p \alpha_g \times \text{(gas price)} + [....] = C \text{(gas price) + D$$
+$$\text{num bookings} = \beta_p \alpha_g \times \text{(gas price)} + [....] = C \text{(gas price)} + D$$
 i.e. the constant in this regression is $C = \beta_p \alpha_g$.
 
 We can find $\beta_p$ by taking the ratio of $C/A = \beta_p \alpha_g / \alpha_g = \beta_p$.
 
-</details><p>If all the relationships are linear, we can determine the causal effect by looking at the ratio of coefficients in two separate regressions, and taking the coefficient of the instrumental variable. We have
+<hr />
+</details><p>If all the relationships are linear, we can determine the causal effect by looking at the ratio of coefficients of the gas price in two separate regressions. We have
 $$\text{causal effect of ticket price increases on bookings} = \frac{\text{coef. of gas price on bookings}}{\text{coef. of gas price on ticket price}}$$</p>
 </div>
 </div>
@@ -4615,7 +4616,7 @@ $$\text{causal effect of ticket price increases on bookings} = \frac{\text{coef.
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>We don't get the answer exactly right with 365 data points (off by roughly 350 bookings in our estimate). To estimate the confidence in this answer, we should bootstrap our samples. However, we do much better than trying to run a regression of price on bookings directly. We already know from the graph that we will have the wrong sign, but it is interesting to see how far too it is:</p>
+<p>We don't get the answer exactly right: we are off by roughly 350 bookings in our estimate, using the 365 data points. To estimate the confidence in this answer, we can bootstrap our samples. While not amazing, this answer is much better than regressing price against bookings directly, as this gets the sign wrong! It is interesting to see how far too it is:</p>
 </div>
 </div>
 </div>
@@ -4646,10 +4647,10 @@ $$\text{causal effect of ticket price increases on bookings} = \frac{\text{coef.
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Defining-Instrumental-Variables">Defining Instrumental Variables<a class="anchor-link" href="#Defining-Instrumental-Variables">¶</a></h2><p>More complicated causal problems require doing additional controlling on variables to stop information from leaking. The lecture notes from <a href="https://www.stat.cmu.edu/~cshalizi/402/lectures/23-causal-estimation/lecture-23.pdf">CMU</a> are a pretty good technical overview of the process, and define instrumental variables in more complicated situations as well. <a href="https://economics.mit.edu/files/18">Angrist and Kruger</a> give a description that is better suited for economists, and they have a pretty broad range of examples of instrumental variables. Finally the <a href="http://cameron.econ.ucdavis.edu/e240a/ch04iv.pdf">UC Davis</a> notes split the difference in terms of technical level and intuition.</p>
+<h2 id="Defining-Instrumental-Variables">Defining Instrumental Variables<a class="anchor-link" href="#Defining-Instrumental-Variables">¶</a></h2><p>More complicated causal problems additional care to stop information from leaking. The lecture notes from <a href="https://www.stat.cmu.edu/~cshalizi/402/lectures/23-causal-estimation/lecture-23.pdf">CMU</a> are a pretty good technical overview of the process, and define instrumental variables in more complicated situations as well. <a href="https://economics.mit.edu/files/18">Angrist and Kruger</a> give a description that is better suited for economists, and they have a pretty broad range of examples of instrumental variables. Finally the <a href="http://cameron.econ.ucdavis.edu/e240a/ch04iv.pdf">UC Davis</a> notes split the difference in terms of technical level and intuition.</p>
 <p>If we have a set of variables $S$ that we need to control for to determine the effect of $X$ (e.g. ticket price) on $Y$ (e.g. number of bookings) then we need</p>
 <ol>
-<li>The instrumental variable influences $X$ after controlling for all the things in $X$.</li>
+<li>The instrumental variable influences $X$ after controlling for all the things in $S$.</li>
 <li>All the unblocked paths the instrument has for affecting $Y$ have an ingoing arrow to $X$. In particular, the instrument is conditionally independent of all the other unobserved or omitted variables (conditioned on S).</li>
 </ol>
 <p>This is the more formal notion of "the only influence the instrument has on the outcome is via its affect on X". The definition here is for quick reference only, for complete details consult the references above.</p>
@@ -4708,7 +4709,7 @@ $$\text{causal effect of ticket price increases on bookings} = \frac{\text{coef.
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h2><p>Similar to the rideshare problem, we saw that the number of bookings made increased with price, because both price and bookings increase with demand. In the ridesharing case, we controlled for demand directly. In this case, we assume that we cannot measure demand directly, and use the technique of <em>instrumental variables</em> instead.</p>
-<p>Ultimately, the quested we are intersted in answering is:</p>
+<p>Ultimately, the quested we are interested in answering is:</p>
 <blockquote><p>How many seats would we have booked at price $p$, holding everything else the same?</p>
 </blockquote>
 <p>Our simple regression fails because comparing high ticket prices to low ticket prices is also comparing times of high demand to times of low demand.</p>
